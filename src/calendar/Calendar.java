@@ -12,7 +12,7 @@ public class Calendar {
 		try {
 			String[] creditals = readCreditals();
 			Class.forName("com.mysql.jdbc.Driver");
-			Connection connection = DriverManager.getConnection("jdbc:mysql://localhost/",creditals[0],creditals[1]);
+			Connection connection = DriverManager.getConnection("jdbc:mysql://mysql.stud.ntnu.no/mariessa_pu",creditals[0],creditals[1]);
 		} catch (SQLException | ClassNotFoundException | IOException e) {
 			e.printStackTrace();
 			System.exit(0);
