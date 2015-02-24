@@ -15,7 +15,7 @@ public class Calendar {
 		try {
 			String[] creditals = readCreditals();
 			Class.forName("com.mysql.jdbc.Driver");
-			Connection connection = DriverManager.getConnection("jdbc:mysql://mysql.stud.ntnu.no/mariessa_pu",creditals[0],creditals[1]);
+			Connection connection = DriverManager.getConnection(creditals[0],creditals[1],creditals[2]);
 			//ResultSet res2 = executeStatement(connection, "select * from Spieler");
 			//printResultSet(res2);
 			System.out.println("done :D");
@@ -27,9 +27,10 @@ public class Calendar {
 	
 	public static String[] readCreditals() throws IOException {
 		BufferedReader reader = new BufferedReader(new FileReader("db_id.txt"));
+		String address = reader.readLine();
 		String username = reader.readLine();
 		String password = reader.readLine();
-		return new String[]{username,password};
+		return new String[]{address,username,password};
 	}
 	
 	/**
