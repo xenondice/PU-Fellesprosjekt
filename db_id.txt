@@ -1,2 +1,3 @@
+jdbc:mysql://mysql.stud.ntnu.no/mariessa_pu
 mariessa_pu
 fellesprosjekt
