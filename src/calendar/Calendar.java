@@ -9,8 +9,46 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.ArrayList;
+
+import user.User;
 
 public class Calendar {
+	private ArrayList<Entry> entries;
+	private ArrayList<User> users;
+	
+	public Calendar(ArrayList<Entry> entries, ArrayList<User> users){
+		this.entries = entries;
+		this.users = users;
+	}
+	
+	
+	public ArrayList<Entry> getEntries() {
+		return entries;
+	}
+	
+	public ArrayList<User> getUsers() {
+		return users;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	public static void main(String[] args) {
 		try {
 			String[] creditals = readCreditals();
@@ -33,29 +71,6 @@ public class Calendar {
 		return new String[]{address,username,password};
 	}
 	
-	/**
-	 * prepares and executes an executes a SQL statement.
-	 * Example of use: ResultSet result = executeStatement(connection, "INSERT INTO User VALUES (name=?, age=?, gender=?)", "Olav", "12", "male");
-	 * @param con -> the connection to be used.
-	 * @param statement -> eg "INSERT INTO User VALUES (name=?, age=?, gender=?)"
-	 * @param arguments -> the string attributes represented by a ? in the statement string.
-	 * @return 
-	 */
-	public static ResultSet executeStatement(Connection con, String statement, String... arguments){
-		try {
-			PreparedStatement stmt = con.prepareStatement(statement);
-			
-			for (int i = 0; i < arguments.length; i++){
-				stmt.setString(i, arguments[i]);
-			}
-			return stmt.executeQuery();
-			
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return null;
-		}
-		
-	}
 	
 	public static void printResultSet(ResultSet res){
 		ResultSetMetaData rsmd;
