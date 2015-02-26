@@ -14,27 +14,27 @@ import java.util.ArrayList;
 import user.User;
 
 public class Calendar {
-	private final ArrayList<Entry> entries;
-	private final ArrayList<User> users;
+	private final Entry[] entries;
+	private final User[] users;
 	
-	public Calendar(ArrayList<Entry> entries, ArrayList<User> users){
+	public Calendar(Entry[] entries, User[] users){
 		this.entries = entries;
 		this.users = users;
 	}
 	
 	
-	public ArrayList<Entry> getEntries() {
-		ArrayList<Entry> clonedList = new ArrayList<>();
-		for(Entry e : entries){
-			clonedList.add(e.clone());
+	public Entry[] getEntries() {
+		Entry[] clonedList = new Entry[entries.length];
+		for(int i = 0; i < clonedList.length; i++){
+			clonedList[i] = entries[i].clone();
 		}
 		return clonedList;
 	}
 	
-	public ArrayList<User> getUsers() {
-		ArrayList<User> clonedList = new ArrayList<>();
-		for(User u : users){
-			clonedList.add(u.clone());
+	public User[] getUsers() {
+		User[] clonedList = new User[users.length];
+		for(int i = 0; i < clonedList.length; i++){
+			clonedList[i] = users[i].clone();
 		}
 		return clonedList;
 	}

@@ -1,10 +1,13 @@
 package calendar;
 
+import java.util.ArrayList;
+
 import interfaces.Builder;
 import user.User;
 
 public class CalendarBuilder implements Builder<Calendar>{
-	//... @TODO
+	private ArrayList<Entry> entries = new ArrayList<Entry>();
+	private ArrayList<User> users = new ArrayList<User>();
 	
 	public CalendarBuilder(){
 		
@@ -12,17 +15,23 @@ public class CalendarBuilder implements Builder<Calendar>{
 	
 	@Override
 	public Calendar build(){
-		// @TODO
-		return null;
+		return new Calendar((Entry[]) entries.toArray(), (User[]) users.toArray());
 	}
 	
 	public void addUser(User u){
-		// @TODO
+		users.add(u);
 	}
 	
 	public void addEntry(Entry e){
-		// @TODO
+		entries.add(e);
 	}
 	
-	//...
+	public ArrayList<Entry> getEntries() {
+		return entries;
+	}
+	 
+	public ArrayList<User> getUsers() {
+		return users;
+	}
+	 
 }
