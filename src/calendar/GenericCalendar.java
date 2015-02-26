@@ -18,7 +18,7 @@ public class GenericCalendar {
 				days = 28;
 			}
 		}else{
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException(nr + " is not a valid day!");
 		}
 		return days;
 	}
@@ -85,9 +85,42 @@ public class GenericCalendar {
 			return "February";
 		}else if(month == 11){
 			return "February";
-		}else(month == 12){
+		}else if(month == 12){
 			return "February";
+		} else {
+			throw new IllegalArgumentException(month + " is not a valid month!");
 		}
+	}
+	
+	public String getDayName(int day) {
+		if (day == 1) {
+			return "Monday";
+		}
+		else if (day == 2) {
+			return "Tuesday";
+		}
+		else if (day == 3) {
+			return "Wednesday";
+		}
+		else if (day == 4) {
+			return "Thursday";
+		}
+		else if (day == 5) {
+			return "Friday";
+		}
+		else if (day == 6) {
+			return "Saturday";
+		}
+		else if (day == 7) {
+			return "Sunday";
+		} else {
+			throw new IllegalArgumentException(day + " is not a valid day!");
+		}
+	}
+	
+	public String toString() {
+		String string = "";
+		return string;
 	}
 
 
