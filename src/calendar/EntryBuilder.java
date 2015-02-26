@@ -17,8 +17,7 @@ public class EntryBuilder implements Builder<Entry>{
 	
 	@Override
 	public Entry build(){
-		// @TODO
-		return null;
+		return new Entry(eventID, startTime, endTime, location, description, isActive, roomID);
 	}
 	
 	public void setDescription(String description) {
