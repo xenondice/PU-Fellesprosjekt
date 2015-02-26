@@ -2,6 +2,10 @@ package calendar;
 
 import interfaces.Builder;
 
+/**
+ * This class is here to incrementally build a immutable Entry. 
+ *
+ */
 public class EntryBuilder implements Builder<Entry>{
 	private String eventID = null;
 	private String startTime = null;

@@ -17,14 +17,24 @@ import calendar.CalendarBuilder;
 import calendar.Entry;
 import calendar.EntryBuilder;
 
+/**
+ * This class is the connection to the Data Base.
+ * It provides all interactions with the DB.
+ * It also parses DB entries to java instances.
+ *
+ */
 public class DataBaseManager {
 	private Connection connection;
+	private final String DB_url = "jdbc:mysql://mysql.stud.ntnu.no/mariessa_pu";
+	private final String username = "mariessa_pu";
+	private final String password = "fellesprosjekt";
 	
-	
+	/**
+	 * opens a connection to the DB.
+	 */
 	public DataBaseManager(){
 		try {
-			Connection connection = DriverManager.getConnection("jdbc:mysql://mysql.stud.ntnu.no/mariessa_pu", "mariessa_pu", "fellesprosjekt");		
-		
+			Connection connection = DriverManager.getConnection(DB_url, username, password);		
 		
 		} catch (SQLException e) { 
 			e.printStackTrace();
@@ -33,21 +43,41 @@ public class DataBaseManager {
 		
 	}
 	
+	/**
+	 * adds the Entry to the DB
+	 * @param e
+	 * @return true if the action was successful. False otherwise.
+	 */
 	public boolean addEntry(Entry e){
 		// @TODO
 		return false;
 	}
 	
+	/**
+	 * adds the User to the DB
+	 * @param u
+	 * @return true if the action was successful. False otherwise.
+	 */
 	public boolean addUser(User u){
 		// @TODO
 		return false;
 	}
 	
+	/**
+	 * adds the Room to the DB
+	 * @param r
+	 * @return true if the action was successful. False otherwise.
+	 */
 	public boolean addRoom(Room r){
 		// @TODO
 		return false;
 	}
 	
+	/**
+	 * Creates a Calendar with all the entries the user is allowed to see.
+	 * @param user
+	 * @return a Calendar instance wit the entries of the given user. An empty calendar if some error occurred.
+	 */
 	public Calendar createCalendar(User user){
 		
 		
@@ -78,7 +108,10 @@ public class DataBaseManager {
 				calendarB.addEntry(entryB.build());
 				
 			}
-		} catch (SQLException e) {e.printStackTrace();}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return new CalendarBuilder().build();
+		}
 		
 		return calendarB.build();
 	}
@@ -89,7 +122,7 @@ public class DataBaseManager {
 	 * @param con -> the connection to be used.
 	 * @param statement -> eg "INSERT INTO User VALUES (name=?, age=?, gender=?)"
 	 * @param arguments -> the string attributes represented by a ? in the statement string.
-	 * @return 
+	 * @return A Result set containing the results of the query
 	 */
 	public static ResultSet executeStatement(Connection con, String statement, String... arguments){
 		try {
@@ -104,13 +137,6 @@ public class DataBaseManager {
 			e.printStackTrace();
 			return null;
 		}
-		
-	}
-	
-	
-	
-	
-	public static void main(String[] args) {
 		
 	}
 }

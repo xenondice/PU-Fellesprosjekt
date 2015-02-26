@@ -1,5 +1,10 @@
 package calendar;
 
+/**
+ * Represents an Entry in a Calendar
+ * The class is immutable. That means no instance of this class can change any of its attributes.
+ *
+ */
 public class Entry {
 	
 	private final  String eventID; 
@@ -21,6 +26,9 @@ public class Entry {
 		this.roomID =  roomID; 
 	}
 	
+	/**
+	 * @return a (immutable) clone of this instance
+	 */
 	public Entry clone(){
 		return new Entry(eventID, startTime, endTime, location, description, isActive, roomID);
 	}

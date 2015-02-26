@@ -2,6 +2,10 @@ package room_booking;
 
 import interfaces.Builder;
 
+/**
+ * This class is here to incrementally build a immutable Room. 
+ *
+ */
 public class RoomBuilder implements Builder<Room> {
 	
 	private String room_id = null;

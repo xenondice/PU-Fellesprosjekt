@@ -1,5 +1,8 @@
 package room_booking;
 
+/**
+ * Represents a Room
+ */
 public class Room {
 	
 	private final String room_id;
@@ -17,6 +20,9 @@ public class Room {
 		return size;
 	}
 	
+	/**
+	 * returns a complete (deep-)copy of this room.
+	 */
 	public Room clone(){
 		return new Room(room_id, size);
 	}

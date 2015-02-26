@@ -1,5 +1,10 @@
 package user;
 
+/**
+ * Represents a user in the system.
+ * The class is immutable. That means no instance of this class can change any of its attributes.
+ *
+ */
 public class User {
 	private final String username;
 	private final String name; 
@@ -34,7 +39,7 @@ public class User {
 	
 	
 	/**
-	 * returns identical (but new) instance of this user.
+	 * returns identical (but new) instance of this user (deep-copy).
 	 */
 	public User clone(){
 		return new User(username, name, password, salt, email);

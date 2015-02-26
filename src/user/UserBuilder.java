@@ -2,6 +2,10 @@ package user;
 
 import interfaces.Builder;
 
+/**
+ * This class is here to incrementally build a immutable User. 
+ *
+ */
 public class UserBuilder implements Builder<User>{
 	private String username = null;
 	private String name = null; 
