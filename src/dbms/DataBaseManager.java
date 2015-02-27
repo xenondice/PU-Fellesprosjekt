@@ -48,6 +48,9 @@ public class DataBaseManager {
 		
 	}
 	
+	/**
+	 * reads the id_db file.
+	 */
 	private String[] readConnectionInformation() {
 		
 		try {
