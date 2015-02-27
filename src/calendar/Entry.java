@@ -9,7 +9,7 @@ import java.util.Date;
  */
 public class Entry {
 	
-	private final  String eventID; 
+	private final  String eventID;
 	private final  Date startTime; 
 	private final  Date endTime; 
 	private final  String location; 
@@ -53,5 +53,9 @@ public class Entry {
 	public Date getStartTime() {
 		return startTime;
 	}
+	public boolean isActive(){
+		return isActive;
+	}
+	
 	
 }

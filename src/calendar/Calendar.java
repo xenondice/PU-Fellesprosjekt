@@ -1,17 +1,8 @@
 package calendar;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 
 import room_booking.RoomBuilder;
@@ -94,17 +85,17 @@ public class Calendar {
 					else System.out.println("Failure!");
 				} else if (parted[0].equals("addentry")) {
 					EntryBuilder eb = new EntryBuilder();
-					eb.setStartTime(new Date(Long.parseLong(parted[1])));
-					eb.setEndTime(new Date(Long.parseLong(parted[2])));
-					eb.setDescription(parted[3]);
-					eb.setLocation(parted[3]);
-					if (dbm.addEntry(eb.build())) System.out.println("Success!");
+					eb.setStartTime(new Date(Long.parseLong(parted[2])));
+					eb.setEndTime(new Date(Long.parseLong(parted[3])));
+					eb.setDescription(parted[4]);
+					eb.setLocation(parted[5]);
+					if (dbm.addEntry(eb.build(), dbm.getUser(parted[1]))) System.out.println("Success!");
 					else System.out.println("Failure!");
 				} else if (parted[0].equals("help")) {
 					System.out.println("Commands:\n"
 							+ "adduser username name(only one name) password email\n"
 							+ "addroom roomid roomsize\n"
-							+ "addentry starttime(milliseconds since 1960 00:00) endtime(same) description location\n");
+							+ "addentry admin_username starttime(milliseconds since 1960 00:00) endtime(same) description location\n");
 				} else {
 					System.out.println("Invalid input");
 				}
