@@ -9,8 +9,8 @@ public class Entry {
 	
 	private final  String eventID; 
 	private final  String startTime; 
-	private final  String endTime; 
-	private final  String location; 
+	private final  String endTime; // TODO change to Timestamp
+	private final  String location; // TODO change to Timestamp
 	private final  String description; 
 	private final  boolean isActive; 
 	private final  String roomID; 
