@@ -281,7 +281,7 @@ public class DataBaseManager {
 			statement.execute(""
 					+ "CREATE TABLE IsAdmin ("
 					+ "	entryID"
-					+ "		VARCHAR(10)"
+					+ "		INT"
 					+ "		NOT NULL"
 					+ "		REFERENCES Entry"
 					+ "		ON UPDATE CASCADE"
@@ -299,5 +299,10 @@ public class DataBaseManager {
 			e.printStackTrace();
 			System.exit(-1);
 		}
+	}
+
+	public User getUser(String username) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
