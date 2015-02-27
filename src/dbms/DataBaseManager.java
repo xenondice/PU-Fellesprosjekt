@@ -339,7 +339,8 @@ public class DataBaseManager {
 	
 	public static void main(String[] args) {
 		Entry e = new Entry("1", "1992-02-02 11:00:00", "1992-02-02 12:00:00", "forrest", "happy meeting with a tree", true, "");
+		User u = new User("lukasap", "Luaks", "222", "", "lukasap@stud.ntnu.no");
 		DataBaseManager dbms = new DataBaseManager();
-		dbms.addEntry(e);
+		dbms.addEntry(e, u);
 	}
 }
