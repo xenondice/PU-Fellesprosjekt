@@ -9,8 +9,70 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
+import user.User;
+
+/**
+ * This class is used to model a calendar with several Entries and users
+ * The class is immutable. That means no instance of this class can change any of its attributes.
+ */
 public class Calendar {
+	private final Entry[] entries;
+	private final User[] users;
+	
+	/**
+	 * 
+	 * @param entries: the entries of this calendar.
+	 * @param users; the users belonging to this calendar.
+	 */
+	public Calendar(Entry[] entries, User[] users){
+		this.entries = entries;
+		this.users = users;
+	}
+	
+	/**
+	 * 
+	 * @return a copy entries of this calendar in an array.
+	 */
+	public Entry[] getEntries() {
+		Entry[] clonedList = new Entry[entries.length];
+		for(int i = 0; i < clonedList.length; i++){
+			clonedList[i] = entries[i].clone();
+		}
+		return clonedList;
+	}
+	
+	/**
+	 * 
+	 * @return a copy of the users of this calendar in an array.
+	 */
+	public User[] getUsers() {
+		User[] clonedList = new User[users.length];
+		for(int i = 0; i < clonedList.length; i++){
+			clonedList[i] = users[i].clone();
+		}
+		return clonedList;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	public static void main(String[] args) {
 		try {
 			String[] creditals = readCreditals();
@@ -33,29 +95,6 @@ public class Calendar {
 		return new String[]{address,username,password};
 	}
 	
-	/**
-	 * prepares and executes an executes a SQL statement.
-	 * Example of use: ResultSet result = executeStatement(connection, "INSERT INTO User VALUES (name=?, age=?, gender=?)", "Olav", "12", "male");
-	 * @param con -> the connection to be used.
-	 * @param statement -> eg "INSERT INTO User VALUES (name=?, age=?, gender=?)"
-	 * @param arguments -> the string attributes represented by a ? in the statement string.
-	 * @return 
-	 */
-	public static ResultSet executeStatement(Connection con, String statement, String... arguments){
-		try {
-			PreparedStatement stmt = con.prepareStatement(statement);
-			
-			for (int i = 0; i < arguments.length; i++){
-				stmt.setString(i, arguments[i]);
-			}
-			return stmt.executeQuery();
-			
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return null;
-		}
-		
-	}
 	
 	public static void printResultSet(ResultSet res){
 		ResultSetMetaData rsmd;
