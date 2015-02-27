@@ -93,9 +93,10 @@ public class Calendar {
 					else System.out.println("Failure!");
 				} else if (parted[0].equals("help")) {
 					System.out.println("Commands:\n"
+							+ "calendar username\n"
 							+ "adduser username name(only one name) password email\n"
 							+ "addroom roomid roomsize\n"
-							+ "addentry admin_username starttime(milliseconds since 1960 00:00) endtime(same) description location\n");
+							+ "addentry admin_username starttime(milliseconds since 1960 00:00) endtime(same) description location");
 				} else {
 					System.out.println("Invalid input");
 				}

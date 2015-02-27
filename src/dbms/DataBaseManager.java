@@ -141,12 +141,18 @@ public class DataBaseManager {
 	 */
 	public boolean addUser(User u){
 		// TODO
-		String addUser = "insert INTO User VALUES ("+u.getUsername() + "," + u.getName() + "," + u.getPassword() +"," + u.getSalt() + "," + u.getEmail() +");";
+		String addUser = "INSERT INTO User VALUES (?, ?, ?, ?, ?);";
 		try {
-			Statement stm = connection.createStatement();
-			stm.execute(addUser);
+			PreparedStatement stm = connection.prepareStatement(addUser);
+			stm.setString(1, u.getUsername());
+			stm.setString(1, u.getName());
+			stm.setString(1, u.getPassword());
+			stm.setString(1, u.getSalt());
+			stm.setString(1, u.getEmail());
+			stm.execute();
 			stm.close();
 		} catch (SQLException e) {
+			e.printStackTrace();
 			return false;
 		}
 		return true;
@@ -158,12 +164,15 @@ public class DataBaseManager {
 	 * @return true if the action was successful. False otherwise.
 	 */
 	public boolean addRoom(Room r){
-		String addRoom = "insert INTO Room VALUES ("+r.getRoom_id() + "," + r.getSize() +");";
+		String addRoom = "INSERT INTO Room VALUES (?, ?)";
 		try {
-			Statement stm = connection.createStatement();
-			stm.execute(addRoom);
+			PreparedStatement stm = connection.prepareStatement(addRoom);
+			stm.setString(1, r.getRoom_id());
+			stm.setInt(2, r.getSize());
+			stm.execute();
 			stm.close();
 		} catch (SQLException e) {
+			e.printStackTrace();
 			return false;
 		}
 		return true;
