@@ -1,6 +1,7 @@
 package dbms;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Connection;
@@ -10,6 +11,8 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 import room_booking.Room;
 import user.User;
@@ -26,24 +29,45 @@ import calendar.EntryBuilder;
  */
 public class DataBaseManager {
 	private static Connection connection;
-	private final String DB_url = "jdbc:mysql://mysql.stud.ntnu.no/mariessa_pu";
-	private final String username = "mariessa_pu";
-	private final String password = "fellesprosjekt";
+	//private final String DB_url = "jdbc:mysql://mysql.stud.ntnu.no/mariessa_pu";
+	//private final String username = "mariessa_pu";
+	//private final String password = "fellesprosjekt";
 	
 	/**
 	 * opens a connection to the DB.
 	 */
 	public DataBaseManager(){
 		try {
-			Connection connection = DriverManager.getConnection(DB_url, username, password);		
-		
-		} catch (SQLException e) { 
+			String[] ci = readConnectionInformation();
+			if (ci.equals(null)) throw new IllegalArgumentException("Something is wrong with your db_id file and a connection can't be established");
+			connection = DriverManager.getConnection(ci[0], ci[1], ci[2]);
+		} catch (SQLException e) {
 			e.printStackTrace();
-			connection = null;
+			System.exit(-1);
 		}
 		
 	}
 	
+	private String[] readConnectionInformation() {
+		
+		try {
+			BufferedReader br = new BufferedReader(new FileReader("db_id.txt"));
+			List<String> sl = new ArrayList<>();
+			
+			while (br.ready()) {
+				sl.add(br.readLine());
+			}
+			
+			br.close();
+			
+			if (sl.size() != 3) return null;
+		
+			return sl.toArray(new String[3]);
+		} catch (IOException e) {
+			return null;
+		}
+	}
+
 	/**
 	 * adds the Entry to the DB
 	 * @param e
