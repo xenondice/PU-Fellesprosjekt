@@ -51,5 +51,9 @@ public class Entry {
 	public String getStartTime() {
 		return startTime;
 	}
+	public boolean isActive(){
+		return isActive;
+	}
+	
 	
 }

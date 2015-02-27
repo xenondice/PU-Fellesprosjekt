@@ -45,7 +45,6 @@ public class DataBaseManager {
 			e.printStackTrace();
 			System.exit(-1);
 		}
-		
 	}
 	
 	/**
@@ -72,14 +71,47 @@ public class DataBaseManager {
 	}
 
 	/**
-	 * adds the Entry to the DB
+	 * adds the Entry to the DB. It will be treated as a new Entry.
+	 * To edit an existing entry use editEntry(Entry e) instead.
 	 * @param e
 	 * @return true if the action was successful. False otherwise.
 	 */
 	public boolean addEntry(Entry e){
-		// @TODO
+		String insert_entry = "INSERT INTO Entry (startTime, endTime, location, description, isActive, roomID) "
+				+ "VALUES (?, ?, ?; ?; ?; ?)";
+		
+		PreparedStatement stmt;
+		try {
+			stmt = connection.prepareStatement(insert_entry);
+			stmt.setString(1, e.getStartTime());
+			stmt.setString(2, e.getEndTime());
+			stmt.setString(3, e.getLocation());
+			stmt.setString(4, e.getDescription());
+			stmt.setBoolean(5, e.isActive());
+			stmt.setString(6, e.getRoomID());
+			
+			stmt.executeQuery();
+			
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+			return false;
+		}
+		return true;
+		
+		
+	}
+	
+	/**
+	 * Changes the entry in the DB with the same entryID as the specified entry e.
+	 * @param e
+	 * @return true iff the action was successful.
+	 */
+	public boolean editEntry(Entry e){
+		// TODO
 		return false;
 	}
+	
+	
 	
 	/**
 	 * adds the User to the DB
@@ -87,7 +119,7 @@ public class DataBaseManager {
 	 * @return true if the action was successful. False otherwise.
 	 */
 	public boolean addUser(User u){
-		// @TODO
+		// TODO
 		return false;
 	}
 	
@@ -97,7 +129,7 @@ public class DataBaseManager {
 	 * @return true if the action was successful. False otherwise.
 	 */
 	public boolean addRoom(Room r){
-		// @TODO
+		// TODO
 		return false;
 	}
 	
@@ -107,9 +139,10 @@ public class DataBaseManager {
 	 * @return a Calendar instance wit the entries of the given user. An empty calendar if some error occurred.
 	 */
 	public Calendar createCalendar(User user){
+		// TODO conversion from Timestamp to string
+		// String S = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(myTimestamp);
 		
-		
-		// @TODO better with JOIN?
+		// TODO better with JOIN?
 		String select_all_events_for_user = "SELECT E.* "
 										  + "FROM Entry E, User U, Status S "
 										  + "WHERE S.isShowing = 1 "
@@ -117,6 +150,8 @@ public class DataBaseManager {
 										  	+ "AND U.username = S.username"
 										  	+ "AND U.username=?";
 		ResultSet rset = executeStatement(connection, select_all_events_for_user, user.getUsername());
+		
+		
 		
 		CalendarBuilder calendarB = new CalendarBuilder();
 		calendarB.addUser(user);
