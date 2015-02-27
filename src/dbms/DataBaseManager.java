@@ -72,34 +72,56 @@ public class DataBaseManager {
 	}
 
 	/**
-	 * adds the Entry to the DB. It will be treated as a new Entry.
-	 * To edit an existing entry use editEntry(Entry e) instead.
-	 * @param e
+	 *  To edit an existing entry use editEntry(Entry e) instead.
 	 * @return true if the action was successful. False otherwise.
+	 * @param e the entry
+	 * @param u the user creating the entry
 	 */
-	public boolean addEntry(Entry e){
-		String insert_entry = "INSERT INTO Entry (startTime, endTime, location, description, isActive, roomID) "
-				+ "VALUES (?, ?, ?; ?; ?; ?)";
+	public boolean addEntry(Entry e, User u){
 		
-		PreparedStatement stmt;
+		
 		try {
-			stmt = connection.prepareStatement(insert_entry);
-			stmt.setString(1, e.getStartTime());
-			stmt.setString(2, e.getEndTime());
-			stmt.setString(3, e.getLocation());
-			stmt.setString(4, e.getDescription());
-			stmt.setBoolean(5, e.isActive());
-			stmt.setString(6, e.getRoomID());
+			// add the entry
+			String insert_entry = "INSERT INTO Entry (startTime, endTime, location, description, isActive, roomID) "
+					+ "VALUES (?, ?, ?, ?, ?, ?)";
+			PreparedStatement addEntry_stmt = connection.prepareStatement(insert_entry);
+			addEntry_stmt.setString(1, e.getStartTime());
+			addEntry_stmt.setString(2, e.getEndTime());
+			addEntry_stmt.setString(3, e.getLocation());
+			addEntry_stmt.setString(4, e.getDescription());
+			addEntry_stmt.setBoolean(5, e.isActive());
+			addEntry_stmt.setString(6, e.getRoomID());
 			
-			stmt.executeQuery();
+			addEntry_stmt.executeUpdate();
+			
+			// get entry_id of the just added entry
+			String get_id = "SELECT MAX(entryID) FROM Entry;";
+			Statement get_id_stmt = connection.createStatement();
+			ResultSet rsetID = get_id_stmt.executeQuery(get_id);
+			rsetID.next();
+			int entry_id = rsetID.getInt(1);
+			
+			// add the user-entry relation
+			String add_isAdmin = "INSERT INTO IsAdmin VALUES (?, ?)";
+			PreparedStatement addisAdmin_stmt = connection.prepareStatement(add_isAdmin);
+			addisAdmin_stmt.setInt(1, entry_id);
+			addisAdmin_stmt.setString(1, u.getUsername());
+			
+			addisAdmin_stmt.executeUpdate();
+			
+			//add the users status to that event.
+			String add_status = "INSERT INTO Status (username, entryID) VALUES (?, ?)";
+			PreparedStatement addStatus_stmt = connection.prepareStatement(add_status);
+			addStatus_stmt.setString(1, u.getUsername());
+			addStatus_stmt.setInt(2, entry_id);
+			
+			addStatus_stmt.executeUpdate();
 			
 		} catch (SQLException e1) {
 			e1.printStackTrace();
 			return false;
 		}
-		return true;
-		
-		
+		return true;	
 	}
 	
 	/**
@@ -150,14 +172,17 @@ public class DataBaseManager {
 										  	+ "AND E.eventID = S.eventID "
 										  	+ "AND U.username = S.username"
 										  	+ "AND U.username=?";
-		ResultSet rset = executeStatement(connection, select_all_events_for_user, user.getUsername());
-		
 		
 		
 		CalendarBuilder calendarB = new CalendarBuilder();
 		calendarB.addUser(user);
 		
 		try {
+			
+			PreparedStatement stmt = connection.prepareStatement(select_all_events_for_user);
+			stmt.setString(1, user.getUsername());
+			ResultSet rset = stmt.executeQuery();
+			
 			while(rset.next()){
 				EntryBuilder entryB = new EntryBuilder();
 				
@@ -178,30 +203,6 @@ public class DataBaseManager {
 		}
 		
 		return calendarB.build();
-	}
-	
-	/**
-	 * prepares and executes an executes a SQL statement.
-	 * Example of use: ResultSet result = executeStatement(connection, "INSERT INTO User VALUES (name=?, age=?, gender=?)", "Olav", "12", "male");
-	 * @param con -> the connection to be used.
-	 * @param statement -> eg "INSERT INTO User VALUES (name=?, age=?, gender=?)"
-	 * @param arguments -> the string attributes represented by a ? in the statement string.
-	 * @return A Result set containing the results of the query
-	 */
-	public static ResultSet executeStatement(Connection con, String statement, String... arguments){
-		try {
-			PreparedStatement stmt = con.prepareStatement(statement);
-			
-			for (int i = 0; i < arguments.length; i++){
-				stmt.setObject(i+1, arguments[i]);
-			}
-			return stmt.executeQuery();
-			
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return null;
-		}
-		
 	}
 	
 	public void createTables() {
@@ -334,5 +335,11 @@ public class DataBaseManager {
 			e.printStackTrace();
 			System.exit(-1);
 		}
+	}
+	
+	public static void main(String[] args) {
+		Entry e = new Entry("1", "1992-02-02 11:00:00", "1992-02-02 12:00:00", "forrest", "happy meeting with a tree", true, "");
+		DataBaseManager dbms = new DataBaseManager();
+		dbms.addEntry(e);
 	}
 }
