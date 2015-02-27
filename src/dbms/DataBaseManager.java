@@ -28,7 +28,7 @@ import calendar.EntryBuilder;
  *
  */
 public class DataBaseManager {
-	private static Connection connection;
+	private Connection connection;
 	//private final String DB_url = "jdbc:mysql://mysql.stud.ntnu.no/mariessa_pu";
 	//private final String username = "mariessa_pu";
 	//private final String password = "fellesprosjekt";
@@ -40,8 +40,9 @@ public class DataBaseManager {
 		try {
 			String[] ci = readConnectionInformation();
 			if (ci.equals(null)) throw new IllegalArgumentException("Something is wrong with your db_id file and a connection can't be established");
+			Class.forName("com.mysql.jdbc.Driver");
 			connection = DriverManager.getConnection(ci[0], ci[1], ci[2]);
-		} catch (SQLException e) {
+		} catch (SQLException | ClassNotFoundException e) {
 			e.printStackTrace();
 			System.exit(-1);
 		}
@@ -203,7 +204,7 @@ public class DataBaseManager {
 		
 	}
 	
-	public static void createTables() {
+	public void createTables() {
 		try {
 			Statement statement = connection.createStatement();
 			
