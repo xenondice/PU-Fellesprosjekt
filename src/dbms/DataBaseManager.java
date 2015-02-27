@@ -121,7 +121,15 @@ public class DataBaseManager {
 	 */
 	public boolean addUser(User u){
 		// TODO
-		return false;
+		String addUser = "insert INTO User VALUES ("+u.getUsername() + "," + u.getName() + "," + u.getPassword() +"," + u.getSalt() + "," + u.getEmail() +");";
+		try {
+			Statement stm = connection.createStatement();
+			stm.execute(addUser);
+			stm.close();
+		} catch (SQLException e) {
+			return false;
+		}
+		return true;
 	}
 	
 	/**
@@ -130,8 +138,15 @@ public class DataBaseManager {
 	 * @return true if the action was successful. False otherwise.
 	 */
 	public boolean addRoom(Room r){
-		// TODO
-		return false;
+		String addRoom = "insert INTO Room VALUES ("+r.getRoom_id() + "," + r.getSize() +");";
+		try {
+			Statement stm = connection.createStatement();
+			stm.execute(addRoom);
+			stm.close();
+		} catch (SQLException e) {
+			return false;
+		}
+		return true;
 	}
 	
 	/**
