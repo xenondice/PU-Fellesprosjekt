@@ -16,6 +16,7 @@ import java.util.List;
 
 import room_booking.Room;
 import user.User;
+import user.UserBuilder;
 import calendar.Calendar;
 import calendar.CalendarBuilder;
 import calendar.Entry;
@@ -127,8 +128,8 @@ public class DataBaseManager {
 				EntryBuilder entryB = new EntryBuilder();
 				
 				entryB.setEventID(rset.getString("eventID"));
-				entryB.setStartTime(rset.getString("startTime"));
-				entryB.setEndTime(rset.getString("endTime"));
+				entryB.setStartTime(rset.getDate("startTime"));
+				entryB.setEndTime(rset.getDate("endTime"));
 				entryB.setLocation(rset.getString("location"));
 				entryB.setDescription(rset.getString("description"));
 				entryB.setIsActive(rset.getBoolean("isActive"));
@@ -302,7 +303,21 @@ public class DataBaseManager {
 	}
 
 	public User getUser(String username) {
-		// TODO Auto-generated method stub
-		return null;
+		try {
+			PreparedStatement stm = connection.prepareStatement("SELECT * FROM User WHERE username=?");
+			stm.setString(1, username);
+			ResultSet rs = stm.executeQuery();
+			if (rs.next()) {
+				UserBuilder ub = new UserBuilder();
+				ub.setUsername(username);
+				ub.setUsername(rs.getString("name"));
+				ub.setUsername(rs.getString("password"));
+				ub.setUsername(rs.getString("salt"));
+				ub.setUsername(rs.getString("email"));
+				return ub.build();
+			} else return null;
+		} catch (SQLException e) {
+			return null;
+		}
 	}
 }

@@ -1,5 +1,7 @@
 package calendar;
 
+import java.util.Date;
+
 /**
  * Represents an Entry in a Calendar
  * The class is immutable. That means no instance of this class can change any of its attributes.
@@ -8,14 +10,14 @@ package calendar;
 public class Entry {
 	
 	private final  String eventID; 
-	private final  String startTime; 
-	private final  String endTime; 
+	private final  Date startTime; 
+	private final  Date endTime; 
 	private final  String location; 
 	private final  String description; 
 	private final  boolean isActive; 
 	private final  String roomID; 
 	
-	public Entry(String eventID, String startTime, String endTime, String location,
+	public Entry(String eventID, Date startTime, Date endTime, String location,
 			String description,	boolean isActive, String roomID){
 		this.eventID =  eventID; 
 		this.startTime =  startTime; 
@@ -36,7 +38,7 @@ public class Entry {
 	public String getDescription() {
 		return description;
 	}
-	public String getEndTime() {
+	public Date getEndTime() {
 		return endTime;
 	}
 	public String getEventID() {
@@ -48,7 +50,7 @@ public class Entry {
 	public String getRoomID() {
 		return roomID;
 	}
-	public String getStartTime() {
+	public Date getStartTime() {
 		return startTime;
 	}
 	
