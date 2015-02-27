@@ -44,4 +44,8 @@ public class User {
 	public User clone(){
 		return new User(username, name, password, salt, email);
 	}
+	
+//	public void receiveNotification(Notification n){
+//		//....
+//	}
 }
