@@ -100,17 +100,18 @@ public class DataBaseManager {
 			ResultSet rsetID = get_id_stmt.executeQuery(get_id);
 			rsetID.next();
 			int entry_id = rsetID.getInt(1);
+			System.out.println(entry_id);
 			
 			// add the user-entry relation
-			String add_isAdmin = "INSERT INTO IsAdmin VALUES (?, ?)";
+			String add_isAdmin = "INSERT INTO IsAdmin VALUES (?, ?);";
 			PreparedStatement addisAdmin_stmt = connection.prepareStatement(add_isAdmin);
-			addisAdmin_stmt.setInt(1, entry_id);
 			addisAdmin_stmt.setString(1, u.getUsername());
+			addisAdmin_stmt.setInt(2, entry_id);
 			
 			addisAdmin_stmt.executeUpdate();
 			
 			//add the users status to that event.
-			String add_status = "INSERT INTO Status (username, entryID) VALUES (?, ?)";
+			String add_status = "INSERT INTO Status (isGoing, isShowing, username, entryID) VALUES (1, 1, ?, ?);";
 			PreparedStatement addStatus_stmt = connection.prepareStatement(add_status);
 			addStatus_stmt.setString(1, u.getUsername());
 			addStatus_stmt.setInt(2, entry_id);
@@ -269,7 +270,8 @@ public class DataBaseManager {
 			statement.execute(""
 					+ "CREATE TABLE Status ("
 					+ "	isGoing"
-					+ "		BOOLEAN,"
+					+ "		BOOLEAN, "
+					+ "		DEFAULT TRUE"
 					+ "	isShowing"
 					+ "		BOOLEAN"
 					+ "		DEFAULT TRUE,"
