@@ -3,6 +3,7 @@ package calendar;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.sql.Timestamp;
 import java.util.Date;
 
 import room_booking.RoomBuilder;
@@ -116,7 +117,7 @@ public class Calendar {
 							+ "calendar username\n"
 							+ "adduser username name(only one name) password email\n"
 							+ "addroom roomid roomsize\n"
-							+ "addentry admin_username starttime(milliseconds since 1960 00:00) endtime(same) description location"
+							+ "addentry admin_username starttime(milliseconds since 1960 00:00) endtime(same) description location\n"
 							+ "exit");
 				} else if(parted[0].equals("exit")){
 					System.out.println("exiting...");

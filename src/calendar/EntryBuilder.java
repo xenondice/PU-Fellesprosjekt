@@ -9,7 +9,7 @@ import interfaces.Builder;
  *
  */
 public class EntryBuilder implements Builder<Entry>{
-	private int entryID = -1;
+	private int entryID = 0;
 	private Date startTime = null;
 	private Date endTime = null;
 	private String location = null;
