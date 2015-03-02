@@ -1,7 +1,5 @@
 package calendar;
 
-import java.util.Date;
-
 import interfaces.Builder;
 
 /**
@@ -10,11 +8,11 @@ import interfaces.Builder;
  */
 public class EntryBuilder implements Builder<Entry>{
 	private int entryID = 0;
-	private Date startTime = null;
-	private Date endTime = null;
+	private long startTime = 0;
+	private long endTime = 0;
 	private String location = null;
 	private String description = null;
-	private Boolean isActive = null;
+	private Boolean isActive = true;
 	private String roomID = null;
 	
 	public EntryBuilder(){
@@ -29,13 +27,13 @@ public class EntryBuilder implements Builder<Entry>{
 	public void setDescription(String description) {
 		this.description = description;
 	}
-	public void setEndTime(Date endTime) {
+	public void setEndTime(long endTime) {
 		this.endTime = endTime;
 	}
 	public void setEventID(int entryID) {
 		this.entryID = entryID;
 	}
-	public void setIsActive(Boolean isActive) {
+	public void setIsActive(boolean isActive) {
 		this.isActive = isActive;
 	}
 	public void setLocation(String location) {
@@ -44,7 +42,7 @@ public class EntryBuilder implements Builder<Entry>{
 	public void setRoomID(String roomID) {
 		this.roomID = roomID;
 	}
-	public void setStartTime(Date startTime) {
+	public void setStartTime(long startTime) {
 		this.startTime = startTime;
 	}
 }

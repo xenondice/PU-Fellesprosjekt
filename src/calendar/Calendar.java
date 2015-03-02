@@ -3,8 +3,6 @@ package calendar;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.sql.Timestamp;
-import java.util.Date;
 
 import room_booking.RoomBuilder;
 import dbms.DataBaseManager;
@@ -106,8 +104,8 @@ public class Calendar {
 					else System.out.println("Failure!");
 				} else if (parted[0].equals("addentry")) {
 					EntryBuilder eb = new EntryBuilder();
-					eb.setStartTime(new Date(Long.parseLong(parted[2])));
-					eb.setEndTime(new Date(Long.parseLong(parted[3])));
+					eb.setStartTime(Long.parseLong(parted[2]));
+					eb.setEndTime(Long.parseLong(parted[3]));
 					eb.setDescription(parted[4]);
 					eb.setLocation(parted[5]);
 					if (dbm.addEntry(eb.build(), dbm.getUser(parted[1]))) System.out.println("Success!");
