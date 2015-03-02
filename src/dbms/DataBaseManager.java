@@ -184,13 +184,6 @@ public class DataBaseManager {
 		return true;
 	}
 	
-	public static void main(String[] args) {
-		DataBaseManager db = new DataBaseManager();
-		User u = new User("lukasap", "Lukas", "1234", "", "lukasap@stud.ntnu.no");
-		Calendar c = db.createCalendar(u);
-		System.out.println(c.toString());
-	}
-	
 	/**
 	 * Creates a Calendar with all the entries the user is allowed to see.
 	 * @param user
@@ -199,6 +192,8 @@ public class DataBaseManager {
 	public Calendar createCalendar(User user){
 		// TODO conversion from Timestamp to string
 		// String S = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(myTimestamp);
+		
+		// TODO check if the user actually exists in the DB
 		
 		// TODO better with JOIN?
 		String select_all_events_for_user = "SELECT E.* "

@@ -87,7 +87,7 @@ public class Calendar {
 				String[] parted = input.split(" ");
 				if (parted[0].equals("calendar")) {
 					Calendar cal = dbm.createCalendar(dbm.getUser(parted[1]));
-					System.out.println(cal.toString());
+					System.out.println(cal);
 				} else if (parted[0].equals("adduser")) {
 					UserBuilder ub = new UserBuilder();
 					ub.setUsername(parted[1]);
