@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import room_booking.Room;
+import user.Group;
 import user.User;
 import user.UserBuilder;
 import calendar.Calendar;
@@ -149,7 +150,75 @@ public class DataBaseManager {
 		return null;
 	}
 	
-	public 
+	/**
+	 * removes the entry with the given id from the DB.
+	 * Does nothing if no entry with the given id exists.
+	 * @param entry_id
+	 * @return
+	 */
+	public boolean deleteEntry(int entry_id){
+		// TODO
+		return false;
+	}
+	
+	public boolean deleteEntry(Entry e){
+		// TODO
+		return this.deleteEntry(e.getEventID());
+	}
+	
+	/**
+	 * adds the given group to the DB
+	 * If a group with this name already exists then it returns false and nothing is done.
+	 * @param g
+	 * @return true if the action was successful.
+	 */
+	public boolean addGroup(Group g){
+		// TODO 
+		return false;
+	}
+	
+	/**
+	 * 
+	 * @param name
+	 * @return the group instance corresponding to the given name from the DB
+	 */
+	public Group getGroup(String name){
+		// TODO
+		return null;
+	}
+	
+	/**
+	 * adds the user with the username to the Group with the groupname.
+	 * Does nothing if the user is already in the group.
+	 * @param username
+	 * @return
+	 */
+	public boolean addUserToGroup(String username, String groupname){
+		// TODO
+		return false;
+	}
+	
+	/**
+	 * adds the user with the username to the Group with the groupname.
+	 * Does nothing if the user is not in the group.
+	 * @param username
+	 * @param groupname
+	 * @return
+	 */
+	public boolean removeUserFromGroup(String username, String groupname){
+		// TODO 
+		return false;
+	}
+	
+	/**
+	 * removes the group from the database.
+	 * @param groupname
+	 * @return
+	 */
+	public boolean deleteGroup(String groupname){
+		// TODO
+		return false;
+	}
 	
 	/**
 	 * adds the User to the DB

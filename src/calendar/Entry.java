@@ -9,7 +9,7 @@ import java.util.Date;
  */
 public class Entry {
 	
-	private final  String eventID;
+	private final  int entryID;
 	private final  Date startTime; 
 	private final  Date endTime; 
 	private final  String location; 
@@ -17,9 +17,9 @@ public class Entry {
 	private final  boolean isActive; 
 	private final  String roomID; 
 	
-	public Entry(String eventID, Date startTime, Date endTime, String location,
+	public Entry(int entryID, Date startTime, Date endTime, String location,
 			String description,	boolean isActive, String roomID){
-		this.eventID =  eventID; 
+		this.entryID =  entryID; 
 		this.startTime =  startTime; 
 		this.endTime =  endTime; 
 		this.location =  location; 
@@ -32,14 +32,14 @@ public class Entry {
 	 * @return a (immutable) clone of this instance
 	 */
 	public Entry clone(){
-		return new Entry(eventID, startTime, endTime, location, description, isActive, roomID);
+		return new Entry(entryID, startTime, endTime, location, description, isActive, roomID);
 	}
 	
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("Entry (id: ");
-		sb.append(eventID); sb.append(")\n");
+		sb.append(entryID); sb.append(")\n");
 		sb.append("start: ");
 		sb.append(startTime); sb.append("\n");
 		sb.append("end: ");
@@ -61,8 +61,8 @@ public class Entry {
 	public Date getEndTime() {
 		return endTime;
 	}
-	public String getEventID() {
-		return eventID;
+	public int getEventID() {
+		return entryID;
 	}
 	public String getLocation() {
 		return location;
