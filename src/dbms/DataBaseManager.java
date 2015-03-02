@@ -296,7 +296,7 @@ public class DataBaseManager {
 			while(rset.next()){
 				EntryBuilder entryB = new EntryBuilder();
 				
-				entryB.setEventID(rset.getString("entryID"));
+				entryB.setEventID(rset.getInt("entryID"));
 				entryB.setStartTime(rset.getDate("startTime"));
 				entryB.setEndTime(rset.getDate("endTime"));
 				entryB.setLocation(rset.getString("location"));
