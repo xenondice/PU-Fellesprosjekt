@@ -12,6 +12,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.mysql.jdbc.exceptions.NotYetImplementedException;
+
 import room_booking.Room;
 import user.Group;
 import user.User;
@@ -161,6 +163,11 @@ public class DataBaseManager {
 		return false;
 	}
 	
+	/**
+	 * calls deleteEntry(int entry_id)
+	 * @param e
+	 * @return
+	 */
 	public boolean deleteEntry(Entry e){
 		// TODO
 		return this.deleteEntry(e.getEventID());
@@ -218,6 +225,47 @@ public class DataBaseManager {
 	public boolean deleteGroup(String groupname){
 		// TODO
 		return false;
+	}
+	
+	/**
+	 * 
+	 * @param u
+	 * @param e
+	 * @return true iff the user is allowed to see the given entry
+	 */
+	public boolean isAllowedToSee(User u, Entry e){
+		// TODO
+		throw new NotYetImplementedException();
+	}
+	
+	/**
+	 * 
+	 * @param u
+	 * @param e
+	 * @return true iff the user is allowed to edit the entry
+	 */
+	public boolean canEdit(String username, int entryID){
+		String get_is_admin = "SELECT COUNT(*) "
+				+ "FROM IsAdmin A, User U, Entry E "
+				+ "WHERE A.username = U.username "
+				+ "AND A.entryID = E.EntryID "
+				+ "AND U.username = ? "
+				+ "AND E.entryID = ?";
+		
+		try {
+			PreparedStatement getIsAdmin_stmt = connection.prepareStatement(get_is_admin);
+			getIsAdmin_stmt.setString(1, username);
+			getIsAdmin_stmt.setInt(2, entryID);
+			
+			ResultSet rset = getIsAdmin_stmt.executeQuery();
+			
+			rset.next();
+			return rset.getInt(1) > 0;
+			
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+			return false;
+		} 
 	}
 	
 	/**

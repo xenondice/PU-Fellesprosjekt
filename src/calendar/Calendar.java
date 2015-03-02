@@ -117,11 +117,15 @@ public class Calendar {
 							+ "adduser username name(only one name) password email\n"
 							+ "addroom roomid roomsize\n"
 							+ "addentry admin_username starttime(milliseconds since 1960 00:00) endtime(same) description location"
+							+ "canEdit username entryID\n"
 							+ "exit");
 				} else if(parted[0].equals("exit")){
 					System.out.println("exiting...");
 					System.exit(0);
-				}else {
+				}else if(parted[0].equals("canEdit")){
+					boolean res = dbm.canEdit(parted[1], Integer.valueOf(parted[2]));
+					System.out.println(res);
+				}else{
 					System.out.println("Invalid input");
 				}
 			}
