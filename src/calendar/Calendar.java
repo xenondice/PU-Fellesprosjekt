@@ -181,7 +181,7 @@ public class Calendar {
 					}
 					
 					EntryBuilder eb = new EntryBuilder();
-						
+
 					try {
 						eb.setStartTime(Long.parseLong(splitted_input.get(2)));
 						eb.setEndTime(Long.parseLong(splitted_input.get(3)));
@@ -206,6 +206,36 @@ public class Calendar {
 							System.out.println("Failure!");
 					}
 				
+				} else if (splitted_input.get(0).equals("canedit")) {
+					
+					if (splitted_input.size() != 3) {
+						System.out.println("Invalid amount of arguments!");
+						System.out.println();
+						System.out.println("Awating input:");
+						break;
+					}
+					
+					int entryid;
+					try {
+						entryid = Integer.valueOf(splitted_input.get(2));
+					} catch (NumberFormatException e) {
+						System.out.println("Invalid number!");
+						System.out.println();
+						System.out.println("Awating input:");
+						break;
+					}
+					
+					String username = splitted_input.get(1);
+					
+					if (dbm.getUser(username) == null)
+						System.out.println("Couldn't find user!");
+					else if (dbm.getEntry(entryid) == null)
+						System.out.println("Couldn't find event!");
+					else if (dbm.canEdit(username, entryid))
+						System.out.println("User can edit entry!");
+					else
+						System.out.println("User can't edit entry!");
+					
 				} else if (splitted_input.get(0).equals("help")) {
 					
 					System.out.println("Commands:");
@@ -213,6 +243,7 @@ public class Calendar {
 					System.out.println(" * adduser username name (use quotes) password email");
 					System.out.println(" * addroom roomid roomsize");
 					System.out.println(" * addentry admin_username starttime (milliseconds since 1970 00:00) endtime (same) description location");
+					System.out.println(" * canedit username entryid");
 					System.out.println(" * exit");
 				
 				} else if(splitted_input.get(0).equals("exit")){
