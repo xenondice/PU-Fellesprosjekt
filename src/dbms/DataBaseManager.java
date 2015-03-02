@@ -88,8 +88,8 @@ public class DataBaseManager {
 			String insert_entry = "INSERT INTO Entry (startTime, endTime, location, description, isActive, roomID) "
 					+ "VALUES (?, ?, ?, ?, ?, ?)";
 			PreparedStatement addEntry_stmt = connection.prepareStatement(insert_entry);
-			addEntry_stmt.setTimestamp(1, new java.sql.Timestamp(e.getStartTime().getTime()));
-			addEntry_stmt.setTimestamp(2, new java.sql.Timestamp(e.getEndTime().getTime()));
+			addEntry_stmt.setTimestamp(1, new java.sql.Timestamp(e.getStartTime()));
+			addEntry_stmt.setTimestamp(2, new java.sql.Timestamp(e.getEndTime()));
 			addEntry_stmt.setString(3, e.getLocation());
 			addEntry_stmt.setString(4, e.getDescription());
 			addEntry_stmt.setBoolean(5, e.isActive());
@@ -279,10 +279,10 @@ public class DataBaseManager {
 		try {
 			PreparedStatement stm = connection.prepareStatement(addUser);
 			stm.setString(1, u.getUsername());
-			stm.setString(1, u.getName());
-			stm.setString(1, u.getPassword());
-			stm.setString(1, u.getSalt());
-			stm.setString(1, u.getEmail());
+			stm.setString(2, u.getName());
+			stm.setString(3, u.getPassword());
+			stm.setString(4, u.getSalt());
+			stm.setString(5, u.getEmail());
 			stm.execute();
 			stm.close();
 		} catch (SQLException e) {
@@ -345,8 +345,8 @@ public class DataBaseManager {
 				EntryBuilder entryB = new EntryBuilder();
 				
 				entryB.setEventID(rset.getInt("entryID"));
-				entryB.setStartTime(rset.getDate("startTime"));
-				entryB.setEndTime(rset.getDate("endTime"));
+				entryB.setStartTime(rset.getLong("startTime"));
+				entryB.setEndTime(rset.getLong("endTime"));
 				entryB.setLocation(rset.getString("location"));
 				entryB.setDescription(rset.getString("description"));
 				entryB.setIsActive(rset.getBoolean("isActive"));

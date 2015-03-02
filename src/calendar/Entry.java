@@ -10,22 +10,22 @@ import java.util.Date;
 public class Entry {
 	
 	private final  int entryID;
-	private final  Date startTime; 
-	private final  Date endTime; 
+	private final  long startTime; 
+	private final  long endTime; 
 	private final  String location; 
 	private final  String description; 
 	private final  boolean isActive; 
 	private final  String roomID; 
 	
-	public Entry(int entryID, Date startTime, Date endTime, String location,
+	public Entry(int entryID, long startTime, long endTime, String location,
 			String description,	boolean isActive, String roomID){
-		this.entryID =  entryID; 
-		this.startTime =  startTime; 
-		this.endTime =  endTime; 
-		this.location =  location; 
-		this.description =  description; 
+		this.entryID = entryID; 
+		this.startTime = startTime; 
+		this.endTime = endTime; 
+		this.location = location; 
+		this.description = description; 
 		this.isActive = isActive; 
-		this.roomID =  roomID; 
+		this.roomID = roomID; 
 	}
 	
 	/**
@@ -41,9 +41,9 @@ public class Entry {
 		sb.append("Entry (id: ");
 		sb.append(entryID); sb.append(")\n");
 		sb.append("start: ");
-		sb.append(startTime); sb.append("\n");
+		sb.append(new Date(startTime)); sb.append("\n");
 		sb.append("end: ");
-		sb.append(endTime); sb.append("\n");
+		sb.append(new Date(endTime)); sb.append("\n");
 		sb.append("location: ");
 		sb.append(location); sb.append("\n");
 		sb.append("description: ");
@@ -58,7 +58,7 @@ public class Entry {
 	public String getDescription() {
 		return description;
 	}
-	public Date getEndTime() {
+	public long getEndTime() {
 		return endTime;
 	}
 	public int getEventID() {
@@ -70,12 +70,10 @@ public class Entry {
 	public String getRoomID() {
 		return roomID;
 	}
-	public Date getStartTime() {
+	public long getStartTime() {
 		return startTime;
 	}
 	public boolean isActive(){
 		return isActive;
-	}
-	
-	
+	}	
 }
