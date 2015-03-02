@@ -139,6 +139,17 @@ public class DataBaseManager {
 		// TODO
 		return false;
 	}
+	/**
+	 * returns the entry with the specified entryId from the database.
+	 * @param entry_id
+	 * @return the Entry instance from the DB with the specified id.
+	 */
+	public Entry getEntry(int entry_id){
+		// TODO
+		return null;
+	}
+	
+	public 
 	
 	/**
 	 * adds the User to the DB
