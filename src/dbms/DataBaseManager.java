@@ -146,8 +146,25 @@ public class DataBaseManager {
 	 * @return the Entry instance from the DB with the specified id.
 	 */
 	public Entry getEntry(int entry_id){
-		// TODO
-		return null;
+
+		try {
+			PreparedStatement stm = connection.prepareStatement("SELECT * FROM Entry WHERE entryID=?");
+			stm.setLong(1, entry_id);
+			ResultSet rs = stm.executeQuery();
+			if (rs.next()) {
+				EntryBuilder ub = new EntryBuilder();
+				ub.setEventID(entry_id);
+				ub.setDescription(rs.getString("description"));
+				ub.setEndTime(rs.getLong("endTime"));
+				ub.setStartTime(rs.getLong("startTime"));
+				ub.setRoomID(rs.getString("roomID"));
+				ub.setIsActive(rs.getBoolean("email"));
+				ub.setLocation(rs.getString("location"));
+				return ub.build();
+			} else return null;
+		} catch (SQLException e) {
+			return null;
+		}
 	}
 	
 	/**
