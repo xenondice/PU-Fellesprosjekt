@@ -231,10 +231,10 @@ public class DataBaseManager {
 		try {
 			PreparedStatement stm = connection.prepareStatement(addUser);
 			stm.setString(1, u.getUsername());
-			stm.setString(1, u.getName());
-			stm.setString(1, u.getPassword());
-			stm.setString(1, u.getSalt());
-			stm.setString(1, u.getEmail());
+			stm.setString(2, u.getName());
+			stm.setString(3, u.getPassword());
+			stm.setString(4, u.getSalt());
+			stm.setString(5, u.getEmail());
 			stm.execute();
 			stm.close();
 		} catch (SQLException e) {
