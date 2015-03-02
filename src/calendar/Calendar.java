@@ -52,6 +52,26 @@ public class Calendar {
 		return clonedList;
 	}
 	
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("Calendar for users [");
+		for(User u: users){
+			sb.append(u.toString());
+			sb.append(", ");
+		}
+		sb.delete(sb.length()-2, sb.length());
+		sb.append("]\n");
+		sb.append("\n");
+		sb.append("Entries: \n");
+		for(Entry e : entries){
+			sb.append(e.toString());
+			sb.append("\n");
+		}
+		sb.append("---------------");
+		return sb.toString();
+	}
+	
 	/**
 	 * main function for testing and eventually running, should really be in request handler
 	 * @param args
@@ -67,7 +87,7 @@ public class Calendar {
 				String[] parted = input.split(" ");
 				if (parted[0].equals("calendar")) {
 					Calendar cal = dbm.createCalendar(dbm.getUser(parted[1]));
-					System.out.println(cal);
+					System.out.println(cal.toString());
 				} else if (parted[0].equals("adduser")) {
 					UserBuilder ub = new UserBuilder();
 					ub.setUsername(parted[1]);
@@ -96,8 +116,12 @@ public class Calendar {
 							+ "calendar username\n"
 							+ "adduser username name(only one name) password email\n"
 							+ "addroom roomid roomsize\n"
-							+ "addentry admin_username starttime(milliseconds since 1960 00:00) endtime(same) description location");
-				} else {
+							+ "addentry admin_username starttime(milliseconds since 1960 00:00) endtime(same) description location"
+							+ "exit");
+				} else if(parted[0].equals("exit")){
+					System.out.println("exiting...");
+					System.exit(0);
+				}else {
 					System.out.println("Invalid input");
 				}
 			}

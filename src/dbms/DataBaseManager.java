@@ -71,7 +71,8 @@ public class DataBaseManager {
 	}
 
 	/**
-	 *  To edit an existing entry use editEntry(Entry e) instead.
+	 * Adds the given Entry as a new entry into the DB
+	 * To edit an existing entry use editEntry(Entry e) instead.
 	 * @return true if the action was successful. False otherwise.
 	 * @param e the entry
 	 * @param u the user creating the entry
@@ -92,6 +93,7 @@ public class DataBaseManager {
 			addEntry_stmt.setString(6, e.getRoomID());
 			
 			addEntry_stmt.executeUpdate();
+			addEntry_stmt.close();
 			
 			// get entry_id of the just added entry
 			String get_id = "SELECT MAX(entryID) FROM Entry;";
@@ -100,14 +102,16 @@ public class DataBaseManager {
 			rsetID.next();
 			int entry_id = rsetID.getInt(1);
 			System.out.println(entry_id);
+			get_id_stmt.close();
 			
 			// add the user-entry relation
 			String add_isAdmin = "INSERT INTO IsAdmin VALUES (?, ?);";
-			PreparedStatement addisAdmin_stmt = connection.prepareStatement(add_isAdmin);
-			addisAdmin_stmt.setString(1, u.getUsername());
-			addisAdmin_stmt.setInt(2, entry_id);
+			PreparedStatement addIsAdmin_stmt = connection.prepareStatement(add_isAdmin);
+			addIsAdmin_stmt.setString(1, u.getUsername());
+			addIsAdmin_stmt.setInt(2, entry_id);
 			
-			addisAdmin_stmt.executeUpdate();
+			addIsAdmin_stmt.executeUpdate();
+			addIsAdmin_stmt.close();
 			
 			//add the users status to that event.
 			String add_status = "INSERT INTO Status (isGoing, isShowing, username, entryID) VALUES (1, 1, ?, ?);";
@@ -116,6 +120,8 @@ public class DataBaseManager {
 			addStatus_stmt.setInt(2, entry_id);
 			
 			addStatus_stmt.executeUpdate();
+			addStatus_stmt.close();
+			
 			
 		} catch (SQLException e1) {
 			e1.printStackTrace();
@@ -178,6 +184,13 @@ public class DataBaseManager {
 		return true;
 	}
 	
+	public static void main(String[] args) {
+		DataBaseManager db = new DataBaseManager();
+		User u = new User("lukasap", "Lukas", "1234", "", "lukasap@stud.ntnu.no");
+		Calendar c = db.createCalendar(u);
+		System.out.println(c.toString());
+	}
+	
 	/**
 	 * Creates a Calendar with all the entries the user is allowed to see.
 	 * @param user
@@ -191,9 +204,9 @@ public class DataBaseManager {
 		String select_all_events_for_user = "SELECT E.* "
 										  + "FROM Entry E, User U, Status S "
 										  + "WHERE S.isShowing = 1 "
-										  	+ "AND E.eventID = S.eventID "
-										  	+ "AND U.username = S.username"
-										  	+ "AND U.username=?";
+										  	+ "AND E.entryID = S.entryID "
+										  	+ "AND U.username = S.username "
+										  	+ "AND U.username = ? ;";
 		
 		CalendarBuilder calendarB = new CalendarBuilder();
 		calendarB.addUser(user);
@@ -204,10 +217,11 @@ public class DataBaseManager {
 			stmt.setString(1, user.getUsername());
 			ResultSet rset = stmt.executeQuery();
 			
+			
 			while(rset.next()){
 				EntryBuilder entryB = new EntryBuilder();
 				
-				entryB.setEventID(rset.getString("eventID"));
+				entryB.setEventID(rset.getString("entryID"));
 				entryB.setStartTime(rset.getDate("startTime"));
 				entryB.setEndTime(rset.getDate("endTime"));
 				entryB.setLocation(rset.getString("location"));
@@ -218,8 +232,10 @@ public class DataBaseManager {
 				calendarB.addEntry(entryB.build());
 				
 			}
+			stmt.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
+			
 			return new CalendarBuilder().build();
 		}
 		
@@ -367,10 +383,10 @@ public class DataBaseManager {
 			if (rs.next()) {
 				UserBuilder ub = new UserBuilder();
 				ub.setUsername(username);
-				ub.setUsername(rs.getString("name"));
-				ub.setUsername(rs.getString("password"));
-				ub.setUsername(rs.getString("salt"));
-				ub.setUsername(rs.getString("email"));
+				ub.setName(rs.getString("name"));
+				ub.setPassword(rs.getString("password"));
+				ub.setSalt(rs.getString("salt"));
+				ub.setEmail(rs.getString("email"));
 				return ub.build();
 			} else return null;
 		} catch (SQLException e) {

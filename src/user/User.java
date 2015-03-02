@@ -20,6 +20,12 @@ public class User {
 		this.email = email;
 	}
 	
+	@Override
+	public String toString() {
+		// TODO
+		return username;
+	}
+	
 	public String getUsername() {
 		return username;
 	}

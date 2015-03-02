@@ -19,8 +19,11 @@ public class CalendarBuilder implements Builder<Calendar>{
 	
 	@Override
 	public Calendar build(){
-		return new Calendar((Entry[]) entries.toArray(), (User[]) users.toArray());
+		Entry[] earary = new Entry[entries.size()];
+		User[] uarary = new User[users.size()];
+		return new Calendar(entries.toArray(earary), users.toArray(uarary));
 	}
+
 	
 	/**
 	 * adds a User to the calendar

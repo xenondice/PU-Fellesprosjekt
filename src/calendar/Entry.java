@@ -35,6 +35,26 @@ public class Entry {
 		return new Entry(eventID, startTime, endTime, location, description, isActive, roomID);
 	}
 	
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("Entry (id: ");
+		sb.append(eventID); sb.append(")\n");
+		sb.append("start: ");
+		sb.append(startTime); sb.append("\n");
+		sb.append("end: ");
+		sb.append(endTime); sb.append("\n");
+		sb.append("location: ");
+		sb.append(location); sb.append("\n");
+		sb.append("description: ");
+		sb.append(description); sb.append("\n");
+		sb.append("isActive: ");
+		sb.append(isActive); sb.append("\n");
+		sb.append("roomID: ");
+		sb.append(roomID); sb.append("\n");
+		return sb.toString();
+	}
+	
 	public String getDescription() {
 		return description;
 	}
