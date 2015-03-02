@@ -3,6 +3,10 @@ package calendar;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import room_booking.RoomBuilder;
 import dbms.DataBaseManager;
@@ -77,52 +81,150 @@ public class Calendar {
 	 * @throws IOException 
 	 */
 	public static void main(String[] args) throws IOException {
+		
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 		DataBaseManager dbm = new DataBaseManager();
 		
+		System.out.println("Awating input:");
+		
 		while (true) {
-			while (reader.ready()) {
+			while (reader.ready()) {				
 				String input = reader.readLine();
-				String[] parted = input.split(" ");
-				if (parted[0].equals("calendar")) {
-					Calendar cal = dbm.createCalendar(dbm.getUser(parted[1]));
-					System.out.println(cal);
-				} else if (parted[0].equals("adduser")) {
+				System.out.println();
+				
+				List<String> splitted_input = new ArrayList<>();
+				
+				//Find all single words, "stuff in these" or 'stuff in these'
+				Pattern regex_pattern = Pattern.compile("([^\\s\"']+)|\"([^\"]*)\"|'([^']*)'");
+				Matcher matcher = regex_pattern.matcher(input);
+				
+				while (matcher.find())
+					for (int i = 1; i <= 3; i++)
+						if (matcher.group(i) != null)
+							splitted_input.add(matcher.group(i));
+				
+				if (splitted_input.get(0).equals("calendar")) {
+					
+					if (splitted_input.size() != 2) {
+						System.out.println("Invalid amount of arguments!");
+						System.out.println();
+						System.out.println("Awating input:");
+						break;
+					}
+					
+					User user = dbm.getUser(splitted_input.get(1));
+					
+					if (user == null)
+						System.out.println("Couldn't find user!");
+					else {
+						Calendar cal = dbm.createCalendar(user);
+						if (cal.equals(null))
+							System.out.println("Failure!");
+						else
+							System.out.println(cal);
+					}
+				
+				} else if (splitted_input.get(0).equals("adduser")) {
+					
+					if (splitted_input.size() != 5) {
+						System.out.println("Invalid amount of arguments!");
+						System.out.println();
+						System.out.println("Awating input:");
+						break;
+					}
+					
 					UserBuilder ub = new UserBuilder();
-					ub.setUsername(parted[1]);
-					ub.setName(parted[2]);
-					ub.setPassword(parted[3]);
-					ub.setSalt("");
-					ub.setEmail(parted[4]);
-					if (dbm.addUser(ub.build())) System.out.println("Success!");
-					else System.out.println("Failure!");
-				} else if (parted[0].equals("addroom")) {
+						ub.setUsername(splitted_input.get(1));
+						ub.setName(splitted_input.get(2));
+						ub.setPassword(splitted_input.get(3));
+						ub.setSalt("");
+						ub.setEmail(splitted_input.get(4));
+					
+					if (dbm.addUser(ub.build()))
+						System.out.println("Success!");
+					else
+						System.out.println("Failure!");
+				
+				} else if (splitted_input.get(0).equals("addroom")) {
+					
+					if (splitted_input.size() != 3) {
+						System.out.println("Invalid amount of arguments!");
+						System.out.println();
+						System.out.println("Awating input:");
+						break;
+					}
+					
 					RoomBuilder rb = new RoomBuilder();
-					rb.setRoom_id(parted[1]);
-					rb.setSize(Integer.parseInt(parted[2]));
-					if (dbm.addRoom(rb.build())) System.out.println("Success!");
-					else System.out.println("Failure!");
-				} else if (parted[0].equals("addentry")) {
+						rb.setRoom_id(splitted_input.get(1));
+						
+					try {
+						rb.setSize(Integer.parseInt(splitted_input.get(2)));
+					} catch (NumberFormatException e) {
+						System.out.println("Invalid number!");
+						System.out.println();
+						System.out.println("Awating input:");
+						break;
+					}
+					
+					if (dbm.addRoom(rb.build()))
+						System.out.println("Success!");
+					else
+						System.out.println("Failure!");
+				
+				} else if (splitted_input.get(0).equals("addentry")) {
+					
+					if (splitted_input.size() != 6) {
+						System.out.println("Invalid amount of arguments!");
+						System.out.println();
+						System.out.println("Awating input:");
+						break;
+					}
+					
 					EntryBuilder eb = new EntryBuilder();
-					eb.setStartTime(Long.parseLong(parted[2]));
-					eb.setEndTime(Long.parseLong(parted[3]));
-					eb.setDescription(parted[4]);
-					eb.setLocation(parted[5]);
-					if (dbm.addEntry(eb.build(), dbm.getUser(parted[1]))) System.out.println("Success!");
-					else System.out.println("Failure!");
-				} else if (parted[0].equals("help")) {
-					System.out.println("Commands:\n"
-							+ "calendar username\n"
-							+ "adduser username name(only one name) password email\n"
-							+ "addroom roomid roomsize\n"
-							+ "addentry admin_username starttime(milliseconds since 1960 00:00) endtime(same) description location\n"
-							+ "exit");
-				} else if(parted[0].equals("exit")){
-					System.out.println("exiting...");
+						
+					try {
+						eb.setStartTime(Long.parseLong(splitted_input.get(2)));
+						eb.setEndTime(Long.parseLong(splitted_input.get(3)));
+					} catch (NumberFormatException e) {
+						System.out.println("Invalid number!");
+						System.out.println();
+						System.out.println("Awating input:");
+						break;
+					}
+					
+						eb.setDescription(splitted_input.get(4));
+						eb.setLocation(splitted_input.get(5));
+					
+					User user = dbm.getUser(splitted_input.get(1));
+					
+					if (user == null)
+						System.out.println("Couldn't find user!");
+					else {	
+						if (dbm.addEntry(eb.build(), user))
+							System.out.println("Success!");
+						else
+							System.out.println("Failure!");
+					}
+				
+				} else if (splitted_input.get(0).equals("help")) {
+					
+					System.out.println("Commands:");
+					System.out.println(" * calendar username");
+					System.out.println(" * adduser username name (use quotes) password email");
+					System.out.println(" * addroom roomid roomsize");
+					System.out.println(" * addentry admin_username starttime (milliseconds since 1970 00:00) endtime (same) description location");
+					System.out.println(" * exit");
+				
+				} else if(splitted_input.get(0).equals("exit")){
+					
+					System.out.println("Exiting...");
 					System.exit(0);
-				}else {
-					System.out.println("Invalid input");
-				}
+				
+				} else
+					System.out.println("Invalid input, type help for a list over commands");
+				
+				System.out.println();
+				System.out.println("Awating input:");
 			}
 		}
 	}

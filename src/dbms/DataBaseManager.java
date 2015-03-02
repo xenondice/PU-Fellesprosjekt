@@ -102,7 +102,6 @@ public class DataBaseManager {
 			ResultSet rsetID = get_id_stmt.executeQuery(get_id);
 			rsetID.next();
 			int entry_id = rsetID.getInt(1);
-			System.out.println(entry_id);
 			get_id_stmt.close();
 			
 			// add the user-entry relation
