@@ -9,7 +9,7 @@ import interfaces.Builder;
  *
  */
 public class EntryBuilder implements Builder<Entry>{
-	private String eventID = null;
+	private int entryID = -1;
 	private Date startTime = null;
 	private Date endTime = null;
 	private String location = null;
@@ -23,7 +23,7 @@ public class EntryBuilder implements Builder<Entry>{
 	
 	@Override
 	public Entry build(){
-		return new Entry(eventID, startTime, endTime, location, description, isActive, roomID);
+		return new Entry(entryID, startTime, endTime, location, description, isActive, roomID);
 	}
 	
 	public void setDescription(String description) {
@@ -32,8 +32,8 @@ public class EntryBuilder implements Builder<Entry>{
 	public void setEndTime(Date endTime) {
 		this.endTime = endTime;
 	}
-	public void setEventID(String eventID) {
-		this.eventID = eventID;
+	public void setEventID(int entryID) {
+		this.entryID = entryID;
 	}
 	public void setIsActive(Boolean isActive) {
 		this.isActive = isActive;
