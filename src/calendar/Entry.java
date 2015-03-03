@@ -61,7 +61,7 @@ public class Entry {
 	public long getEndTime() {
 		return endTime;
 	}
-	public int getEventID() {
+	public int getEntryID() {
 		return entryID;
 	}
 	public String getLocation() {

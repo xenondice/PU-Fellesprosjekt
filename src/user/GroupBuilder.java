@@ -7,6 +7,8 @@ import interfaces.Builder;
 public class GroupBuilder implements Builder<Group> {
 	
 	ArrayList<User> users = new ArrayList<>();
+	private String name;
+
 	
 	public GroupBuilder() {
 		
@@ -20,7 +22,14 @@ public class GroupBuilder implements Builder<Group> {
 	@Override
 	public Group build() {
 		User[] u  = new User[users.size()];
-		return new Group(users.toArray(u));
+		return new Group(users.toArray(u), this.name);
+	}
+	
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
 	}
 
 }

@@ -16,6 +16,7 @@ import com.mysql.jdbc.exceptions.NotYetImplementedException;
 
 import room_booking.Room;
 import user.Group;
+import user.GroupBuilder;
 import user.User;
 import user.UserBuilder;
 import calendar.Calendar;
@@ -100,31 +101,63 @@ public class DataBaseManager {
 		return true;
 	}
 	
+	/**
+	 * u replaces the user with the same username in the DB
+	 * @param u
+	 * @return true iff successful.
+	 */
 	public boolean editUser(User u){
-		// TODO
-		throw new NotYetImplementedException();
+		String edit_entry = "UPDATE User "
+				+ "SET name = ?, password = ?, salt = ?, email = ?"
+				+ "WHERE username = ?; ";
+		
+		try {
+			PreparedStatement editUser_stmt = connection.prepareStatement(edit_entry);
+			int i = 0;
+			
+			editUser_stmt.setString(++i, u.getName());
+			editUser_stmt.setString(++i, u.getPassword());
+			editUser_stmt.setString(++i, u.getSalt());
+			editUser_stmt.setString(++i, u.getEmail());
+			editUser_stmt.setString(++i, u.getUsername());
+			
+			editUser_stmt.executeUpdate();
+			editUser_stmt.close();
+			return true;
+		}catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	/**
 	 * 
 	 * @param username
-	 * @return the user if he exists
-	 * @throws SQLException if something with the sql went wrong
+	 * @return the user if he exists, null if something went wrong.
 	 * @throws UserDoesNotExistException if the user does not exist
 	 */
-	public User getUser(String username) throws SQLException, UserDoesNotExistException {
-		PreparedStatement stm = connection.prepareStatement("SELECT * FROM User WHERE username=?");
-		stm.setString(1, username);
-		ResultSet rs = stm.executeQuery();
-		if (rs.next()) {
-			UserBuilder ub = new UserBuilder();
-			ub.setUsername(username);
-			ub.setName(rs.getString("name"));
-			ub.setPassword(rs.getString("password"));
-			ub.setSalt(rs.getString("salt"));
-			ub.setEmail(rs.getString("email"));
-			return ub.build();
-		} else throw new UserDoesNotExistException("");
+	public User getUser(String username) throws UserDoesNotExistException {
+		PreparedStatement stm;
+		try {
+			stm = connection
+					.prepareStatement("SELECT * FROM User WHERE username=?");
+
+			stm.setString(1, username);
+			ResultSet rs = stm.executeQuery();
+			if (rs.next()) {
+				UserBuilder ub = new UserBuilder();
+				ub.setUsername(username);
+				ub.setName(rs.getString("name"));
+				ub.setPassword(rs.getString("password"));
+				ub.setSalt(rs.getString("salt"));
+				ub.setEmail(rs.getString("email"));
+				return ub.build();
+			} else
+				throw new UserDoesNotExistException("");
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	
@@ -191,14 +224,12 @@ public class DataBaseManager {
 	 * @param u the user creating the entry
 	 */
 	public boolean addEntry(Entry e, String username){
-		
-		if(addIntoEntry(e)){ // -1 for a new Entry
+		if(addIntoEntry(e)){
 			int entryID = getLastEntryID();
 			return addIntoIsAdmin(username, entryID) && addIntoStatus(true, true, username, entryID);
 		}else{
 			return false;
 		}
-		
 	}
 	
 	/**
@@ -223,6 +254,7 @@ public class DataBaseManager {
 			editEntry_stmt.setString(++i, newEntry.getDescription());
 			editEntry_stmt.setBoolean(++i, newEntry.isActive());
 			editEntry_stmt.setString(++i, newEntry.getRoomID());
+			editEntry_stmt.setInt(++i, newEntry.getEntryID());
 			
 			editEntry_stmt.executeUpdate();
 			editEntry_stmt.close();
@@ -292,8 +324,9 @@ public class DataBaseManager {
 			String add_isAdmin = "INSERT INTO IsAdmin VALUES (?, ?);";
 			PreparedStatement addIsAdmin_stmt = connection
 					.prepareStatement(add_isAdmin);
-			addIsAdmin_stmt.setString(1, username);
-			addIsAdmin_stmt.setInt(2, entry_id);
+			addIsAdmin_stmt.setInt(1, entry_id);
+			addIsAdmin_stmt.setString(2, username);
+			
 	
 			addIsAdmin_stmt.executeUpdate();
 			addIsAdmin_stmt.close();
@@ -312,7 +345,7 @@ public class DataBaseManager {
 		
 		addStatus_stmt.setBoolean(1, isGoing);
 		
-		addStatus_stmt.setBoolean(1, isShowing);
+		addStatus_stmt.setBoolean(2, isShowing);
 		addStatus_stmt.setString(3, username);
 		addStatus_stmt.setInt(4, entry_id);
 		
@@ -334,11 +367,37 @@ public class DataBaseManager {
 	 * adds the given group to the DB
 	 * If a group with this name already exists then it returns false and nothing is done.
 	 * @param g
-	 * @return true if the action was successful.
+	 * @return true iff the action was successful. false otherwise.
 	 */
 	public boolean addGroup(Group g){
-		// TODO 
-		return false;
+		try {
+			getGroup(g.getName());
+			return false;
+		} catch (GroupDoesNotExistException group_e) {
+			// this means the group does not yet exists, which is good.
+			
+			try {
+				// TODO change groupID to groupName in DataBase! And varchar(100) not (10)
+				
+				// Create the group
+				String addGroup = "INSERT INTO Gruppe VALUES (?);";
+				PreparedStatement addGroup_stm = connection.prepareStatement(addGroup);
+				addGroup_stm.setString(1, g.getName());
+				addGroup_stm.execute();
+				addGroup_stm.close();
+				
+				// add people to the group
+				for(User u: g.getUsers()){
+					addUserToGroup(u.getUsername(), g.getName());
+				}
+				
+			} catch (SQLException sql_e) {
+				sql_e.printStackTrace();
+				return false;
+			}
+			return true;
+		}
+		
 	}
 	
 	/**
@@ -348,9 +407,31 @@ public class DataBaseManager {
 	 * @throws GroupDoesNotExistException 
 	 */
 	public Group getGroup(String name) throws GroupDoesNotExistException{
-		// TODO
-		
-		throw new GroupDoesNotExistException("");
+		PreparedStatement stm;
+		try {
+			stm = connection.prepareStatement("SELECT username FROM MemberOf WHERE groupname=?");
+
+			stm.setString(1, name);
+			ResultSet rs = stm.executeQuery();
+			
+			GroupBuilder gb = new GroupBuilder();
+			gb.setName(name);
+			while(rs.next()){
+				User u = getUser(rs.getString("username"));
+				gb.addUser(u);
+			}
+			
+			return gb.build();
+			
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		} catch (UserDoesNotExistException e) {
+			// Should never happen or something went horrible wrong :P
+			e.printStackTrace();
+			return null;
+		}
 	}
 	
 	/**
@@ -360,8 +441,16 @@ public class DataBaseManager {
 	 * @return
 	 */
 	public boolean addUserToGroup(String username, String groupname){
-		// TODO
-		return false;
+		PreparedStatement stm;
+		try {
+			stm = connection.prepareStatement("INSERT INTO MemberOf () Values (?, ?)");
+// TODO
+			stm.setString(1, name);
+			
+		catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 	
 	/**

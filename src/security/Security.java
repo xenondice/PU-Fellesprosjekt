@@ -12,27 +12,6 @@ public class Security {
 	}
 	
 	/**
-	 * @param u
-	 * @param e
-	 * @return true iff the user is allowed to see the given entry
-	 */
-	public boolean isAllowedToSee(String username, int entry_id){
-		// TODO
-		throw new NotYetImplementedException();
-	}
-	
-	/**
-	 * 
-	 * @param u
-	 * @param e
-	 * @return true iff the user is allowed to edit the entry
-	 */
-	public boolean canEdit(User u, Entry e){
-		// TODO
-		throw new NotYetImplementedException();
-	}
-	
-	/**
 	 * 
 	 * @param username
 	 * @return true iff the user is logged in
