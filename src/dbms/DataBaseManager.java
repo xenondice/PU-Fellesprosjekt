@@ -617,26 +617,6 @@ public class DataBaseManager {
 		
 		return calendarB.build();
 	}
-
-	
-	public User getUser(String username) {
-		try {
-			PreparedStatement stm = connection.prepareStatement("SELECT * FROM User WHERE username=?");
-			stm.setString(1, username);
-			ResultSet rs = stm.executeQuery();
-			if (rs.next()) {
-				UserBuilder ub = new UserBuilder();
-				ub.setUsername(username);
-				ub.setName(rs.getString("name"));
-				ub.setPassword(rs.getString("password"));
-				ub.setSalt(rs.getString("salt"));
-				ub.setEmail(rs.getString("email"));
-				return ub.build();
-			} else return null;
-		} catch (SQLException e) {
-			return null;
-		}
-	}
 	
 	public void addSQL(String filename) throws IOException {
 		ScriptRunner runner=new ScriptRunner(connection);
