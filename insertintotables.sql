@@ -27,14 +27,14 @@ INSERT INTO IsAdmin (entryID, username)
 VALUES (1, "xXx69xXx")
 ;
 
-INSERT INTO Gruppe (groupID)
+INSERT INTO Gruppe (groupname)
 VALUES ("gruppe1")
 ;
 
-INSERT INTO MemberOf (groupID, username)
+INSERT INTO MemberOf (groupname, username)
 VALUES ("gruppe1", "xXx69xXx")
 ;
 
-INSERT INTO MemberOf (groupID, username)
+INSERT INTO MemberOf (groupname, username)
 VALUES ("gruppe1", "MaMo")
 ;
