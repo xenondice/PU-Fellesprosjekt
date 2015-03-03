@@ -80,66 +80,146 @@ public class DataBaseManager {
 	 * @param e the entry
 	 * @param u the user creating the entry
 	 */
-	public boolean addEntry(Entry e, User u){
+	public boolean addEntry(Entry e, String username){
+		EntryBuilder eb = new EntryBuilder(e);
+		eb.setEventID(-1);
 		
+		if(addIntoEntry(eb.build())){ // -1 for a new Entry
+			int entryID = getLastEntryID();
+			return addIntoIsAdmin(username, entryID) && addIntoStatus(true, true, username, entryID);
+		}else{
+			return false;
+		}
+		
+	}
+	
+	/**
+	 * newEntry replaces the entry in the DB with the same entry_id as newEntry. the entry_id stays the same.
+	 * @param newEntry the new entry. replaces the old one
+	 * @return true iff the action was successful.
+	 */
+	public boolean editEntry(Entry newEntry, String username){
+		// TODO maybe make it that only the not Null attributes of the newEntry are changed from the old one.
+		// TODO handle the Status and IsAdmin table
+		
+		String edit_entry = "UPDATE Entry "
+				+ "SET startTime = ?, endTime = ?, location = ?, description = ?, isActive = ?, roomID = ? "
+				+ "WHERE entryID = ?; ";
 		
 		try {
-			// add the entry
-			String insert_entry = "INSERT INTO Entry (startTime, endTime, location, description, isActive, roomID) "
-					+ "VALUES (?, ?, ?, ?, ?, ?)";
-			PreparedStatement addEntry_stmt = connection.prepareStatement(insert_entry);
-			addEntry_stmt.setTimestamp(1, new java.sql.Timestamp(e.getStartTime()));
-			addEntry_stmt.setTimestamp(2, new java.sql.Timestamp(e.getEndTime()));
-			addEntry_stmt.setString(3, e.getLocation());
-			addEntry_stmt.setString(4, e.getDescription());
-			addEntry_stmt.setBoolean(5, e.isActive());
-			addEntry_stmt.setString(6, e.getRoomID());
+			PreparedStatement editEntry_stmt = connection.prepareStatement(edit_entry);
+			int i = 0;
+			editEntry_stmt.setTimestamp(++i, new java.sql.Timestamp(newEntry.getStartTime()));
+			editEntry_stmt.setTimestamp(++i, new java.sql.Timestamp(newEntry.getEndTime()));
+			editEntry_stmt.setString(++i, newEntry.getLocation());
+			editEntry_stmt.setString(++i, newEntry.getDescription());
+			editEntry_stmt.setBoolean(++i, newEntry.isActive());
+			editEntry_stmt.setString(++i, newEntry.getRoomID());
 			
+			editEntry_stmt.executeUpdate();
+			editEntry_stmt.close();
+			return true;
+		}catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	/**
+	 * adds the Entry into the Entry Table.
+	 * 
+	 * If the entry_id <= 0 then it will create a new Entry in the Entry Table.
+	 * If the entry_id > 0 then it will try to add it but it may fail if already one with this id exists.
+	 * @param e
+	 * @return true iff the action was successful, false otherwise
+	 */
+	private boolean addIntoEntry(Entry e) {
+		
+		String insert_entry = "INSERT INTO Entry (entryID, startTime, endTime, location, description, isActive, roomID) "
+				+ "VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+		try {
+			PreparedStatement addEntry_stmt = connection.prepareStatement(insert_entry);
+			
+			int i = 0;
+			if (e.getEventID() <= 0) {
+				addEntry_stmt.setLong(++i, e.getEventID()); // set the entry id
+			}
+
+			addEntry_stmt.setTimestamp(++i,
+					new java.sql.Timestamp(e.getStartTime()));
+			addEntry_stmt.setTimestamp(++i,
+					new java.sql.Timestamp(e.getEndTime()));
+			addEntry_stmt.setString(++i, e.getLocation());
+			addEntry_stmt.setString(++i, e.getDescription());
+			addEntry_stmt.setBoolean(++i, e.isActive());
+			addEntry_stmt.setString(++i, e.getRoomID());
+
 			addEntry_stmt.executeUpdate();
 			addEntry_stmt.close();
-			
-			// get entry_id of the just added entry
-			String get_id = "SELECT MAX(entryID) FROM Entry;";
-			Statement get_id_stmt = connection.createStatement();
-			ResultSet rsetID = get_id_stmt.executeQuery(get_id);
-			rsetID.next();
-			int entry_id = rsetID.getInt(1);
-			get_id_stmt.close();
-			
-			// add the user-entry relation
-			String add_isAdmin = "INSERT INTO IsAdmin VALUES (?, ?);";
-			PreparedStatement addIsAdmin_stmt = connection.prepareStatement(add_isAdmin);
-			addIsAdmin_stmt.setString(1, u.getUsername());
-			addIsAdmin_stmt.setInt(2, entry_id);
-			
-			addIsAdmin_stmt.executeUpdate();
-			addIsAdmin_stmt.close();
-			
-			//add the users status to that event.
-			String add_status = "INSERT INTO Status (isGoing, isShowing, username, entryID) VALUES (1, 1, ?, ?);";
-			PreparedStatement addStatus_stmt = connection.prepareStatement(add_status);
-			addStatus_stmt.setString(1, u.getUsername());
-			addStatus_stmt.setInt(2, entry_id);
-			
-			addStatus_stmt.executeUpdate();
-			addStatus_stmt.close();
-			
-			
+			return true;
 		} catch (SQLException e1) {
 			e1.printStackTrace();
 			return false;
 		}
-		return true;
+
 	}
 	
-	/**
-	 * Changes the entry in the DB with the same entryID as the specified entry e.
-	 * @param e
-	 * @return true iff the action was successful.
-	 */
-	public boolean editEntry(Entry e){
-		// TODO
-		return false;
+	private int getLastEntryID(){
+		// get entry_id of the just added entry
+		String get_id = "SELECT MAX(entryID) FROM Entry;";
+		Statement get_id_stmt;
+		try {
+		get_id_stmt = connection.createStatement();
+		
+		ResultSet rsetID = get_id_stmt.executeQuery(get_id);
+		rsetID.next();
+		int entry_id = rsetID.getInt(1);
+		get_id_stmt.close();
+		return entry_id;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return -1;
+		}
+	}
+
+	private boolean addIntoIsAdmin(String username, int entry_id) {
+		// add the user-entry relation
+		try{
+			String add_isAdmin = "INSERT INTO IsAdmin VALUES (?, ?);";
+			PreparedStatement addIsAdmin_stmt = connection
+					.prepareStatement(add_isAdmin);
+			addIsAdmin_stmt.setString(1, username);
+			addIsAdmin_stmt.setInt(2, entry_id);
+	
+			addIsAdmin_stmt.executeUpdate();
+			addIsAdmin_stmt.close();
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	private boolean addIntoStatus(boolean isGoing, boolean isShowing, String username, int entry_id){
+		//add the users status to that event.
+		String add_status = "INSERT INTO Status (isGoing, isShowing, username, entryID) VALUES (?, ?, ?, ?);";
+		try {
+		PreparedStatement addStatus_stmt = connection.prepareStatement(add_status);
+		
+		addStatus_stmt.setBoolean(1, isGoing);
+		
+		addStatus_stmt.setBoolean(1, isShowing);
+		addStatus_stmt.setString(3, username);
+		addStatus_stmt.setInt(4, entry_id);
+		
+		addStatus_stmt.executeUpdate();
+		addStatus_stmt.close();
+		return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 	/**
 	 * returns the entry with the specified entryId from the database.
@@ -172,21 +252,19 @@ public class DataBaseManager {
 	 * removes the entry with the given id from the DB.
 	 * Does nothing if no entry with the given id exists.
 	 * @param entry_id
-	 * @return
+	 * @return true iff the action was successful. Otherwise false.
 	 */
 	public boolean deleteEntry(int entry_id){
-		// TODO
-		return false;
-	}
-	
-	/**
-	 * calls deleteEntry(int entry_id)
-	 * @param e
-	 * @return
-	 */
-	public boolean deleteEntry(Entry e){
-		// TODO
-		return this.deleteEntry(e.getEventID());
+		try {
+			PreparedStatement stm = connection.prepareStatement("DELETE FROM Entry WHERE entryID = ?");
+			stm.setLong(1, entry_id);
+			stm.executeUpdate();
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+		
 	}
 	
 	/**
@@ -251,7 +329,7 @@ public class DataBaseManager {
 	 * @param e
 	 * @return true iff the user is allowed to see the given entry
 	 */
-	public boolean isAllowedToSee(User u, Entry e){
+	public boolean isAllowedToSee(String username, int entry_id){
 		// TODO
 		throw new NotYetImplementedException();
 	}
@@ -334,8 +412,10 @@ public class DataBaseManager {
 	 * Creates a Calendar with all the entries the user is allowed to see.
 	 * @param user
 	 * @return a Calendar instance wit the entries of the given user. An empty calendar if some error occurred.
+	 * @throws UserDoesNotExistException 
+	 * @throws SQLException 
 	 */
-	public Calendar createCalendar(User user){
+	public Calendar createCalendar(String username) throws UserDoesNotExistException{
 		// TODO conversion from Timestamp to string
 		// String S = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(myTimestamp);
 		
@@ -350,12 +430,12 @@ public class DataBaseManager {
 										  	+ "AND U.username = ? ;";
 		
 		CalendarBuilder calendarB = new CalendarBuilder();
-		calendarB.addUser(user);
+		
 		
 		try {
-			
+			calendarB.addUser(this.getUser(username));
 			PreparedStatement stmt = connection.prepareStatement(select_all_events_for_user);
-			stmt.setString(1, user.getUsername());
+			stmt.setString(1, username);
 			ResultSet rset = stmt.executeQuery();
 			
 			

@@ -19,6 +19,16 @@ public class EntryBuilder implements Builder<Entry>{
 		
 	}
 	
+	public EntryBuilder(Entry e){
+		this.setDescription(e.getDescription());
+		this.setEndTime(e.getEndTime());
+		this.setEventID(e.getEventID());
+		this.setIsActive(e.isActive());
+		this.setLocation(e.getLocation());
+		this.setRoomID(e.getRoomID());
+		this.setStartTime(e.getStartTime());
+	}
+	
 	@Override
 	public Entry build(){
 		return new Entry(entryID, startTime, endTime, location, description, isActive, roomID);
