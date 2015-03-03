@@ -19,8 +19,6 @@ public class ClientServerListener implements Runnable {
 			try {
 				
 				if (server_input.ready()) {
-					console_output.write("Message from server:");
-					console_output.write(System.lineSeparator());
 					while (server_input.ready())
 						console_output.write(server_input.read());
 					console_output.flush();
