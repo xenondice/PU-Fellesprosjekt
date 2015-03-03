@@ -1,8 +1,10 @@
 package dbms;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -22,6 +24,7 @@ import calendar.Calendar;
 import calendar.CalendarBuilder;
 import calendar.Entry;
 import calendar.EntryBuilder;
+import org.apache.ibatis.jdbc.ScriptRunner;
 
 /**
  * This class is the connection to the Data Base.
@@ -380,139 +383,7 @@ public class DataBaseManager {
 		
 		return calendarB.build();
 	}
-	
-	public void createTables() {
-		try {
-			Statement statement = connection.createStatement();
-			
-			statement.execute(""
-					+ "CREATE TABLE User ("
-					+ "	username"
-					+ "		VARCHAR(10)"
-					+ "		NOT NULL"
-					+ "		PRIMARY KEY,"
-					+ "	name"
-					+ "		VARCHAR(30)"
-					+ "		NOT NULL,"
-					+ "	password"
-					+ "		VARCHAR(20)"
-					+ "		NOT NULL,"
-					+ "	salt"
-					+ "		VARCHAR(30)"
-					+ "		NOT NULL,"
-					+ "	email"
-					+ "		VARCHAR(50)"
-					+ "		NOT NULL"
-					+ ");");
-			
-			statement.execute(""
-					+ "CREATE TABLE Room ("
-					+ "	roomID"
-					+ "		VARCHAR(10)"
-					+ "		NOT NULL"
-					+ "		PRIMARY KEY,"
-					+ "	size"
-					+ "		INT"
-					+ "		NOT NULL"
-					+ ");");
-			
-			statement.execute(""
-					+ "CREATE TABLE Entry ("
-					+ "	entryID"
-					+ "		INT"
-					+ "		NOT NULL"
-					+ "		PRIMARY KEY"
-					+ "		AUTO_INCREMENT,"
-					+ "	startTime"
-					+ "		TIMESTAMP"
-					+ "		NOT NULL,"
-					+ "	endTime"
-					+ "		TIMESTAMP"
-					+ "		NOT NULL,"
-					+ "	location"
-					+ "		VARCHAR(20),"
-					+ "	description"
-					+ "		VARCHAR(100)"
-					+ "		NOT NULL,"
-					+ "	isActive"
-					+ "		BOOLEAN"
-					+ "		DEFAULT TRUE,"
-					+ "	roomID"
-					+ "		VARCHAR(10)"
-					+ "		REFERENCES Room"
-					+ ");");
-			
-			statement.execute(""
-					+ "CREATE TABLE Status ("
-					+ "	isGoing"
-					+ "		BOOLEAN, "
-					+ "		DEFAULT TRUE"
-					+ "	isShowing"
-					+ "		BOOLEAN"
-					+ "		DEFAULT TRUE,"
-					+ "	username"
-					+ "		VARCHAR(10)"
-					+ "		NOT NULL"
-					+ "		REFERENCES User"
-					+ "		ON DELETE CASCADE"
-					+ "		ON UPDATE CASCADE,"
-					+ "	entryID"
-					+ "		INT"
-					+ "		NOT NULL"
-					+ "		REFERENCES Entry"
-					+ "		ON DELETE CASCADE"
-					+ "		ON UPDATE CASCADE,"
-					+ "	PRIMARY KEY (username, entryID)"
-					+ ");");
-			
-			statement.execute(""
-					+ "CREATE TABLE Notification ("
-					+ "	description"
-					+ "		VARCHAR(100)"
-					+ "		NOT NULL,"
-					+ "	isOpened"
-					+ "		BOOLEAN"
-					+ "		DEFAULT FALSE,"
-					+ "	time"
-					+ "		TIMESTAMP"
-					+ "		NOT NULL,"
-					+ "	username"
-					+ "		VARCHAR(10)"
-					+ "		NOT NULL"
-					+ "		REFERENCES User"
-					+ "		ON DELETE CASCADE"
-					+ "		ON UPDATE CASCADE,"
-					+ "	entryID"
-					+ "		INT"
-					+ "		NOT NULL"
-					+ "		REFERENCES Entry"
-					+ "		ON UPDATE CASCADE"
-					+ "		ON DELETE CASCADE,"
-					+ "	PRIMARY KEY (username, entryID)"
-					+ ");");
-			
-			statement.execute(""
-					+ "CREATE TABLE IsAdmin ("
-					+ "	entryID"
-					+ "		INT"
-					+ "		NOT NULL"
-					+ "		REFERENCES Entry"
-					+ "		ON UPDATE CASCADE"
-					+ "		ON DELETE CASCADE,"
-					+ "	username"
-					+ "		VARCHAR(10)"
-					+ "		NOT NULL"
-					+ "		REFERENCES User"
-					+ "		ON DELETE CASCADE"
-					+ "		ON UPDATE CASCADE,"
-					+ "	PRIMARY KEY (username, entryID)"
-					+ ");");
-			
-		} catch (SQLException e) {
-			e.printStackTrace();
-			System.exit(-1);
-		}
-	}
+
 	
 	public User getUser(String username) {
 		try {
@@ -531,5 +402,12 @@ public class DataBaseManager {
 		} catch (SQLException e) {
 			return null;
 		}
+	}
+	
+	public void addSQL(String filename) throws IOException {
+		ScriptRunner runner=new ScriptRunner(connection);
+		InputStreamReader reader = new InputStreamReader(new FileInputStream(filename));
+		runner.runScript(reader);
+		reader.close();
 	}
 }
