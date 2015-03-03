@@ -12,12 +12,11 @@ public class Security {
 	}
 	
 	/**
-	 * 
 	 * @param u
 	 * @param e
 	 * @return true iff the user is allowed to see the given entry
 	 */
-	public boolean isAllowedToSee(User u, Entry e){
+	public boolean isAllowedToSee(String username, int entry_id){
 		// TODO
 		throw new NotYetImplementedException();
 	}
@@ -57,5 +56,4 @@ public class Security {
 		// TODO
 		throw new NotYetImplementedException();
 	}
-
 }
