@@ -63,15 +63,15 @@ CREATE TABLE IsAdmin (
 );
 
 CREATE TABLE Gruppe (
-	groupID	VARCHAR(10)	NOT NULL,
-	PRIMARY KEY (groupID)
+	groupname	VARCHAR(100)	NOT NULL,
+	PRIMARY KEY (groupname)
 );
 
 CREATE TABLE MemberOf (
-	groupID		VARCHAR(10)	NOT NULL,
+	groupname	VARCHAR(10)	NOT NULL,
 	username	VARCHAR(10)	NOT NULL,
-	PRIMARY KEY (groupID, username),
-	FOREIGN KEY (groupID) REFERENCES Gruppe(groupID)
+	PRIMARY KEY (groupname, username),
+	FOREIGN KEY (groupname) REFERENCES Gruppe(groupname)
 		ON UPDATE CASCADE ON DELETE CASCADE,
 	FOREIGN KEY (username) REFERENCES USER(username)
 		ON UPDATE CASCADE ON DELETE CASCADE

@@ -448,7 +448,7 @@ public class DataBaseManager {
 		PreparedStatement stm;
 		try {
 			stm = connection.prepareStatement("INSERT INTO MemberOf () Values (?, ?)");
-// TODO
+			// TODO
 			stm.setString(1, name);
 			
 		catch (SQLException e) {
