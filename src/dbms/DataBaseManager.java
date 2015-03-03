@@ -343,12 +343,11 @@ public class DataBaseManager {
 
 	private boolean addIntoStatus(boolean isGoing, boolean isShowing, String username, int entry_id){
 		//add the users status to that event.
-		String add_status = "INSERT INTO Status (isGoing, isShowing, username, entryID) VALUES (?, ?, ?, ?);";
+		String add_status = "INSERT INTO Invitation (isGoing, isShowing, username, entryID) VALUES (?, ?, ?, ?);";
 		try {
 		PreparedStatement addStatus_stmt = connection.prepareStatement(add_status);
 		
 		addStatus_stmt.setBoolean(1, isGoing);
-		
 		addStatus_stmt.setBoolean(2, isShowing);
 		addStatus_stmt.setString(3, username);
 		addStatus_stmt.setInt(4, entry_id);
@@ -381,7 +380,6 @@ public class DataBaseManager {
 			// this means the group does not yet exists, which is good.
 			
 			try {
-				// TODO change groupID to groupName in DataBase! And varchar(100) not (10)
 				
 				// Create the group
 				String addGroup = "INSERT INTO Gruppe VALUES (?);";
@@ -445,13 +443,18 @@ public class DataBaseManager {
 	 * @return
 	 */
 	public boolean addUserToGroup(String username, String groupname){
-		PreparedStatement stm;
+		PreparedStatement isertUser_stm;
 		try {
-			stm = connection.prepareStatement("INSERT INTO MemberOf () Values (?, ?)");
-			// TODO
-			stm.setString(1, name);
+			isertUser_stm = connection.prepareStatement("INSERT INTO MemberOf (groupname, username) Values (?, ?)");
+			isertUser_stm.setString(1, groupname);
+			isertUser_stm.setString(2, username);
 			
-		catch (SQLException e) {
+			isertUser_stm.executeUpdate();
+			isertUser_stm.close();
+			return true;
+			
+			
+		}catch (SQLException e) {
 			e.printStackTrace();
 			return false;
 		}
@@ -571,12 +574,9 @@ public class DataBaseManager {
 	 * @throws SQLException 
 	 */
 	public Calendar createCalendar(String username) throws UserDoesNotExistException{
-		// TODO conversion from Timestamp to string
-		// String S = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(myTimestamp);
 		
 		// TODO check if the user actually exists in the DB
 		
-		// TODO better with JOIN?
 		String select_all_events_for_user = "SELECT E.* "
 										  + "FROM Entry E, User U, Status S "
 										  + "WHERE S.isShowing = 1 "
