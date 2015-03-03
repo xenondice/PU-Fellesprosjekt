@@ -22,7 +22,7 @@ public class EntryBuilder implements Builder<Entry>{
 	public EntryBuilder(Entry e){
 		this.setDescription(e.getDescription());
 		this.setEndTime(e.getEndTime());
-		this.setEventID(e.getEventID());
+		this.setEventID(e.getEntryID());
 		this.setIsActive(e.isActive());
 		this.setLocation(e.getLocation());
 		this.setRoomID(e.getRoomID());

@@ -1,9 +1,11 @@
+
 package security;
+
+import user.User;
+import calendar.Entry;
 
 import com.mysql.jdbc.exceptions.NotYetImplementedException;
 
-import calendar.Entry;
-import user.User;
 
 public class Security {
 	

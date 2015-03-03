@@ -1,10 +1,13 @@
+
 package user;
 
 public class Group {
 	private User[] users;
+	private String name;
 	
-	public Group(User[] users){
+	public Group(User[] users, String name){
 		this.users = users;
+		this.name = name;
 	}
 	
 	public User[] getUsers(){
@@ -13,5 +16,9 @@ public class Group {
 			u[i] = users[i].clone();
 		}
 		return u;
+	}
+	
+	public String getName() {
+		return name;
 	}
 }
