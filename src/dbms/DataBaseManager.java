@@ -22,6 +22,9 @@ import calendar.Calendar;
 import calendar.CalendarBuilder;
 import calendar.Entry;
 import calendar.EntryBuilder;
+import exceptions.EntryDoesNotExistException;
+import exceptions.GroupDoesNotExistException;
+import exceptions.UserDoesNotExistException;
 
 /**
  * This class is the connection to the Data Base.
@@ -31,9 +34,6 @@ import calendar.EntryBuilder;
  */
 public class DataBaseManager {
 	private Connection connection;
-	//private final String DB_url = "jdbc:mysql://mysql.stud.ntnu.no/mariessa_pu";
-	//private final String username = "mariessa_pu";
-	//private final String password = "fellesprosjekt";
 	
 	/**
 	 * opens a connection to the DB.
@@ -145,27 +145,27 @@ public class DataBaseManager {
 	 * returns the entry with the specified entryId from the database.
 	 * @param entry_id
 	 * @return the Entry instance from the DB with the specified id.
+	 * @throws SQLException 
+	 * @throws EntryDoesNotExistException 
 	 */
-	public Entry getEntry(int entry_id){
+	public Entry getEntry(int entry_id) throws SQLException,
+			EntryDoesNotExistException {
 
-		try {
-			PreparedStatement stm = connection.prepareStatement("SELECT * FROM Entry WHERE entryID=?");
-			stm.setLong(1, entry_id);
-			ResultSet rs = stm.executeQuery();
-			if (rs.next()) {
-				EntryBuilder ub = new EntryBuilder();
-				ub.setEventID(entry_id);
-				ub.setDescription(rs.getString("description"));
-				ub.setEndTime(rs.getLong("endTime"));
-				ub.setStartTime(rs.getLong("startTime"));
-				ub.setRoomID(rs.getString("roomID"));
-				ub.setIsActive(rs.getBoolean("isActive"));
-				ub.setLocation(rs.getString("location"));
-				return ub.build();
-			} else return null;
-		} catch (SQLException e) {
-			return null;
-		}
+		PreparedStatement stm = connection.prepareStatement("SELECT * FROM Entry WHERE entryID=?");
+		stm.setLong(1, entry_id);
+		ResultSet rs = stm.executeQuery();
+		if (rs.next()) {
+			EntryBuilder ub = new EntryBuilder();
+			ub.setEventID(entry_id);
+			ub.setDescription(rs.getString("description"));
+			ub.setEndTime(rs.getLong("endTime"));
+			ub.setStartTime(rs.getLong("startTime"));
+			ub.setRoomID(rs.getString("roomID"));
+			ub.setIsActive(rs.getBoolean("isActive"));
+			ub.setLocation(rs.getString("location"));
+			return ub.build();
+		} else
+			throw new EntryDoesNotExistException("");
 	}
 	
 	/**
@@ -204,10 +204,12 @@ public class DataBaseManager {
 	 * 
 	 * @param name
 	 * @return the group instance corresponding to the given name from the DB
+	 * @throws GroupDoesNotExistException 
 	 */
-	public Group getGroup(String name){
+	public Group getGroup(String name) throws GroupDoesNotExistException{
 		// TODO
-		return null;
+		
+		throw new GroupDoesNotExistException("");
 	}
 	
 	/**
@@ -514,22 +516,25 @@ public class DataBaseManager {
 		}
 	}
 	
-	public User getUser(String username) {
-		try {
-			PreparedStatement stm = connection.prepareStatement("SELECT * FROM User WHERE username=?");
-			stm.setString(1, username);
-			ResultSet rs = stm.executeQuery();
-			if (rs.next()) {
-				UserBuilder ub = new UserBuilder();
-				ub.setUsername(username);
-				ub.setName(rs.getString("name"));
-				ub.setPassword(rs.getString("password"));
-				ub.setSalt(rs.getString("salt"));
-				ub.setEmail(rs.getString("email"));
-				return ub.build();
-			} else return null;
-		} catch (SQLException e) {
-			return null;
-		}
+	/**
+	 * 
+	 * @param username
+	 * @return the user if he exists
+	 * @throws SQLException if something with the sql went wrong
+	 * @throws UserDoesNotExistException if the user does not exist
+	 */
+	public User getUser(String username) throws SQLException, UserDoesNotExistException {
+		PreparedStatement stm = connection.prepareStatement("SELECT * FROM User WHERE username=?");
+		stm.setString(1, username);
+		ResultSet rs = stm.executeQuery();
+		if (rs.next()) {
+			UserBuilder ub = new UserBuilder();
+			ub.setUsername(username);
+			ub.setName(rs.getString("name"));
+			ub.setPassword(rs.getString("password"));
+			ub.setSalt(rs.getString("salt"));
+			ub.setEmail(rs.getString("email"));
+			return ub.build();
+		} else throw new UserDoesNotExistException("");
 	}
 }

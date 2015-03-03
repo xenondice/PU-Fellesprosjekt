@@ -12,7 +12,6 @@ public class Security {
 	}
 	
 	/**
-	 * 
 	 * @param u
 	 * @param e
 	 * @return true iff the user is allowed to see the given entry
@@ -57,5 +56,4 @@ public class Security {
 		// TODO
 		throw new NotYetImplementedException();
 	}
-
 }
