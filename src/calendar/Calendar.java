@@ -81,5 +81,17 @@ public class Calendar {
 	 * @throws IOException 
 	 */
 	public static void main(String[] args) {
+		User u1 = new User("u1", "n1", "", "", "");
+		User u2 = new User("u2", "n2", "", "", "");
+		
+		Entry e1 = new Entry(1, 13456543, 234345230, "l1", "d1", true, null);
+		Entry e2 = new Entry(2, 13456543, 234345230, "l2", "d2", true, null);
+		
+		DataBaseManager dbm = new DataBaseManager();
+//		dbm.addUser(u1);
+//		dbm.addUser(u2);
+		
+		dbm.addEntry(e1, u1.getUsername());
+		
 	}
 }
