@@ -17,7 +17,7 @@ public class Security {
 	 * @param e
 	 * @return true iff the user is allowed to see the given entry
 	 */
-	public boolean isAllowedToSee(User u, Entry e){
+	public boolean isAllowedToSee(String username, int entry_id){
 		// TODO
 		throw new NotYetImplementedException();
 	}
