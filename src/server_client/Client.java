@@ -43,32 +43,62 @@ public class Client {
 	private static ClientServerListener server_listener;
 	private static Thread server_listener_thread;
 	
-	private static void setup() {
+	private static void setup() throws IOException {
 		
 		// Setup console connection
 		console_output = new BufferedWriter(new OutputStreamWriter(System.out));
 		console_input = new BufferedReader(new InputStreamReader(System.in));
 		console_error = new BufferedWriter(new OutputStreamWriter(System.err));
-	}
-	
-	private static void connect(String address, int port) throws UnknownHostException, IOException {
+		
+		String address = DEFAULT_SERVER_ADDRESS;
+		int port = DEFAULT_SERVER_PORT;
+		
+		if (!askYesOrNo("Use default address and port?")) {
+			List<String> response = ask("Enter server ip-address and port:", 2);
+			address = response.get(0);
+			port = verifyInt(response.get(1));
+		}
+		
+		try {
+			server_connection = new Socket(address, port);
+		} catch (IOException e) {
+			error("Couldn't connect to server!", true);
+		}
+		
+		message("Successfully connected!");
+		message();
 		
 		// Setup server connection
-		server_connection = new Socket(address, port);
 		server_output = new BufferedWriter(new OutputStreamWriter(server_connection.getOutputStream()));
 		server_input = new BufferedReader(new InputStreamReader(server_connection.getInputStream()));
-				
+		
 		// Setup server listener
 		server_listener = new ClientServerListener(console_output, server_input);
 		server_listener_thread = new Thread(server_listener);
 		server_listener_thread.start();
 	}
 	
+	private static void error(String message, boolean should_exit) throws IOException {
+		console_error.write(message);
+		console_error.write(System.lineSeparator());
+		console_error.flush();
+		if (should_exit) System.exit(-1);
+	}
+	
+	private static void message(String message) throws IOException {
+		console_output.write(message);
+		console_output.write(System.lineSeparator());
+		console_output.flush();
+	}
+	
+	private static void message() throws IOException {
+		console_output.write(System.lineSeparator());
+		console_output.flush();
+	}
+	
 	private static boolean askYesOrNo(String question) throws IOException {
 		while (true) {
-			console_output.write(question + " (answer with yes[y] or no[n])");
-			console_output.write(System.lineSeparator());
-			console_output.flush();
+			message(question + " (answer with yes[y] or no[n])");
 		
 			List<String> response = consoleInput();
 			
@@ -78,22 +108,32 @@ public class Client {
 				else if (response.get(0).equals("no") || response.get(0).equals("n"))
 					return false;
 			
-			console_output.write("Invalid answer!");
-			console_output.write(System.lineSeparator());
-			console_output.flush();
+			message("Invalid response!");
+			message();
+		}
+	}
+	
+	private static List<String> ask(String question, int number_of_arguments) throws IOException {
+		while (true) {
+			message(question);
+		
+			List<String> response = consoleInput();
+			
+			if (response.size() == number_of_arguments)
+				return response;
+			
+			message("Please provide " + number_of_arguments + " argument(s)!");
+			message();
 		}
 	}
 	
 	private static List<String> consoleInput() throws IOException {
-		console_output.write(">");
+		console_output.write("> ");
 		console_output.flush();
 		
-		String answer = "";
-		if (console_input.ready())
-			answer = console_input.readLine();
+		String answer = console_input.readLine();
 		
-		console_output.write(System.lineSeparator());
-		console_output.flush();
+		message();
 		
 		List<String> splitted_answer = new ArrayList<>();
 		
@@ -108,50 +148,44 @@ public class Client {
 		return splitted_answer;
 	}
 	
-	public static void main(String[] args) {
-		
-		setup();
-		
-		if (askYesOrNo("Use default address and port?")) {
-			console_output.write(arg0);
-		}
-		
-		try { connect(); } catch (IOException e) {
-			try { console_error.write("Couldn't connect to server"); console_error.flush(); } catch (IOException e1) {}
-			System.exit(0);
-		}
-		
-		console_output.write("Succesfully connected!");
-		console_output.write(System.lineSeparator());
-		
-		System.out.println("Awating input:");
-		
+	private static int verifyInt(String argument) throws IOException {
 		while (true) {
-			while (reader.ready()) {				
-				String input = reader.readLine();
-				System.out.println();
-				
-				List<String> splitted_input = new ArrayList<>();
-				
-				//Find all single words, "stuff in these" or 'stuff in these'
-				Pattern regex_pattern = Pattern.compile("([^\\s\"']+)|\"([^\"]*)\"|'([^']*)'");
-				Matcher matcher = regex_pattern.matcher(input);
-				
-				while (matcher.find())
-					for (int i = 1; i <= 3; i++)
-						if (matcher.group(i) != null)
-							splitted_input.add(matcher.group(i));
-				
-				if (splitted_input.get(0).equals("calendar")) {
-					
-					if (splitted_input.size() != 2) {
+			try {
+				return Integer.parseInt(argument);
+			} catch (NumberFormatException e) {
+				argument = ask("Argument \"" + argument + "\" is not an integer, try again:", 1).get(0);
+			}
+		}
+	}
+	
+	private static long verifyLong(String argument) throws IOException {
+		while (true) {
+			try {
+				return Long.parseLong(argument);
+			} catch (NumberFormatException e) {
+				argument = ask("Argument \"" + argument + "\" is not a long, try again:", 1).get(0);
+			}
+		}
+	}
+	
+	private static void run() throws IOException {
+		while (true) {
+			
+			List<String> response = consoleInput();
+			
+			if (response.size() > 0 && response.get(0).equals("exit")) return;
+			
+		}
+			
+			/*if (response.get(0).equals("calendar")) {
+				if (response.size() != 2) {
 						System.out.println("Invalid amount of arguments!");
 						System.out.println();
 						System.out.println("Awating input:");
 						break;
 					}
 					
-					User user = dbm.getUser(splitted_input.get(1));
+					User user = dbm.getUser(response.get(1));
 					
 					if (user == null)
 						System.out.println("Couldn't find user!");
@@ -163,9 +197,9 @@ public class Client {
 							System.out.println(cal);
 					}
 				
-				} else if (splitted_input.get(0).equals("adduser")) {
+				} else if (response.get(0).equals("adduser")) {
 					
-					if (splitted_input.size() != 5) {
+					if (response.size() != 5) {
 						System.out.println("Invalid amount of arguments!");
 						System.out.println();
 						System.out.println("Awating input:");
@@ -173,20 +207,20 @@ public class Client {
 					}
 					
 					UserBuilder ub = new UserBuilder();
-						ub.setUsername(splitted_input.get(1));
-						ub.setName(splitted_input.get(2));
-						ub.setPassword(splitted_input.get(3));
+						ub.setUsername(response.get(1));
+						ub.setName(response.get(2));
+						ub.setPassword(response.get(3));
 						ub.setSalt("");
-						ub.setEmail(splitted_input.get(4));
+						ub.setEmail(response.get(4));
 					
 					if (dbm.addUser(ub.build()))
 						System.out.println("Success!");
 					else
 						System.out.println("Failure!");
 				
-				} else if (splitted_input.get(0).equals("addroom")) {
+				} else if (response.get(0).equals("addroom")) {
 					
-					if (splitted_input.size() != 3) {
+					if (response.size() != 3) {
 						System.out.println("Invalid amount of arguments!");
 						System.out.println();
 						System.out.println("Awating input:");
@@ -194,10 +228,10 @@ public class Client {
 					}
 					
 					RoomBuilder rb = new RoomBuilder();
-						rb.setRoom_id(splitted_input.get(1));
+						rb.setRoom_id(response.get(1));
 						
 					try {
-						rb.setSize(Integer.parseInt(splitted_input.get(2)));
+						rb.setSize(Integer.parseInt(response.get(2)));
 					} catch (NumberFormatException e) {
 						System.out.println("Invalid number!");
 						System.out.println();
@@ -210,9 +244,9 @@ public class Client {
 					else
 						System.out.println("Failure!");
 				
-				} else if (splitted_input.get(0).equals("addentry")) {
+				} else if (response.get(0).equals("addentry")) {
 					
-					if (splitted_input.size() != 6) {
+					if (response.size() != 6) {
 						System.out.println("Invalid amount of arguments!");
 						System.out.println();
 						System.out.println("Awating input:");
@@ -222,8 +256,8 @@ public class Client {
 					EntryBuilder eb = new EntryBuilder();
 
 					try {
-						eb.setStartTime(Long.parseLong(splitted_input.get(2)));
-						eb.setEndTime(Long.parseLong(splitted_input.get(3)));
+						eb.setStartTime(Long.parseLong(response.get(2)));
+						eb.setEndTime(Long.parseLong(response.get(3)));
 					} catch (NumberFormatException e) {
 						System.out.println("Invalid number!");
 						System.out.println();
@@ -231,10 +265,10 @@ public class Client {
 						break;
 					}
 					
-						eb.setDescription(splitted_input.get(4));
-						eb.setLocation(splitted_input.get(5));
+						eb.setDescription(response.get(4));
+						eb.setLocation(response.get(5));
 					
-					User user = dbm.getUser(splitted_input.get(1));
+					User user = dbm.getUser(response.get(1));
 					
 					if (user == null)
 						System.out.println("Couldn't find user!");
@@ -245,9 +279,9 @@ public class Client {
 							System.out.println("Failure!");
 					}
 				
-				} else if (splitted_input.get(0).equals("canedit")) {
+				} else if (response.get(0).equals("canedit")) {
 					
-					if (splitted_input.size() != 3) {
+					if (response.size() != 3) {
 						System.out.println("Invalid amount of arguments!");
 						System.out.println();
 						System.out.println("Awating input:");
@@ -256,7 +290,7 @@ public class Client {
 					
 					int entryid;
 					try {
-						entryid = Integer.valueOf(splitted_input.get(2));
+						entryid = Integer.valueOf(response.get(2));
 					} catch (NumberFormatException e) {
 						System.out.println("Invalid number!");
 						System.out.println();
@@ -264,7 +298,7 @@ public class Client {
 						break;
 					}
 					
-					String username = splitted_input.get(1);
+					String username = response.get(1);
 					
 					if (dbm.getUser(username) == null)
 						System.out.println("Couldn't find user!");
@@ -275,7 +309,7 @@ public class Client {
 					else
 						System.out.println("User can't edit entry!");
 					
-				} else if (splitted_input.get(0).equals("help")) {
+				} else if (response.get(0).equals("help")) {
 					
 					System.out.println("Commands:");
 					System.out.println(" * calendar username");
@@ -285,7 +319,7 @@ public class Client {
 					System.out.println(" * canedit username entryid");
 					System.out.println(" * exit");
 				
-				} else if (splitted_input.get(0).equals("exit")) {
+				} else if (response.get(0).equals("exit")) {
 					
 					System.out.println("Exiting...");
 					System.exit(0);
@@ -296,6 +330,21 @@ public class Client {
 				System.out.println();
 				System.out.println("Awating input:");
 			}
+		}*/
+	}
+	
+	private static void dispose() {
+	
+	}
+	
+	public static void main(String[] args) {
+		try {
+			setup();
+			run();
+			dispose();
+		} catch (IOException e) {
+			System.err.println("Critical error!");
+			System.exit(-1);
 		}
 	}
 }
