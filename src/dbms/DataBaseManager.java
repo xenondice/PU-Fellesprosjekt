@@ -23,6 +23,7 @@ import calendar.Calendar;
 import calendar.CalendarBuilder;
 import calendar.Entry;
 import calendar.EntryBuilder;
+
 import org.apache.ibatis.jdbc.ScriptRunner;
 
 import com.mysql.jdbc.exceptions.NotYetImplementedException;
@@ -30,6 +31,7 @@ import com.mysql.jdbc.exceptions.NotYetImplementedException;
 import exceptions.EntryDoesNotExistException;
 import exceptions.GroupDoesNotExistException;
 import exceptions.UserDoesNotExistException;
+import exceptions.UsernameAlreadyExistsException;
 
 /**
  * This class is the connection to the Data Base.
@@ -81,14 +83,41 @@ public class DataBaseManager {
 /*==============================
  * User functions
  *==============================*/
+	
+	private boolean doesUserExist(String username){
+		try {
+			getUser(username);
+			// at this point it is clear that the username is taken (user does exist)
+			return true;
+		} catch (UserDoesNotExistException e1) {
+			// if it is catched then the username is not taken (user does not exist)
+			return false;
+		} 
+	}
+	
+	private boolean doesEntryExist(int entryID){
+		try {
+			getEntry(entryID);
+			// entry does exist
+			return true;
+		} catch (EntryDoesNotExistException e1) {
+			// entry does not exist
+			return false;
+		} 
+	}
 
 	/**
-	 * adds the User to the DB
+	 * adds the User to the DB. Does not work if a user with the same username already exists.
 	 * @param u
 	 * @return true if the action was successful. False otherwise.
+	 * @throws UsernameAlreadyExistsException if the username is already taken.
 	 */
-	public boolean addUser(User u){
+	public boolean addUser(User u) throws UsernameAlreadyExistsException{
+		if(doesUserExist(u.getUsername())){throw new UsernameAlreadyExistsException();}
+		
 		String addUser = "INSERT INTO User VALUES (?, ?, ?, ?, ?);";
+			
+		
 		try {
 			PreparedStatement stm = connection.prepareStatement(addUser);
 			stm.setString(1, u.getUsername());
@@ -98,19 +127,24 @@ public class DataBaseManager {
 			stm.setString(5, u.getEmail());
 			stm.execute();
 			stm.close();
+			
+			return true;
+			
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return false;
 		}
-		return true;
 	}
 	
 	/**
-	 * u replaces the user with the same username in the DB
+	 * u replaces the user with the same username in the DB. Note that the username can not be changed
 	 * @param u
-	 * @return true iff successful.
+	 * @return true iff successful. false otherwise.
+	 * @throws UserDoesNotExistException if the user does not exist
 	 */
-	public boolean editUser(User u){
+	public boolean editUser(User u) throws UserDoesNotExistException{
+		if(! doesUserExist(u.getUsername())){throw new UserDoesNotExistException("");}	
+		
 		String edit_entry = "UPDATE User "
 				+ "SET name = ?, password = ?, salt = ?, email = ?"
 				+ "WHERE username = ?; ";
@@ -141,6 +175,7 @@ public class DataBaseManager {
 	 * @throws UserDoesNotExistException if the user does not exist
 	 */
 	public User getUser(String username) throws UserDoesNotExistException {
+		
 		PreparedStatement stm;
 		try {
 			stm = connection
@@ -193,8 +228,9 @@ public class DataBaseManager {
 				ub.setIsActive(rs.getBoolean("isActive"));
 				ub.setLocation(rs.getString("location"));
 				return ub.build();
-			} else
+			} else{
 				throw new EntryDoesNotExistException("");
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
@@ -226,8 +262,10 @@ public class DataBaseManager {
 	 * @return true if the action was successful. False otherwise.
 	 * @param e the entry
 	 * @param u the user creating the entry
+	 * @throws UserDoesNotExistException 
 	 */
-	public boolean addEntry(Entry e, String username){
+	public boolean addEntry(Entry e, String username) throws UserDoesNotExistException{
+		if(! doesUserExist(username)){throw new UserDoesNotExistException("");}	
 		if(addIntoEntry(e)){
 			int entryID = getLastEntryID();
 			return addIntoIsAdmin(username, entryID) && addIntoStatus(true, true, username, entryID);
@@ -240,10 +278,13 @@ public class DataBaseManager {
 	 * newEntry replaces the entry in the DB with the same entry_id as newEntry. the entry_id stays the same.
 	 * @param newEntry the new entry. replaces the old one
 	 * @return true iff the action was successful.
+	 * @throws EntryDoesNotExistException if the entryID is not in the database
 	 */
-	public boolean editEntry(Entry newEntry, String username){
+	public boolean editEntry(Entry newEntry, String username) throws EntryDoesNotExistException{
 		// TODO maybe make it that only the not Null attributes of the newEntry are changed from the old one.
 		// TODO handle the Status and IsAdmin tables
+		
+		if(! doesEntryExist(newEntry.getEntryID())){throw new EntryDoesNotExistException("there is no entry with id "+newEntry.getEntryID());};
 		
 		String edit_entry = "UPDATE Entry "
 				+ "SET startTime = ?, endTime = ?, location = ?, description = ?, isActive = ?, roomID = ? "
@@ -468,8 +509,21 @@ public class DataBaseManager {
 	 * @return
 	 */
 	public boolean removeUserFromGroup(String username, String groupname){
-		// TODO 
-		return false;
+		PreparedStatement removeUser_stm;
+		try {
+			removeUser_stm = connection.prepareStatement("DELETE FROM MemberOf WHERE username = ? AND groupname = ?; ");
+			removeUser_stm.setString(1, username);
+			removeUser_stm.setString(2, groupname);
+			
+			removeUser_stm.executeUpdate();
+			removeUser_stm.close();
+			return true;
+			
+			
+		}catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	/**
@@ -478,8 +532,27 @@ public class DataBaseManager {
 	 * @return
 	 */
 	public boolean deleteGroup(String groupname){
-		// TODO
-		return false;
+		PreparedStatement removeGroupFromMemberOf_stm;
+		PreparedStatement deleteGroup_stm;
+		try {
+			// delete member assoziations from MemberOf
+			removeGroupFromMemberOf_stm = connection.prepareStatement("DELETE FROM MemberOf WHERE groupname = ?");
+			removeGroupFromMemberOf_stm.setString(1, groupname);
+			removeGroupFromMemberOf_stm.executeUpdate();
+			removeGroupFromMemberOf_stm.close();
+			
+			// delete the group
+			deleteGroup_stm = connection.prepareStatement("DELETE FROM Gruppe WHERE groupname = ?");
+			deleteGroup_stm.setString(1, groupname);
+			deleteGroup_stm.executeUpdate();
+			deleteGroup_stm.close();
+			
+			return true;
+			
+		}catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 	
 	/*==============================
@@ -499,21 +572,44 @@ public class DataBaseManager {
 			stm.setInt(2, r.getSize());
 			stm.execute();
 			stm.close();
+			return true;
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return false;
 		}
-		return true;
 	}
 	
 	public boolean deleteRoom(String roomID){
-		// TODO 
-		throw new NotYetImplementedException();
+		String deleteRoom = "DELETE FROM Room	WHERE roomID = ?";
+		try {
+			PreparedStatement stm = connection.prepareStatement(deleteRoom);
+			stm.setString(1, roomID);
+			stm.execute();
+			stm.close();
+			return true;
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 	
-	public boolean editRoom(String roomID){
-		// TODO 
-		throw new NotYetImplementedException();
+	public boolean editRoom(Room r){
+		String editRoom = "UPDATE Room "
+				+ "SET roomID = ?, size = ? "
+				+ "WHERE roomID = ?; ";
+		try {
+			PreparedStatement stm = connection.prepareStatement(editRoom);
+			stm.setString(1, r.getRoom_id());
+			stm.setInt(2, r.getSize());
+			stm.execute();
+			stm.close();
+			return true;
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	/*==============================
