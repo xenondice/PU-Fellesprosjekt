@@ -11,7 +11,7 @@ public class GroupBuilder implements Builder<Group> {
 	private String name;
 
 	
-	public GroupBuilder() {
+	public GroupBuilder() {	
 		
 	}
 	
