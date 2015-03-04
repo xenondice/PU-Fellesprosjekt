@@ -200,6 +200,142 @@ public class DataBaseManager {
 			return null;
 		}
 	}
+	
+	/**
+	 * makes the user an admin of the given entry
+	 * @param username
+	 * @param entry_id
+	 * @return true iff the action was successful. false otherwise
+	 */
+	public boolean makeAdmin(String username, int entry_id){
+		// TODO
+		throw new NotYetImplementedException();
+	}
+	
+	
+	/**
+	 * makes the user be able to see the given entry
+	 * @param username
+	 * @param entry_id
+	 * @return true iff the action was successful. false otherwise
+	 */
+	public boolean allowToSee(String username, int entry_id){
+		// TODO
+		throw new NotYetImplementedException();
+	}
+	
+	/**
+	 * makes all users of the group be able to see the given entry
+	 * @param username
+	 * @param entry_id
+	 * @return true iff the action was successful. false otherwise
+	 * @throws GroupDoesNotExistException 
+	 */
+	public boolean allowToSeeGroup(String groupname, int entry_id) throws GroupDoesNotExistException{
+		for(User u : getGroup(groupname).getUsers()){
+			if (! allowToSee(u.getUsername(), entry_id)){
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	/**
+	 *hides the event from the given user
+	 * @param username
+	 * @param entry_id
+	 * @return true iff the action was successful. false otherwise
+	 */
+	public boolean hideEvent(String username, int entry_id){
+		// TODO
+		throw new NotYetImplementedException();
+	}
+	
+	/**
+	 * hides the event from all the users in the given group
+	 * @param groupname
+	 * @param entry_id
+	 * @return true iff the action was successful. false otherwise
+	 * @throws GroupDoesNotExistException
+	 */
+	public boolean hideEventGroup(String groupname, int entry_id) throws GroupDoesNotExistException{
+		for(User u : getGroup(groupname).getUsers()){
+			if (! hideEvent(u.getUsername(), entry_id)){
+				return false;
+			}
+		}
+		return true;
+		
+	}
+	
+	/**
+	 * sets the 'isGoing' flag to true for the user in the entry
+	 * @param username
+	 * @param entry_id
+	 * @return true iff the action was successful. false otherwise
+	 */
+	public boolean isGoing(String username, int entry_id){
+		return setIsGoing(username, entry_id, true);
+	}
+	
+	/**
+	 * sets the 'isGoing' flag to false for the user in the entry
+	 * @param username
+	 * @param entry_id
+	 * @return true iff the action was successful. false otherwise
+	 */
+	public boolean isNotGoing(String username, int entry_id){
+		return setIsGoing(username, entry_id, false);
+	}
+	
+	/**
+	 * sets the 'isGoing' flag for the user in the entry.
+	 * @param username
+	 * @param entry_id
+	 * @param newValue the value it should take
+	 * @return true iff the action was successful. false otherwise
+	 */
+	private boolean setIsGoing(String username, int entry_id, boolean newValue){
+		// TODO
+		throw new NotYetImplementedException();
+	}
+	
+	/**
+	 * sets the isActive flag to true in the event
+	 * @param entry_id
+	 * @param newValue
+	 * @return true iff the action was successful. false otherwise
+	 */
+	public boolean isActive(int entry_id){
+		return setIsActive(entry_id, true);
+	}
+	
+	/**
+	 * sets the isActive flag to false in the event
+	 * @param entry_id
+	 * @param newValue
+	 * @return true iff the action was successful. false otherwise
+	 */
+	public boolean isNotActive(int entry_id){
+		return setIsActive(entry_id, false);
+	}
+	
+	/**
+	 * sets the isActive flag in the entry
+	 * @param username
+	 * @param entry_id
+	 * @param newValue
+	 * @return true iff the action was successful. false otherwise
+	 */
+	private boolean setIsActive(int entry_id, boolean newValue){
+		// TODO
+		throw new NotYetImplementedException();
+	}
+	
+	
+	
+	
+	
 
 	
 	/*==============================
@@ -284,7 +420,8 @@ public class DataBaseManager {
 	 */
 	public boolean editEntry(Entry newEntry, String username) throws EntryDoesNotExistException{
 		// TODO maybe make it that only the not Null attributes of the newEntry are changed from the old one.
-		// TODO handle the Status and IsAdmin tables
+		// TODO handle the Status and IsAdmin tables.
+		// TODO check if user is allowed to do this action.
 		
 		if(! doesEntryExist(newEntry.getEntryID())){throw new EntryDoesNotExistException("there is no entry with id "+newEntry.getEntryID());};
 		
@@ -619,9 +756,11 @@ public class DataBaseManager {
 		throw new NotYetImplementedException();
 	}
 	
-	public boolean inviteGroup(String groupname, int entry_id){
-		// TODO
-		throw new NotYetImplementedException();
+	public boolean inviteGroup(String groupname, int entry_id) throws GroupDoesNotExistException{
+		for(User u : getGroup(groupname).getUsers()){
+			inviteUser(u.getUsername(), entry_id);
+		}
+		return true;
 	}
 
 	/*==============================
