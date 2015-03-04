@@ -16,10 +16,10 @@ public class RequestHandler {
 	public void logIn(User user){
 		// TODO
 	}
-
-/* ===============
- * User functions
- *================*/ 
+	
+	/* ===============
+	 * User functions
+	 *================*/ 
 	
 	
 	public void createUser(User user) throws UsernameAlreadyExistsException{
@@ -28,6 +28,10 @@ public class RequestHandler {
 	
 	public void editUser(User u) throws UserDoesNotExistException{
 		dbm.editUser(u);
+	}
+	
+	public void makeAdmin(User admin, User newAdmin, Entry entry){
+		dbm.makeAdmin(admin.getUsername(), newAdmin.getUsername(), entry.getEntryID());
 	}
 	
 	
@@ -59,8 +63,8 @@ public class RequestHandler {
 		dbm.inviteUser(admin.getUsername(), user.getUsername(), entry.getEntryID());
 	}
 	
-	public void inviteGroupToEntry(User admin, Group group, Entry entry){
-		dbm.inviteUser(admin.getUsername(), group.getName(), entry.getEntryID());
+	public void inviteGroupToEntry(User admin, Group group, Entry entry) throws GroupDoesNotExistException{
+		dbm.inviteGroup(admin.getUsername(), group.getName(), entry.getEntryID());
 	}
 	
 	/* ===============
