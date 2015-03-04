@@ -6,18 +6,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import room_booking.RoomBuilder;
-import user.User;
-import user.UserBuilder;
-import calendar.Calendar;
-import calendar.EntryBuilder;
-import dbms.DataBaseManager;
+import javax.naming.TimeLimitExceededException;
 
 	/**
 	 * Client interface used to connect to ServerClientHandler, which in turn sends requests to the RequestHandler.
@@ -31,6 +25,8 @@ public class Client {
 	public static final String DEFAULT_SERVER_ADDRESS = "127.0.0.1";
 	public static final int DEFAULT_SERVER_PORT = 80;
 	public static final long SERVER_LISTENER_CHECK_INTERVAL = 1000;
+	private static final long WAIT_BEFORE_TIMEOUT = 5000;
+	private static boolean can_write = true;
 	
 	private static Socket server_connection;
 	private static BufferedWriter server_output;
@@ -168,173 +164,61 @@ public class Client {
 		}
 	}
 	
+	private static void sendRequest(String request) throws TimeLimitExceededException, IOException {
+		
+		can_write = false;
+		server_output.write(request);
+		server_output.flush();
+		
+		while (true) {
+			try {
+				Thread.sleep(WAIT_BEFORE_TIMEOUT);
+				throw new TimeLimitExceededException();
+			} catch (InterruptedException e) {
+				if (can_write) return;
+			}
+		}
+	}
+	
+	public static void markEnd() {
+		can_write = true;
+	}
+	
+	private static String requestConsoleInput() throws IOException {
+		
+		String answer = "";
+		
+		while (true) {
+			console_output.write("$ ");
+			console_output.flush();
+			
+			answer = console_input.readLine().trim().toLowerCase();
+			
+			message();
+			
+			if (answer.length() > 0) break;
+			
+			message("Can't send empty string!");
+			message();
+		}
+		
+		return answer;
+	}
+	
 	private static void run() throws IOException {
 		while (true) {
-			
-			List<String> response = consoleInput();
-			
-			if (response.size() > 0 && response.get(0).equals("exit")) return;
-			
-		}
-			
-			/*if (response.get(0).equals("calendar")) {
-				if (response.size() != 2) {
-						System.out.println("Invalid amount of arguments!");
-						System.out.println();
-						System.out.println("Awating input:");
-						break;
-					}
-					
-					User user = dbm.getUser(response.get(1));
-					
-					if (user == null)
-						System.out.println("Couldn't find user!");
-					else {
-						Calendar cal = dbm.createCalendar(user);
-						if (cal.equals(null))
-							System.out.println("Failure!");
-						else
-							System.out.println(cal);
-					}
-				
-				} else if (response.get(0).equals("adduser")) {
-					
-					if (response.size() != 5) {
-						System.out.println("Invalid amount of arguments!");
-						System.out.println();
-						System.out.println("Awating input:");
-						break;
-					}
-					
-					UserBuilder ub = new UserBuilder();
-						ub.setUsername(response.get(1));
-						ub.setName(response.get(2));
-						ub.setPassword(response.get(3));
-						ub.setSalt("");
-						ub.setEmail(response.get(4));
-					
-					if (dbm.addUser(ub.build()))
-						System.out.println("Success!");
-					else
-						System.out.println("Failure!");
-				
-				} else if (response.get(0).equals("addroom")) {
-					
-					if (response.size() != 3) {
-						System.out.println("Invalid amount of arguments!");
-						System.out.println();
-						System.out.println("Awating input:");
-						break;
-					}
-					
-					RoomBuilder rb = new RoomBuilder();
-						rb.setRoom_id(response.get(1));
-						
-					try {
-						rb.setSize(Integer.parseInt(response.get(2)));
-					} catch (NumberFormatException e) {
-						System.out.println("Invalid number!");
-						System.out.println();
-						System.out.println("Awating input:");
-						break;
-					}
-					
-					if (dbm.addRoom(rb.build()))
-						System.out.println("Success!");
-					else
-						System.out.println("Failure!");
-				
-				} else if (response.get(0).equals("addentry")) {
-					
-					if (response.size() != 6) {
-						System.out.println("Invalid amount of arguments!");
-						System.out.println();
-						System.out.println("Awating input:");
-						break;
-					}
-					
-					EntryBuilder eb = new EntryBuilder();
-
-					try {
-						eb.setStartTime(Long.parseLong(response.get(2)));
-						eb.setEndTime(Long.parseLong(response.get(3)));
-					} catch (NumberFormatException e) {
-						System.out.println("Invalid number!");
-						System.out.println();
-						System.out.println("Awating input:");
-						break;
-					}
-					
-						eb.setDescription(response.get(4));
-						eb.setLocation(response.get(5));
-					
-					User user = dbm.getUser(response.get(1));
-					
-					if (user == null)
-						System.out.println("Couldn't find user!");
-					else {
-						if (dbm.addEntry(eb.build(), user))
-							System.out.println("Success!");
-						else
-							System.out.println("Failure!");
-					}
-				
-				} else if (response.get(0).equals("canedit")) {
-					
-					if (response.size() != 3) {
-						System.out.println("Invalid amount of arguments!");
-						System.out.println();
-						System.out.println("Awating input:");
-						break;
-					}
-					
-					int entryid;
-					try {
-						entryid = Integer.valueOf(response.get(2));
-					} catch (NumberFormatException e) {
-						System.out.println("Invalid number!");
-						System.out.println();
-						System.out.println("Awating input:");
-						break;
-					}
-					
-					String username = response.get(1);
-					
-					if (dbm.getUser(username) == null)
-						System.out.println("Couldn't find user!");
-					else if (dbm.getEntry(entryid) == null)
-						System.out.println("Couldn't find event!");
-					else if (dbm.canEdit(username, entryid))
-						System.out.println("User can edit entry!");
-					else
-						System.out.println("User can't edit entry!");
-					
-				} else if (response.get(0).equals("help")) {
-					
-					System.out.println("Commands:");
-					System.out.println(" * calendar username");
-					System.out.println(" * adduser username name (use quotes) password email");
-					System.out.println(" * addroom roomid roomsize");
-					System.out.println(" * addentry admin_username starttime (milliseconds since 1970 00:00) endtime (same) description location");
-					System.out.println(" * canedit username entryid");
-					System.out.println(" * exit");
-				
-				} else if (response.get(0).equals("exit")) {
-					
-					System.out.println("Exiting...");
-					System.exit(0);
-				
-				} else
-					System.out.println("Invalid input, type help for a list over commands");
-				
-				System.out.println();
-				System.out.println("Awating input:");
+			String request = requestConsoleInput();
+			try {
+				sendRequest(request);
+			} catch (TimeLimitExceededException e) {
+				error("Server timeout!", false);
+				return;
 			}
-		}*/
+		}
 	}
 	
 	private static void dispose() {
-	
+		server_listener_thread.interrupt();
 	}
 	
 	public static void main(String[] args) {
