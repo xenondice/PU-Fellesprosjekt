@@ -113,6 +113,8 @@ public class DataBaseManager {
 	 * @throws UsernameAlreadyExistsException if the username is already taken.
 	 */
 	public boolean addUser(User u) throws UsernameAlreadyExistsException{
+		
+		// check if the username already exists.
 		if(doesUserExist(u.getUsername())){throw new UsernameAlreadyExistsException();}
 		
 		String addUser = "INSERT INTO User VALUES (?, ?, ?, ?, ?);";
@@ -610,6 +612,16 @@ public class DataBaseManager {
 			e.printStackTrace();
 			return false;
 		}
+	}
+	
+	public boolean inviteUser(String username, int entry_id){
+		// TODO
+		throw new NotYetImplementedException();
+	}
+	
+	public boolean inviteGroup(String groupname, int entry_id){
+		// TODO
+		throw new NotYetImplementedException();
 	}
 
 	/*==============================
