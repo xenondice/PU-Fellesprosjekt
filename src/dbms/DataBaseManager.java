@@ -274,7 +274,7 @@ public class DataBaseManager {
 	 * @param entry_id
 	 * @return true iff the action was successful. false otherwise
 	 */
-	public boolean isGoing(String username, int entry_id){
+	public boolean going(String username, int entry_id){
 		return setIsGoing(username, entry_id, true);
 	}
 	
@@ -284,7 +284,7 @@ public class DataBaseManager {
 	 * @param entry_id
 	 * @return true iff the action was successful. false otherwise
 	 */
-	public boolean isNotGoing(String username, int entry_id){
+	public boolean notGoing(String username, int entry_id){
 		return setIsGoing(username, entry_id, false);
 	}
 	
@@ -419,7 +419,6 @@ public class DataBaseManager {
 	 * @throws EntryDoesNotExistException if the entryID is not in the database
 	 */
 	public boolean editEntry(Entry newEntry, String username) throws EntryDoesNotExistException{
-		// TODO maybe make it that only the not Null attributes of the newEntry are changed from the old one.
 		// TODO handle the Status and IsAdmin tables.
 		// TODO check if user is allowed to do this action.
 		
@@ -447,6 +446,21 @@ public class DataBaseManager {
 			e.printStackTrace();
 			return false;
 		}
+	}
+	
+	public boolean removeNotification(String username, int entry_id){
+		// TODO
+		throw new NotYetImplementedException();
+	}
+	
+	public boolean addNotification(String username, int entry_id, String description, boolean isOpened, long timestamp){
+		// TODO
+		throw new NotYetImplementedException();
+	}
+	
+	public boolean editNotification(String username, int entry_id, String description, boolean isOpened, long timestamp){
+		// TODO
+		throw new NotYetImplementedException();
 	}
 
 	/**
@@ -751,14 +765,30 @@ public class DataBaseManager {
 		}
 	}
 	
-	public boolean inviteUser(String username, int entry_id){
+	/**
+	 * Invites the user to the given event. The admin is the one inviting.
+	 * @param admin
+	 * @param username
+	 * @param entry_id
+	 * @return
+	 */
+	public boolean inviteUser(String admin, String username, int entry_id){
+		// TODO check if admin is allowed to do that
 		// TODO
 		throw new NotYetImplementedException();
 	}
 	
-	public boolean inviteGroup(String groupname, int entry_id) throws GroupDoesNotExistException{
+	/**
+	 * Invites all users in the group to the given event. The admin is the one inviting.
+	 * @param admin
+	 * @param groupname
+	 * @param entry_id
+	 * @return 
+	 * @throws GroupDoesNotExistException
+	 */
+	public boolean inviteGroup(String admin, String groupname, int entry_id) throws GroupDoesNotExistException{
 		for(User u : getGroup(groupname).getUsers()){
-			inviteUser(u.getUsername(), entry_id);
+			inviteUser(admin, u.getUsername(), entry_id);
 		}
 		return true;
 	}
