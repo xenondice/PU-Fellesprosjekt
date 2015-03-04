@@ -30,6 +30,7 @@ import com.mysql.jdbc.exceptions.NotYetImplementedException;
 
 import exceptions.EntryDoesNotExistException;
 import exceptions.GroupDoesNotExistException;
+import exceptions.HasNotTheRightsException;
 import exceptions.UserDoesNotExistException;
 import exceptions.UsernameAlreadyExistsException;
 
@@ -180,8 +181,7 @@ public class DataBaseManager {
 		
 		PreparedStatement stm;
 		try {
-			stm = connection
-					.prepareStatement("SELECT * FROM User WHERE username=?");
+			stm = connection.prepareStatement("SELECT * FROM User WHERE username=?");
 
 			stm.setString(1, username);
 			ResultSet rs = stm.executeQuery();
@@ -202,14 +202,56 @@ public class DataBaseManager {
 	}
 	
 	/**
-	 * makes the user an admin of the given entry
+	 * makes the user an admin of the given entry. check also if the issuing user has the rights to do that
+	 * @param admin the one issuing the admin-rights
 	 * @param username
 	 * @param entry_id
 	 * @return true iff the action was successful. false otherwise
+	 * @throws HasNotTheRightsException 
 	 */
-	public boolean makeAdmin(String username, int entry_id){
-		// TODO
-		throw new NotYetImplementedException();
+	public boolean makeAdmin(String admin, String username, int entry_id) throws HasNotTheRightsException{
+		if(! isAdmin(admin, entry_id)){throw new HasNotTheRightsException();}
+		
+		PreparedStatement stmt;
+		try {
+			stmt = connection.prepareStatement("INSERT INTO IsAdmin (username, eventID) VALUES (? ? );");
+		
+		stmt.setString(1, username);
+		stmt.setInt(2, entry_id);
+		stmt.close();
+		
+		return true;
+		
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	/**
+	 * 
+	 * @param username
+	 * @param entry_id
+	 * @return true iff the user has adminrights to the entry.
+	 */
+	private boolean isAdmin(String username, int entry_id){
+
+		try {
+			PreparedStatement stm = connection.prepareStatement(""
+					+ "SELECT * "
+					+ "FROM isAdmin "
+					+ "WHERE username=? "
+						+ "AND entryID = ?;");
+
+			stm.setString(1, username);
+			stm.setInt(2, entry_id);
+			ResultSet rs = stm.executeQuery();
+			return rs.next();
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 	
 	
