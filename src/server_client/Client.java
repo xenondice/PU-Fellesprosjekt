@@ -69,7 +69,7 @@ public class Client {
 		server_input = new BufferedReader(new InputStreamReader(server_connection.getInputStream()));
 		
 		// Setup server listener
-		server_listener = new ClientServerListener(console_output, server_input);
+		server_listener = new ClientServerListener(console_output, server_input, Thread.currentThread());
 		server_listener_thread = new Thread(server_listener);
 		server_listener_thread.start();
 	}
