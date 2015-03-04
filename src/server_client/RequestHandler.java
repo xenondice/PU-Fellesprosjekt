@@ -2,6 +2,7 @@ package server_client;
 
 import calendar.Entry;
 import dbms.DataBaseManager;
+import exceptions.UserDoesNotExistException;
 import user.Group;
 import user.User;
 
@@ -17,7 +18,7 @@ public class RequestHandler {
 	}
 
 	
-	public void createUser(String username, String name, String password, String salt, String email){
+	public void createUser(String username, String name, String password, String salt, String email) throws UsernameAlreadyExistsException{
 		User user = new User(username, name, password, salt, email);
 		dbm.addUser(user);
 	}
@@ -27,7 +28,7 @@ public class RequestHandler {
 	}
 	
 	
-	public void createEvent(int entryID , long startTime, long endTime, String location, String description, boolean isActive, String roomID){
+	public void createEvent(int entryID , long startTime, long endTime, String location, String description, boolean isActive, String roomID) throws UserDoesNotExistException{
 		Entry event = new Entry(entryID, startTime, endTime,location, description, isActive, roomID);
 		dbm.addEntry(event, user.getUsername());
 	}
