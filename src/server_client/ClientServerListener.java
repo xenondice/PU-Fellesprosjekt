@@ -20,12 +20,29 @@ public class ClientServerListener implements Runnable {
 		while (!Thread.interrupted()) {
 			try {
 				if (server_input.ready()) {
+					
+					if (!Client.ready()) {
+						console_output.write(System.lineSeparator());
+						console_output.write(System.lineSeparator());
+						console_output.write("Incomming message from server:");
+						console_output.write(System.lineSeparator());
+						console_output.flush();
+					}
+					
 					while (server_input.ready()) {
 						console_output.write(server_input.read());
 						console_output.flush();
 						client_thread.interrupt();
 					}
+					
+					if (!Client.ready()) {
+						console_output.write(System.lineSeparator());
+						console_output.flush();
+					}
+					
 					Client.markEnd();
+					
+					client_thread.interrupt(); //TODO: use Client.ready()
 				}
 				
 				Thread.sleep(Client.SERVER_LISTENER_CHECK_INTERVAL);
