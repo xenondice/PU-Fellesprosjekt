@@ -4,6 +4,7 @@ import calendar.Entry;
 import dbms.DataBaseManager;
 import exceptions.EntryDoesNotExistException;
 import exceptions.GroupDoesNotExistException;
+import exceptions.HasNotTheRightsException;
 import exceptions.UserDoesNotExistException;
 import exceptions.UsernameAlreadyExistsException;
 import user.Group;
@@ -30,7 +31,7 @@ public class RequestHandler {
 		dbm.editUser(u);
 	}
 	
-	public void makeAdmin(User admin, User newAdmin, Entry entry){
+	public void makeAdmin(User admin, User newAdmin, Entry entry) throws HasNotTheRightsException {
 		dbm.makeAdmin(admin.getUsername(), newAdmin.getUsername(), entry.getEntryID());
 	}
 	
@@ -47,7 +48,7 @@ public class RequestHandler {
 		dbm.deleteEntry(e.getEntryID());
 	}
 	
-	public void editEntry(Entry e, User user) throws EntryDoesNotExistException{
+	public void editEntry(Entry e, User user) throws EntryDoesNotExistException, HasNotTheRightsException {
 		dbm.editEntry(e, user.getUsername());
 	}
 	
