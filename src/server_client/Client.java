@@ -25,8 +25,9 @@ public class Client {
 	public static final String DEFAULT_SERVER_ADDRESS = "127.0.0.1";
 	public static final int DEFAULT_SERVER_PORT = 80;
 	public static final long SERVER_LISTENER_CHECK_INTERVAL = 1000;
-	private static final long WAIT_BEFORE_TIMEOUT = 5000;
+	public static final long WAIT_BEFORE_TIMEOUT = 5000;
 	private static boolean can_write = true;
+	private static boolean can_recieve_input = true;
 	
 	private static Socket server_connection;
 	private static BufferedWriter server_output;
@@ -154,22 +155,16 @@ public class Client {
 		}
 	}
 	
-	private static long verifyLong(String argument) throws IOException {
-		while (true) {
-			try {
-				return Long.parseLong(argument);
-			} catch (NumberFormatException e) {
-				argument = ask("Argument \"" + argument + "\" is not a long, try again:", 1).get(0);
-			}
-		}
-	}
-	
 	private static void sendRequest(String request) throws TimeLimitExceededException, IOException {
 		
 		can_write = false;
 		server_output.write(request);
 		server_output.flush();
 		
+		waitForEnd();
+	}
+	
+	private static void waitForEnd() throws TimeLimitExceededException {
 		while (true) {
 			try {
 				Thread.sleep(WAIT_BEFORE_TIMEOUT);
@@ -185,6 +180,8 @@ public class Client {
 	}
 	
 	private static String requestConsoleInput() throws IOException {
+		
+		can_recieve_input = false;
 		
 		String answer = "";
 		
@@ -202,22 +199,34 @@ public class Client {
 			message();
 		}
 		
+		can_recieve_input = true;
+		
 		return answer;
+	}
+	
+	public static boolean ready() {
+		return can_recieve_input;
 	}
 	
 	private static void run() throws IOException {
 		while (true) {
+			
 			String request = requestConsoleInput();
+			
 			try {
 				sendRequest(request);
-			} catch (TimeLimitExceededException e) {
+			} catch (TimeLimitExceededException e1) {
 				error("Server timeout!", false);
+				return;
+			} catch (IOException e2) {
+				error("Something went wrong while sending the request!", false);
 				return;
 			}
 		}
 	}
 	
-	private static void dispose() {
+	private static void dispose() throws IOException {
+		server_connection.close();
 		server_listener_thread.interrupt();
 	}
 	
