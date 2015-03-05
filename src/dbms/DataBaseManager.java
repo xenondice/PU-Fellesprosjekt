@@ -14,6 +14,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.ibatis.jdbc.ScriptRunner;
+
 import room_booking.Room;
 import user.Group;
 import user.GroupBuilder;
@@ -26,13 +28,12 @@ import calendar.EntryBuilder;
 import calendar.Invitation;
 import calendar.InvitationBuilder;
 
-import org.apache.ibatis.jdbc.ScriptRunner;
-
 import com.mysql.jdbc.exceptions.NotYetImplementedException;
 
 import exceptions.EntryDoesNotExistException;
 import exceptions.GroupDoesNotExistException;
 import exceptions.HasNotTheRightsException;
+import exceptions.InvitationDoesNotExistException;
 import exceptions.UserDoesNotExistException;
 import exceptions.UsernameAlreadyExistsException;
 
@@ -83,30 +84,325 @@ public class DataBaseManager {
 		}
 	}
 
-/*==============================
- * User functions
- *==============================*/
-	
+	/**
+	 * 
+	 * @param username
+	 * @return true iff the username exists in the DB
+	 */
 	private boolean doesUserExist(String username){
+		PreparedStatement findUser_stmt;
 		try {
-			getUser(username);
-			// at this point it is clear that the username is taken (user does exist)
-			return true;
-		} catch (UserDoesNotExistException e1) {
-			// if it is catched then the username is not taken (user does not exist)
+			findUser_stmt = connection.prepareStatement("SELECT * FROM User WHERE username = ?;");
+			findUser_stmt.setString(1, username);
+			ResultSet rset = findUser_stmt.executeQuery();
+			return rset.next();
+		
+		} catch (SQLException e) {
+			e.printStackTrace();
 			return false;
-		} 
+		}
+		
+		
 	}
 	
-	private boolean doesEntryExist(int entryID){
+	/**
+	 * 
+	 * @param entryID
+	 * @return true iff the entryID exists in the DB
+	 */
+	private boolean doesEntryExist(long entryID){
+		PreparedStatement findEntry_stmt;
 		try {
-			getEntry(entryID);
-			// entry does exist
-			return true;
-		} catch (EntryDoesNotExistException e1) {
-			// entry does not exist
+			findEntry_stmt = connection.prepareStatement("SELECT * FROM Entry WHERE entryID = ?;");
+			findEntry_stmt.setLong(1, entryID);
+			ResultSet rset = findEntry_stmt.executeQuery();
+			return rset.next();
+		
+		} catch (SQLException e) {
+			e.printStackTrace();
 			return false;
-		} 
+		}
+	}
+	
+	private boolean doesInvitationExist(String username, long entry_id){
+		PreparedStatement findInvitation_stmt;
+		try {
+			findInvitation_stmt = connection.prepareStatement("SELECT * FROM Invitation WHERE entryID = ? AND username = ?;");
+			findInvitation_stmt.setLong(1, entry_id);
+			findInvitation_stmt.setString(2, username);
+			ResultSet rset = findInvitation_stmt.executeQuery();
+			return rset.next();
+		
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	private void checkIfUserExists(String username) throws UserDoesNotExistException{
+		if(! doesUserExist(username)){throw new UserDoesNotExistException();}
+	}
+	private void checkIfEntryExists(long entry_id) throws EntryDoesNotExistException{
+		if(! doesEntryExist(entry_id)){throw new EntryDoesNotExistException();}
+	}
+	private void checkUserAndEntry(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
+		checkIfEntryExists(entry_id);
+		checkIfUserExists(username);
+	}
+	private void checkIfInvitationExists(String username, long entry_id) throws InvitationDoesNotExistException, EntryDoesNotExistException, UserDoesNotExistException{
+		checkUserAndEntry(username, entry_id);
+		if(! doesInvitationExist(username, entry_id)){throw new InvitationDoesNotExistException();}
+	}
+
+	/**
+	 * 
+	 * @param username
+	 * @param entry_id
+	 * @return true iff the user has adminrights to the entry.
+	 */
+	private boolean isAdmin(String username, int entry_id){
+	
+		try {
+			PreparedStatement stm = connection.prepareStatement(""
+					+ "SELECT * "
+					+ "FROM isAdmin "
+					+ "WHERE username=? "
+						+ "AND entryID = ?;");
+	
+			stm.setString(1, username);
+			stm.setInt(2, entry_id);
+			ResultSet rs = stm.executeQuery();
+			return rs.next();
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	/**
+	 * sets the isShowing flag in the Invitation to the newValue.
+	 * @param username
+	 * @param entry_id
+	 * @param newValue
+	 * @return true iff the action was successful.
+	 */
+	private boolean setIsShowing(String username, int entry_id, boolean newValue){
+		String setValue = "UPDATE Invitation "
+				+ "SET isShowing = ? "
+				+ "WHERE username = ? and entryID = ?; ";
+		
+		try {
+			PreparedStatement set_stmt = connection.prepareStatement(setValue);
+			int i = 0;
+			
+			set_stmt.setBoolean(++i, newValue);
+			set_stmt.setString(++i, username);
+			set_stmt.setInt(++i, entry_id);
+			
+			set_stmt.executeUpdate();
+			set_stmt.close();
+			
+			return true;
+			
+		}catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	/**
+	 * sets the 'isGoing' flag for the user in the entry.
+	 * @param username
+	 * @param entry_id
+	 * @param newValue the value it should take
+	 * @return true iff the action was successful. false otherwise
+	 */
+	private boolean setIsGoing(String username, int entry_id, boolean newValue){
+		String setValue = "UPDATE Invitation "
+				+ "SET isGoing = ? "
+				+ "WHERE username = ? and entryID = ?; ";
+		
+		try {
+			PreparedStatement set_stmt = connection.prepareStatement(setValue);
+			int i = 0;
+			
+			set_stmt.setBoolean(++i, newValue);
+			set_stmt.setString(++i, username);
+			set_stmt.setInt(++i, entry_id);
+			
+			set_stmt.executeUpdate();
+			set_stmt.close();
+			
+			return true;
+			
+		}catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	/**
+	 * sets the isActive flag in the entry
+	 * @param username
+	 * @param entry_id
+	 * @param newValue
+	 * @return true iff the action was successful. false otherwise
+	 * @throws EntryDoesNotExistException 
+	 * @throws HasNotTheRightsException 
+	 */
+	private boolean setIsActive(String username, int entry_id, boolean newValue) throws EntryDoesNotExistException, HasNotTheRightsException{
+		EntryBuilder eb = new EntryBuilder(getEntry(entry_id));
+		eb.setIsActive(newValue);
+		return editEntry(eb.build(), username);
+	}
+
+	/**
+	 * adds the Entry as a new Entry (with unique id) into the Entry Table.</br>
+	 * Only the Entry Table is changed. 
+	 * 
+	 * @param e
+	 * @return true iff the action was successful, false otherwise
+	 */
+	private boolean addIntoEntry(Entry e) {
+		
+		String insert_entry = "INSERT INTO Entry (startTime, endTime, location, description, isActive, roomID) "
+				+ "VALUES (?, ?, ?, ?, ?, ?)"; // without setting entryID -> default value
+	
+		try {
+			PreparedStatement addEntry_stmt = connection.prepareStatement(insert_entry);
+			
+			int i = 0;
+	
+			addEntry_stmt.setTimestamp(++i,
+					new java.sql.Timestamp(e.getStartTime()));
+			addEntry_stmt.setTimestamp(++i,
+					new java.sql.Timestamp(e.getEndTime()));
+			addEntry_stmt.setString(++i, e.getLocation());
+			addEntry_stmt.setString(++i, e.getDescription());
+			addEntry_stmt.setBoolean(++i, e.isActive());
+			addEntry_stmt.setString(++i, e.getRoomID());
+	
+			addEntry_stmt.executeUpdate();
+			addEntry_stmt.close();
+			return true;
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+			return false;
+		}
+	
+	}
+
+	/**
+	 * 
+	 * @return the entryID of the last added entry (the highest entryID) -1 if something went wrong.
+	 */
+	private int getLastEntryID(){
+		// get entry_id of the just added entry
+		String get_id = "SELECT MAX(entryID) FROM Entry;";
+		Statement get_id_stmt;
+		try {
+		get_id_stmt = connection.createStatement();
+		
+		ResultSet rsetID = get_id_stmt.executeQuery(get_id);
+		rsetID.next();
+		int entry_id = rsetID.getInt(1);
+		get_id_stmt.close();
+		return entry_id;
+		
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return -1;
+		}
+	}
+
+	/**
+	 * makes the user admin of the given entry.
+	 * @param username
+	 * @param entry_id
+	 * @return true iff the action was successful, false otherwise
+	 */
+	private boolean addIntoIsAdmin(String username, int entry_id) {
+		// add the user-entry relation
+		try{
+			String add_isAdmin = "INSERT INTO IsAdmin (entryID, username) VALUES (?, ?);";
+			PreparedStatement addIsAdmin_stmt = connection.prepareStatement(add_isAdmin);
+			addIsAdmin_stmt.setInt(1, entry_id);
+			addIsAdmin_stmt.setString(2, username);
+			
+	
+			addIsAdmin_stmt.executeUpdate();
+			addIsAdmin_stmt.close();
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	/**
+	 * 
+	 * @param inv the invitation to be added to the DB
+	 * @return true iff action was successful. false otherwise.
+	 * @throws InvitationDoesNotExistException 
+	 * @throws UserDoesNotExistException 
+	 * @throws EntryDoesNotExistException 
+	 */
+	private boolean addIntoInvitation(Invitation inv) throws InvitationDoesNotExistException, EntryDoesNotExistException, UserDoesNotExistException{
+		
+		checkIfInvitationExists(inv.getUsername(), inv.getEntry_id());		
+		//add the users status to that event.
+		String add_status = "INSERT INTO Invitation (isGoing, isShowing, username, entryID) VALUES (?, ?, ?, ?);";
+		try {
+		PreparedStatement addStatus_stmt = connection.prepareStatement(add_status);
+		
+		addStatus_stmt.setBoolean(1, inv.isGoing());
+		addStatus_stmt.setBoolean(2, inv.isShowing());
+		addStatus_stmt.setString(3, inv.getUsername());
+		addStatus_stmt.setLong(4, inv.getEntry_id());
+		
+		addStatus_stmt.executeUpdate();
+		addStatus_stmt.close();
+		return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	/**
+	 * 
+	 * @param username
+	 * @param entry_id
+	 * @return the invitation belonging to the username and entryID.
+	 * @throws EntryDoesNotExistException
+	 */
+	private Invitation getInvitation(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
+		
+		checkUserAndEntry(username, entry_id);
+		
+		PreparedStatement stm;
+		try {
+			stm = connection.prepareStatement("SELECT * FROM Invitation WHERE username=? and entryID = ?; ");
+	
+			stm.setLong(1, entry_id);
+			ResultSet rs = stm.executeQuery();
+			
+			if (rs.next()) {
+				InvitationBuilder ib = new InvitationBuilder();
+				ib.setUsername(rs.getString("username"));
+				ib.setEntry_id(rs.getLong("entryID"));
+				ib.setGoing(rs.getBoolean("isGoing"));
+				ib.setShowing(rs.getBoolean("isShowing"));
+				
+				return ib.build();
+			} else{
+				throw new EntryDoesNotExistException();
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	/**
@@ -148,7 +444,7 @@ public class DataBaseManager {
 	 * @throws UserDoesNotExistException if the user does not exist
 	 */
 	public boolean editUser(User u) throws UserDoesNotExistException{
-		if(! doesUserExist(u.getUsername())){throw new UserDoesNotExistException("");}	
+		checkIfUserExists(u.getUsername());	
 		
 		String edit_entry = "UPDATE User "
 				+ "SET name = ?, password = ?, salt = ?, email = ?"
@@ -181,6 +477,8 @@ public class DataBaseManager {
 	 */
 	public User getUser(String username) throws UserDoesNotExistException {
 		
+		checkIfUserExists(username);
+		
 		PreparedStatement stm;
 		try {
 			stm = connection.prepareStatement("SELECT * FROM User WHERE username=?");
@@ -196,7 +494,7 @@ public class DataBaseManager {
 				ub.setEmail(rs.getString("email"));
 				return ub.build();
 			} else{
-				throw new UserDoesNotExistException("");
+				throw new UserDoesNotExistException();
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -213,65 +511,9 @@ public class DataBaseManager {
 	 * @throws HasNotTheRightsException 
 	 */
 	public boolean makeAdmin(String admin, String username, int entry_id) throws HasNotTheRightsException{
+		// TODO make checkAdmin function
 		if(! isAdmin(admin, entry_id)){throw new HasNotTheRightsException();}
 		return addIntoIsAdmin(username, entry_id);
-	}
-	
-	/**
-	 * 
-	 * @param username
-	 * @param entry_id
-	 * @return true iff the user has adminrights to the entry.
-	 */
-	private boolean isAdmin(String username, int entry_id){
-
-		try {
-			PreparedStatement stm = connection.prepareStatement(""
-					+ "SELECT * "
-					+ "FROM isAdmin "
-					+ "WHERE username=? "
-						+ "AND entryID = ?;");
-
-			stm.setString(1, username);
-			stm.setInt(2, entry_id);
-			ResultSet rs = stm.executeQuery();
-			return rs.next();
-			
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return false;
-		}
-	}
-	
-	/**
-	 * sets the isShowing flag in the Invitation to the newValue.
-	 * @param username
-	 * @param entry_id
-	 * @param newValue
-	 * @return true iff the action was successful.
-	 */
-	private boolean setIsShowing(String username, int entry_id, boolean newValue){
-		String setValue = "UPDATE Invitation "
-				+ "SET isShowing = ? "
-				+ "WHERE username = ? and entryID = ?; ";
-		
-		try {
-			PreparedStatement set_stmt = connection.prepareStatement(setValue);
-			int i = 0;
-			
-			set_stmt.setBoolean(++i, newValue);
-			set_stmt.setString(++i, username);
-			set_stmt.setInt(++i, entry_id);
-			
-			set_stmt.executeUpdate();
-			set_stmt.close();
-			
-			return true;
-			
-		}catch (SQLException e) {
-			e.printStackTrace();
-			return false;
-		}
 	}
 	
 	/**
@@ -348,37 +590,6 @@ public class DataBaseManager {
 	}
 	
 	/**
-	 * sets the 'isGoing' flag for the user in the entry.
-	 * @param username
-	 * @param entry_id
-	 * @param newValue the value it should take
-	 * @return true iff the action was successful. false otherwise
-	 */
-	private boolean setIsGoing(String username, int entry_id, boolean newValue){
-		String setValue = "UPDATE Invitation "
-				+ "SET isGoing = ? "
-				+ "WHERE username = ? and entryID = ?; ";
-		
-		try {
-			PreparedStatement set_stmt = connection.prepareStatement(setValue);
-			int i = 0;
-			
-			set_stmt.setBoolean(++i, newValue);
-			set_stmt.setString(++i, username);
-			set_stmt.setInt(++i, entry_id);
-			
-			set_stmt.executeUpdate();
-			set_stmt.close();
-			
-			return true;
-			
-		}catch (SQLException e) {
-			e.printStackTrace();
-			return false;
-		}
-	}
-	
-	/**
 	 * sets the isActive flag to true in the event
 	 * @param entry_id
 	 * @param newValue
@@ -403,37 +614,14 @@ public class DataBaseManager {
 	}
 	
 	/**
-	 * sets the isActive flag in the entry
-	 * @param username
-	 * @param entry_id
-	 * @param newValue
-	 * @return true iff the action was successful. false otherwise
-	 * @throws EntryDoesNotExistException 
-	 * @throws HasNotTheRightsException 
-	 */
-	private boolean setIsActive(String username, int entry_id, boolean newValue) throws EntryDoesNotExistException, HasNotTheRightsException{
-		EntryBuilder eb = new EntryBuilder(getEntry(entry_id));
-		eb.setIsActive(newValue);
-		return editEntry(eb.build(), username);		
-	}
-	
-	
-	
-	
-	
-
-	
-	/*==============================
-	 * Entry functions
-	 *==============================*/
-	
-	/**
 	 * returns the entry with the specified entryId from the database.
 	 * @param entry_id
 	 * @return the Entry instance from the DB with the specified id.
 	 * @throws EntryDoesNotExistException if the entry does not exist.
 	 */
 	public Entry getEntry(int entry_id) throws EntryDoesNotExistException {
+		
+		checkIfEntryExists(entry_id);
 	
 		PreparedStatement stm;
 		try {
@@ -452,7 +640,7 @@ public class DataBaseManager {
 				ub.setLocation(rs.getString("location"));
 				return ub.build();
 			} else{
-				throw new EntryDoesNotExistException("");
+				throw new EntryDoesNotExistException();
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -486,12 +674,21 @@ public class DataBaseManager {
 	 * @param e the entry
 	 * @param u the user creating the entry
 	 * @throws UserDoesNotExistException 
+	 * @throws InvitationDoesNotExistException 
 	 */
-	public boolean addEntry(Entry e, String username) throws UserDoesNotExistException{
-		if(! doesUserExist(username)){throw new UserDoesNotExistException("");}	
+	public boolean addEntry(Entry e, String username) throws UserDoesNotExistException, InvitationDoesNotExistException{
+		
+		checkIfUserExists(username);
+		
 		if(addIntoEntry(e)){
 			int entryID = getLastEntryID();
-			return addIntoIsAdmin(username, entryID) && addIntoStatus(true, true, username, entryID);
+			try {
+				return addIntoIsAdmin(username, entryID) && addIntoInvitation(new Invitation(true, true, username, entryID));
+			} catch (EntryDoesNotExistException e1) {
+				// should never happen!
+				e1.printStackTrace();
+				return false;
+			}
 		}else{
 			return false;
 		}
@@ -550,112 +747,6 @@ public class DataBaseManager {
 		throw new NotYetImplementedException();
 	}
 
-	/**
-	 * adds the Entry as a new Entry (with unique id) into the Entry Table.
-	 * 
-	 * @param e
-	 * @return true iff the action was successful, false otherwise
-	 */
-	private boolean addIntoEntry(Entry e) {
-		
-		String insert_entry = "INSERT INTO Entry (startTime, endTime, location, description, isActive, roomID) "
-				+ "VALUES (?, ?, ?, ?, ?, ?)"; // without setting entryID -> default value
-
-		try {
-			PreparedStatement addEntry_stmt = connection.prepareStatement(insert_entry);
-			
-			int i = 0;
-
-			addEntry_stmt.setTimestamp(++i,
-					new java.sql.Timestamp(e.getStartTime()));
-			addEntry_stmt.setTimestamp(++i,
-					new java.sql.Timestamp(e.getEndTime()));
-			addEntry_stmt.setString(++i, e.getLocation());
-			addEntry_stmt.setString(++i, e.getDescription());
-			addEntry_stmt.setBoolean(++i, e.isActive());
-			addEntry_stmt.setString(++i, e.getRoomID());
-
-			addEntry_stmt.executeUpdate();
-			addEntry_stmt.close();
-			return true;
-		} catch (SQLException e1) {
-			e1.printStackTrace();
-			return false;
-		}
-
-	}
-	
-	/**
-	 * 
-	 * @return the entryID of the last added entry
-	 */
-	private int getLastEntryID(){
-		// get entry_id of the just added entry
-		String get_id = "SELECT MAX(entryID) FROM Entry;";
-		Statement get_id_stmt;
-		try {
-		get_id_stmt = connection.createStatement();
-		
-		ResultSet rsetID = get_id_stmt.executeQuery(get_id);
-		rsetID.next();
-		int entry_id = rsetID.getInt(1);
-		get_id_stmt.close();
-		return entry_id;
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return -1;
-		}
-	}
-	
-	/**
-	 * makes the user admin of the given entry.
-	 * @param username
-	 * @param entry_id
-	 * @return
-	 */
-	private boolean addIntoIsAdmin(String username, int entry_id) {
-		// add the user-entry relation
-		try{
-			String add_isAdmin = "INSERT INTO IsAdmin (entryID, username) VALUES (?, ?);";
-			PreparedStatement addIsAdmin_stmt = connection.prepareStatement(add_isAdmin);
-			addIsAdmin_stmt.setInt(1, entry_id);
-			addIsAdmin_stmt.setString(2, username);
-			
-	
-			addIsAdmin_stmt.executeUpdate();
-			addIsAdmin_stmt.close();
-			return true;
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return false;
-		}
-	}
-
-	private boolean addIntoStatus(boolean isGoing, boolean isShowing, String username, int entry_id){
-		//add the users status to that event.
-		String add_status = "INSERT INTO Invitation (isGoing, isShowing, username, entryID) VALUES (?, ?, ?, ?);";
-		try {
-		PreparedStatement addStatus_stmt = connection.prepareStatement(add_status);
-		
-		addStatus_stmt.setBoolean(1, isGoing);
-		addStatus_stmt.setBoolean(2, isShowing);
-		addStatus_stmt.setString(3, username);
-		addStatus_stmt.setInt(4, entry_id);
-		
-		addStatus_stmt.executeUpdate();
-		addStatus_stmt.close();
-		return true;
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return false;
-		}
-	}
-	
-	
-	/*==============================
-	 * Group functions
-	 *==============================*/
-	
 	/**
 	 * adds the given group to the DB
 	 * If a group with this name already exists then it returns false and nothing is done.
@@ -804,9 +895,6 @@ public class DataBaseManager {
 		}
 	}
 	
-	/*==============================
-	 * Room functions
-	 *==============================*/
 	
 	/**
 	 * adds the Room to the DB
@@ -889,39 +977,6 @@ public class DataBaseManager {
 		return true;
 	}
 	
-	private Invitation getInvitation(String username, long entry_id) throws EntryDoesNotExistException{
-		// TODO returns only one Invitation, maybe there are more. CHange DB if necessary
-		
-		PreparedStatement stm;
-		try {
-			stm = connection.prepareStatement("SELECT * FROM Invitation WHERE username=? and entryID = ?; ");
-	
-			stm.setLong(1, entry_id);
-			ResultSet rs = stm.executeQuery();
-			
-			
-			if (rs.next()) {
-				InvitationBuilder ib = new InvitationBuilder();
-				ib.setUsername(rs.getString("username"));
-				ib.setEntry_id(rs.getLong("entryID"));
-				ib.setGoing(rs.getBoolean("isGoing"));
-				ib.setShowing(rs.getBoolean("isShowing"));
-				
-				return ib.build();
-			} else{
-				throw new EntryDoesNotExistException("");
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
-
-	/*==============================
-	 * Authorisation functions
-	 *==============================*/
-	
-	
 	/**
 	 * 
 	 * @param username
@@ -981,10 +1036,7 @@ public class DataBaseManager {
 			return false;
 		} 
 	}
-	
-	/*==============================
-	 * Calendar functions
-	 *==============================*/	
+		
 	
 	/**
 	 * Creates a Calendar with all the entries the user is allowed to see.

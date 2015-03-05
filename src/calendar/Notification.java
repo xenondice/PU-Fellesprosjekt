@@ -1,6 +1,7 @@
 package calendar;
 
 public class Notification {
+	// TODO add another key value in the DB
 	private final String description;
 	private final boolean isOpened;
 	private final long time;
