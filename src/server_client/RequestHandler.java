@@ -74,7 +74,7 @@ public class RequestHandler{
 		dbm.deleteEntry(e.getEntryID());
 	}
 	
-	public static void editEntry(Entry e, User user) throws EntryDoesNotExistException, HasNotTheRightsException {
+	public static void editEntry(Entry e, User user) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException {
 		dbm.editEntry(e, user.getUsername());
 	}
 	
@@ -98,11 +98,11 @@ public class RequestHandler{
 	 * Group functions
 	 *================*/ 
 	
-	public static void createGroup(Group group){
+	public static void createGroup(Group group) throws UserDoesNotExistException{
 		dbm.addGroup(group);
 	}
 	
-	public static void addUserToGroup(User user, Group group){
+	public static void addUserToGroup(User user, Group group) throws UserDoesNotExistException{
 		dbm.addUserToGroup(user.getUsername(), group.getName());
 	}
 	

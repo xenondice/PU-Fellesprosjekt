@@ -33,6 +33,7 @@ import com.mysql.jdbc.exceptions.NotYetImplementedException;
 import exceptions.EntryDoesNotExistException;
 import exceptions.GroupDoesNotExistException;
 import exceptions.HasNotTheRightsException;
+import exceptions.InvitationAlreadyExistsException;
 import exceptions.InvitationDoesNotExistException;
 import exceptions.UserDoesNotExistException;
 import exceptions.UsernameAlreadyExistsException;
@@ -250,8 +251,11 @@ public class DataBaseManager {
 	 * @return true iff the action was successful. false otherwise
 	 * @throws EntryDoesNotExistException 
 	 * @throws HasNotTheRightsException 
+	 * @throws UserDoesNotExistException 
 	 */
-	private boolean setIsActive(String username, int entry_id, boolean newValue) throws EntryDoesNotExistException, HasNotTheRightsException{
+	private boolean setIsActive(String username, int entry_id, boolean newValue) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException{
+		checkUserAndEntry(username, entry_id);
+		
 		EntryBuilder eb = new EntryBuilder(getEntry(entry_id));
 		eb.setIsActive(newValue);
 		return editEntry(eb.build(), username);
@@ -342,15 +346,23 @@ public class DataBaseManager {
 	
 	/**
 	 * 
-	 * @param inv the invitation to be added to the DB
+	 * @param inv the invitation to be added to the DB.</br>
+	 * 
 	 * @return true iff action was successful. false otherwise.
-	 * @throws InvitationDoesNotExistException 
 	 * @throws UserDoesNotExistException 
 	 * @throws EntryDoesNotExistException 
+	 * @throws InvitationAlreadyExistsException if there is already an Invitation for this user-entry pair
 	 */
-	private boolean addIntoInvitation(Invitation inv) throws InvitationDoesNotExistException, EntryDoesNotExistException, UserDoesNotExistException{
+	private boolean addIntoInvitation(Invitation inv) throws EntryDoesNotExistException, UserDoesNotExistException, InvitationAlreadyExistsException{
 		
-		checkIfInvitationExists(inv.getUsername(), inv.getEntry_id());		
+		try {
+			checkIfInvitationExists(inv.getUsername(), inv.getEntry_id());
+			// the entry already exists
+			throw new InvitationAlreadyExistsException();
+		} catch (InvitationDoesNotExistException e1) {
+			// ok, the programm may proceed.
+		}
+		
 		//add the users status to that event.
 		String add_status = "INSERT INTO Invitation (isGoing, isShowing, username, entryID) VALUES (?, ?, ?, ?);";
 		try {
@@ -596,8 +608,9 @@ public class DataBaseManager {
 	 * @return true iff the action was successful. false otherwise
 	 * @throws EntryDoesNotExistException 
 	 * @throws HasNotTheRightsException 
+	 * @throws UserDoesNotExistException 
 	 */
-	public boolean isActive(String username, int entry_id) throws EntryDoesNotExistException, HasNotTheRightsException{
+	public boolean isActive(String username, int entry_id) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException{
 		return setIsActive(username, entry_id, true);
 	}
 	
@@ -608,8 +621,9 @@ public class DataBaseManager {
 	 * @return true iff the action was successful. false otherwise
 	 * @throws EntryDoesNotExistException 
 	 * @throws HasNotTheRightsException 
+	 * @throws UserDoesNotExistException 
 	 */
-	public boolean isNotActive(String username, int entry_id) throws EntryDoesNotExistException, HasNotTheRightsException{
+	public boolean isNotActive(String username, int entry_id) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException{
 		return setIsActive(username, entry_id, false);
 	}
 	
@@ -676,7 +690,7 @@ public class DataBaseManager {
 	 * @throws UserDoesNotExistException 
 	 * @throws InvitationDoesNotExistException 
 	 */
-	public boolean addEntry(Entry e, String username) throws UserDoesNotExistException, InvitationDoesNotExistException{
+	public boolean addEntry(Entry e, String username) throws UserDoesNotExistException{
 		
 		checkIfUserExists(username);
 		
@@ -686,6 +700,10 @@ public class DataBaseManager {
 				return addIntoIsAdmin(username, entryID) && addIntoInvitation(new Invitation(true, true, username, entryID));
 			} catch (EntryDoesNotExistException e1) {
 				// should never happen!
+				e1.printStackTrace();
+				return false;
+			} catch (InvitationAlreadyExistsException e1) {
+				// should never be executed!
 				e1.printStackTrace();
 				return false;
 			}
@@ -698,14 +716,16 @@ public class DataBaseManager {
 	 * newEntry replaces the entry in the DB with the same entry_id as newEntry. the entry_id stays the same.</br>
 	 * Note that the IsAdmin and the Invitation Tables stay unchanged.
 	 * @param newEntry the new entry. replaces the old one
+	 * @param username this is the user who wants to edit the entry
 	 * @return true iff the action was successful.
 	 * @throws EntryDoesNotExistException if the entryID is not in the database
 	 * @throws HasNotTheRightsException if the user is not Admin of the entry
+	 * @throws UserDoesNotExistException 
 	 */
-	public boolean editEntry(Entry newEntry, String username) throws EntryDoesNotExistException, HasNotTheRightsException{
+	public boolean editEntry(Entry newEntry, String username) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException{
 				
 		// checks
-		if(! doesEntryExist(newEntry.getEntryID())){throw new EntryDoesNotExistException("there is no entry with id "+newEntry.getEntryID());};
+		checkUserAndEntry(username, newEntry.getEntryID());
 		if(! isAdmin(username, newEntry.getEntryID())){throw new HasNotTheRightsException();}
 		
 		String edit_entry = "UPDATE Entry "
@@ -752,8 +772,10 @@ public class DataBaseManager {
 	 * If a group with this name already exists then it returns false and nothing is done.
 	 * @param g
 	 * @return true iff the action was successful. false otherwise.
+	 * @throws UserDoesNotExistException if a user in the group does not exist.
 	 */
-	public boolean addGroup(Group g){
+	public boolean addGroup(Group g) throws UserDoesNotExistException{
+		// TODO make checkIfGroupExists check.
 		try {
 			getGroup(g.getName());
 			return false;
@@ -822,8 +844,11 @@ public class DataBaseManager {
 	 * Does nothing if the user is already in the group.
 	 * @param username
 	 * @return
+	 * @throws UserDoesNotExistException 
 	 */
-	public boolean addUserToGroup(String username, String groupname){
+	public boolean addUserToGroup(String username, String groupname) throws UserDoesNotExistException{
+		checkIfUserExists(username);
+		
 		PreparedStatement isertUser_stm;
 		try {
 			isertUser_stm = connection.prepareStatement("INSERT INTO MemberOf (groupname, username) Values (?, ?)");
@@ -872,6 +897,7 @@ public class DataBaseManager {
 	 * @return
 	 */
 	public boolean deleteGroup(String groupname){
+		
 		PreparedStatement removeGroupFromMemberOf_stm;
 		PreparedStatement deleteGroup_stm;
 		try {
@@ -902,6 +928,7 @@ public class DataBaseManager {
 	 * @return true if the action was successful. False otherwise.
 	 */
 	public boolean addRoom(Room r){
+		// TODO make checkIfRoomExists method
 		String addRoom = "INSERT INTO Room VALUES (?, ?)";
 		try {
 			PreparedStatement stm = connection.prepareStatement(addRoom);
@@ -932,6 +959,7 @@ public class DataBaseManager {
 	}
 	
 	public boolean editRoom(Room r){
+		// check if room exists
 		String editRoom = "UPDATE Room "
 				+ "SET roomID = ?, size = ? "
 				+ "WHERE roomID = ?; ";
@@ -958,7 +986,7 @@ public class DataBaseManager {
 	 */
 	public boolean inviteUser(String admin, String username, int entry_id){
 		// TODO check if admin is allowed to do that
-		// TODO
+		// TODO check if both, user and admin exist
 		throw new NotYetImplementedException();
 	}
 	
@@ -982,9 +1010,14 @@ public class DataBaseManager {
 	 * @param username
 	 * @param entry_id
 	 * @return true iff the user is allowed to see the given entry
+	 * @throws UserDoesNotExistException 
+	 * @throws EntryDoesNotExistException 
 	 */
-	public boolean isAllowedToSee(String username, int entry_id){
-		// TODO ev. create class Invitation
+	public boolean isAllowedToSee(String username, int entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
+		
+		checkUserAndEntry(username, entry_id);
+		
+		
 		String getIsShowing = ""
 				+ "SELECT isShowing "
 				+ "FROM Invitation "
@@ -1012,8 +1045,13 @@ public class DataBaseManager {
 	 * @param u
 	 * @param e
 	 * @return true if the user is allowed to edit the entry
+	 * @throws UserDoesNotExistException 
+	 * @throws EntryDoesNotExistException 
 	 */
-	public boolean canEdit(String username, int entryID){
+	public boolean canEdit(String username, int entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
+		
+		checkUserAndEntry(username, entry_id);
+		
 		String get_is_admin = "SELECT COUNT(*) "
 				+ "FROM IsAdmin A, User U, Entry E "
 				+ "WHERE A.username = U.username "
@@ -1024,7 +1062,7 @@ public class DataBaseManager {
 		try {
 			PreparedStatement getIsAdmin_stmt = connection.prepareStatement(get_is_admin);
 			getIsAdmin_stmt.setString(1, username);
-			getIsAdmin_stmt.setInt(2, entryID);
+			getIsAdmin_stmt.setInt(2, entry_id);
 			
 			ResultSet rset = getIsAdmin_stmt.executeQuery();
 			
@@ -1047,7 +1085,7 @@ public class DataBaseManager {
 	 */
 	public Calendar createCalendar(String username) throws UserDoesNotExistException{
 		
-		if(! doesUserExist(username)){throw new UserDoesNotExistException("");}
+		checkIfUserExists(username);
 		
 		String select_all_events_for_user = "SELECT E.* "
 										  + "FROM Entry E, User U, Status S "
@@ -1087,6 +1125,18 @@ public class DataBaseManager {
 			e.printStackTrace();
 			
 			return new CalendarBuilder().build();
+		}
+	}
+	
+	/**
+	 * closes the connection to the DB.
+	 * @return
+	 */
+	public void close(){
+		try {
+			connection.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
 		}
 	}
 	
