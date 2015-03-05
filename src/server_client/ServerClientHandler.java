@@ -104,7 +104,23 @@ public class ServerClientHandler implements Runnable {
 		}
 	}
 	
-	private String handleRequest(String request) {
+	private String handleRequest(String request) throws IOException {
+		
+		List<String> formatted = formatRequest(request);
+		
+		if (formatted.isEmpty())
+			return "Invalid request!";
+		
+		String command = formatted.get(0);
+		List<String> arguments = formatted.subList(1, formatted.size()-1);
+		
+		switch (command) {
+			case "asd":
+				break;
+			default:
+				break;
+		}
+		
 		return "Test";
 	}
 
