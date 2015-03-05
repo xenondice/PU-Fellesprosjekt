@@ -76,11 +76,7 @@ public class RequestHandler implements Runnable{
 		dbm.deleteEntry(e.getEntryID());
 	}
 	
-<<<<<<< HEAD
-	public void editEntry(Entry e, User user) throws EntryDoesNotExistException, HasNotTheRightsException{
-=======
 	public void editEntry(Entry e, User user) throws EntryDoesNotExistException, HasNotTheRightsException {
->>>>>>> 02adc14e308a22b6c8938c88101df7ced5a0f480
 		dbm.editEntry(e, user.getUsername());
 	}
 	
