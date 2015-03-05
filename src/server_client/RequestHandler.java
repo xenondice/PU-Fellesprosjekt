@@ -1,21 +1,49 @@
 package server_client;
 
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+
 import calendar.Entry;
 import dbms.DataBaseManager;
 import exceptions.EntryDoesNotExistException;
 import exceptions.GroupDoesNotExistException;
+import exceptions.HasNotTheRightsException;
 import exceptions.UserDoesNotExistException;
 import exceptions.UsernameAlreadyExistsException;
 import user.Group;
 import user.User;
 
-public class RequestHandler {
+public class RequestHandler implements Runnable{
 
 	DataBaseManager dbm = new DataBaseManager();
+	
+	
+	
 	
 	public void logIn(User user){
 		// TODO
 	}
+	
+	@Override
+	public void run() {
+		
+		try {
+			ServerSocket ss = new ServerSocket(80);
+			
+			while (true){
+				Socket so = ss.accept();
+				
+			}
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+	}
+	
 	
 	/* ===============
 	 * User functions
@@ -30,7 +58,7 @@ public class RequestHandler {
 		dbm.editUser(u);
 	}
 	
-	public void makeAdmin(User admin, User newAdmin, Entry entry){
+	public void makeAdmin(User admin, User newAdmin, Entry entry) throws HasNotTheRightsException { 
 		dbm.makeAdmin(admin.getUsername(), newAdmin.getUsername(), entry.getEntryID());
 	}
 	
@@ -47,7 +75,7 @@ public class RequestHandler {
 		dbm.deleteEntry(e.getEntryID());
 	}
 	
-	public void editEntry(Entry e, User user) throws EntryDoesNotExistException{
+	public void editEntry(Entry e, User user) throws EntryDoesNotExistException, HasNotTheRightsException{
 		dbm.editEntry(e, user.getUsername());
 	}
 	
@@ -99,4 +127,6 @@ public class RequestHandler {
 			dbm.notGoing(u.getUsername(), e.getEntryID());
 		}
 	}
+
+	
 }
