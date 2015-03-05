@@ -23,6 +23,8 @@ import calendar.Calendar;
 import calendar.CalendarBuilder;
 import calendar.Entry;
 import calendar.EntryBuilder;
+import calendar.Invitation;
+import calendar.InvitationBuilder;
 
 import org.apache.ibatis.jdbc.ScriptRunner;
 
@@ -193,8 +195,9 @@ public class DataBaseManager {
 				ub.setSalt(rs.getString("salt"));
 				ub.setEmail(rs.getString("email"));
 				return ub.build();
-			} else
+			} else{
 				throw new UserDoesNotExistException("");
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
@@ -211,21 +214,7 @@ public class DataBaseManager {
 	 */
 	public boolean makeAdmin(String admin, String username, int entry_id) throws HasNotTheRightsException{
 		if(! isAdmin(admin, entry_id)){throw new HasNotTheRightsException();}
-		
-		PreparedStatement stmt;
-		try {
-			stmt = connection.prepareStatement("INSERT INTO IsAdmin (username, eventID) VALUES (? ? );");
-		
-		stmt.setString(1, username);
-		stmt.setInt(2, entry_id);
-		stmt.close();
-		
-		return true;
-		
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return false;
-		}
+		return addIntoIsAdmin(username, entry_id);
 	}
 	
 	/**
@@ -254,6 +243,36 @@ public class DataBaseManager {
 		}
 	}
 	
+	/**
+	 * sets the isShowing flag in the Invitation to the newValue.
+	 * @param username
+	 * @param entry_id
+	 * @param newValue
+	 * @return true iff the action was successful.
+	 */
+	private boolean setIsShowing(String username, int entry_id, boolean newValue){
+		String setValue = "UPDATE Invitation "
+				+ "SET isShowing = ? "
+				+ "WHERE username = ? and entryID = ?; ";
+		
+		try {
+			PreparedStatement set_stmt = connection.prepareStatement(setValue);
+			int i = 0;
+			
+			set_stmt.setBoolean(++i, newValue);
+			set_stmt.setString(++i, username);
+			set_stmt.setInt(++i, entry_id);
+			
+			set_stmt.executeUpdate();
+			set_stmt.close();
+			
+			return true;
+			
+		}catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
 	
 	/**
 	 * makes the user be able to see the given entry
@@ -262,8 +281,7 @@ public class DataBaseManager {
 	 * @return true iff the action was successful. false otherwise
 	 */
 	public boolean allowToSee(String username, int entry_id){
-		// TODO
-		throw new NotYetImplementedException();
+		return setIsShowing(username, entry_id, true);
 	}
 	
 	/**
@@ -289,8 +307,7 @@ public class DataBaseManager {
 	 * @return true iff the action was successful. false otherwise
 	 */
 	public boolean hideEvent(String username, int entry_id){
-		// TODO
-		throw new NotYetImplementedException();
+		return setIsShowing(username, entry_id, false);
 	}
 	
 	/**
@@ -338,8 +355,27 @@ public class DataBaseManager {
 	 * @return true iff the action was successful. false otherwise
 	 */
 	private boolean setIsGoing(String username, int entry_id, boolean newValue){
-		// TODO
-		throw new NotYetImplementedException();
+		String setValue = "UPDATE Invitation "
+				+ "SET isGoing = ? "
+				+ "WHERE username = ? and entryID = ?; ";
+		
+		try {
+			PreparedStatement set_stmt = connection.prepareStatement(setValue);
+			int i = 0;
+			
+			set_stmt.setBoolean(++i, newValue);
+			set_stmt.setString(++i, username);
+			set_stmt.setInt(++i, entry_id);
+			
+			set_stmt.executeUpdate();
+			set_stmt.close();
+			
+			return true;
+			
+		}catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 	
 	/**
@@ -347,9 +383,11 @@ public class DataBaseManager {
 	 * @param entry_id
 	 * @param newValue
 	 * @return true iff the action was successful. false otherwise
+	 * @throws EntryDoesNotExistException 
+	 * @throws HasNotTheRightsException 
 	 */
-	public boolean isActive(int entry_id){
-		return setIsActive(entry_id, true);
+	public boolean isActive(String username, int entry_id) throws EntryDoesNotExistException, HasNotTheRightsException{
+		return setIsActive(username, entry_id, true);
 	}
 	
 	/**
@@ -357,9 +395,11 @@ public class DataBaseManager {
 	 * @param entry_id
 	 * @param newValue
 	 * @return true iff the action was successful. false otherwise
+	 * @throws EntryDoesNotExistException 
+	 * @throws HasNotTheRightsException 
 	 */
-	public boolean isNotActive(int entry_id){
-		return setIsActive(entry_id, false);
+	public boolean isNotActive(String username, int entry_id) throws EntryDoesNotExistException, HasNotTheRightsException{
+		return setIsActive(username, entry_id, false);
 	}
 	
 	/**
@@ -368,10 +408,13 @@ public class DataBaseManager {
 	 * @param entry_id
 	 * @param newValue
 	 * @return true iff the action was successful. false otherwise
+	 * @throws EntryDoesNotExistException 
+	 * @throws HasNotTheRightsException 
 	 */
-	private boolean setIsActive(int entry_id, boolean newValue){
-		// TODO
-		throw new NotYetImplementedException();
+	private boolean setIsActive(String username, int entry_id, boolean newValue) throws EntryDoesNotExistException, HasNotTheRightsException{
+		EntryBuilder eb = new EntryBuilder(getEntry(entry_id));
+		eb.setIsActive(newValue);
+		return editEntry(eb.build(), username);		
 	}
 	
 	
@@ -455,16 +498,18 @@ public class DataBaseManager {
 	}
 	
 	/**
-	 * newEntry replaces the entry in the DB with the same entry_id as newEntry. the entry_id stays the same.
+	 * newEntry replaces the entry in the DB with the same entry_id as newEntry. the entry_id stays the same.</br>
+	 * Note that the IsAdmin and the Invitation Tables stay unchanged.
 	 * @param newEntry the new entry. replaces the old one
 	 * @return true iff the action was successful.
 	 * @throws EntryDoesNotExistException if the entryID is not in the database
+	 * @throws HasNotTheRightsException if the user is not Admin of the entry
 	 */
-	public boolean editEntry(Entry newEntry, String username) throws EntryDoesNotExistException{
-		// TODO handle the Status and IsAdmin tables.
-		// TODO check if user is allowed to do this action.
-		
+	public boolean editEntry(Entry newEntry, String username) throws EntryDoesNotExistException, HasNotTheRightsException{
+				
+		// checks
 		if(! doesEntryExist(newEntry.getEntryID())){throw new EntryDoesNotExistException("there is no entry with id "+newEntry.getEntryID());};
+		if(! isAdmin(username, newEntry.getEntryID())){throw new HasNotTheRightsException();}
 		
 		String edit_entry = "UPDATE Entry "
 				+ "SET startTime = ?, endTime = ?, location = ?, description = ?, isActive = ?, roomID = ? "
@@ -540,6 +585,10 @@ public class DataBaseManager {
 
 	}
 	
+	/**
+	 * 
+	 * @return the entryID of the last added entry
+	 */
 	private int getLastEntryID(){
 		// get entry_id of the just added entry
 		String get_id = "SELECT MAX(entryID) FROM Entry;";
@@ -557,13 +606,18 @@ public class DataBaseManager {
 			return -1;
 		}
 	}
-
+	
+	/**
+	 * makes the user admin of the given entry.
+	 * @param username
+	 * @param entry_id
+	 * @return
+	 */
 	private boolean addIntoIsAdmin(String username, int entry_id) {
 		// add the user-entry relation
 		try{
-			String add_isAdmin = "INSERT INTO IsAdmin VALUES (?, ?);";
-			PreparedStatement addIsAdmin_stmt = connection
-					.prepareStatement(add_isAdmin);
+			String add_isAdmin = "INSERT INTO IsAdmin (entryID, username) VALUES (?, ?);";
+			PreparedStatement addIsAdmin_stmt = connection.prepareStatement(add_isAdmin);
 			addIsAdmin_stmt.setInt(1, entry_id);
 			addIsAdmin_stmt.setString(2, username);
 			
@@ -834,6 +888,34 @@ public class DataBaseManager {
 		}
 		return true;
 	}
+	
+	private Invitation getInvitation(String username, long entry_id) throws EntryDoesNotExistException{
+		// TODO returns only one Invitation, maybe there are more. CHange DB if necessary
+		
+		PreparedStatement stm;
+		try {
+			stm = connection.prepareStatement("SELECT * FROM Invitation WHERE username=? and entryID = ?; ");
+	
+			stm.setLong(1, entry_id);
+			ResultSet rs = stm.executeQuery();
+			
+			
+			if (rs.next()) {
+				InvitationBuilder ib = new InvitationBuilder();
+				ib.setUsername(rs.getString("username"));
+				ib.setEntry_id(rs.getLong("entryID"));
+				ib.setGoing(rs.getBoolean("isGoing"));
+				ib.setShowing(rs.getBoolean("isShowing"));
+				
+				return ib.build();
+			} else{
+				throw new EntryDoesNotExistException("");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 
 	/*==============================
 	 * Authorisation functions
@@ -842,13 +924,32 @@ public class DataBaseManager {
 	
 	/**
 	 * 
-	 * @param u
-	 * @param e
+	 * @param username
+	 * @param entry_id
 	 * @return true iff the user is allowed to see the given entry
 	 */
 	public boolean isAllowedToSee(String username, int entry_id){
-		// TODO
-		throw new NotYetImplementedException();
+		// TODO ev. create class Invitation
+		String getIsShowing = ""
+				+ "SELECT isShowing "
+				+ "FROM Invitation "
+				+ "WHERE username = ? AND entryID = ?; ";
+		
+		try {
+			PreparedStatement stmt = connection.prepareStatement(getIsShowing);
+		
+			int i = 0;
+			stmt.setString(++i, username);
+			stmt.setLong(++i, entry_id);
+			
+			ResultSet rset = stmt.executeQuery();
+			return rset.next() && rset.getBoolean("isShowing");
+			
+		
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 	
 	/**
@@ -894,7 +995,7 @@ public class DataBaseManager {
 	 */
 	public Calendar createCalendar(String username) throws UserDoesNotExistException{
 		
-		// TODO check if the user actually exists in the DB
+		if(! doesUserExist(username)){throw new UserDoesNotExistException("");}
 		
 		String select_all_events_for_user = "SELECT E.* "
 										  + "FROM Entry E, User U, Status S "
@@ -903,11 +1004,11 @@ public class DataBaseManager {
 										  	+ "AND U.username = S.username "
 										  	+ "AND U.username = ? ;";
 		
-		CalendarBuilder calendarB = new CalendarBuilder();
+		CalendarBuilder cb = new CalendarBuilder();
 		
 		
 		try {
-			calendarB.addUser(this.getUser(username));
+			cb.addUser(this.getUser(username));
 			PreparedStatement stmt = connection.prepareStatement(select_all_events_for_user);
 			stmt.setString(1, username);
 			ResultSet rset = stmt.executeQuery();
@@ -924,17 +1025,17 @@ public class DataBaseManager {
 				entryB.setIsActive(rset.getBoolean("isActive"));
 				entryB.setRoomID(rset.getString("roomID"));
 								
-				calendarB.addEntry(entryB.build());
+				cb.addEntry(entryB.build());
 				
 			}
 			stmt.close();
+			return cb.build();
+			
 		} catch (SQLException e) {
 			e.printStackTrace();
 			
 			return new CalendarBuilder().build();
 		}
-		
-		return calendarB.build();
 	}
 	
 	public void addSQL(String filename) throws IOException {
