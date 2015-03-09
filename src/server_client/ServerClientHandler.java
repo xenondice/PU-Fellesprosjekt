@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.concurrent.TimeoutException;
@@ -24,11 +25,6 @@ public class ServerClientHandler implements Runnable, Closeable {
 	private Socket client;
 	private String username;
 	private String password;
-	
-	private static Command[] commands = {
-		new CreateUser(),
-		new CreateUserWiz(),
-	};
 	
 	/*public static final String[][][] commands = { // Once login is done, store user creditals and change eg. calendar to show your calendar only
 		{
@@ -224,92 +220,18 @@ public class ServerClientHandler implements Runnable, Closeable {
 		
 		String command = arguments.remove(0);
 		
-		if (command.equals("help")) {
-			if (arguments.size() == 1)
-				for (Command command_type : commands)
-					if (arguments.get(0).equals(command_type.getCommand())) {
-						help(command_type);
-						return;
-					}
-			help();
+		Command command_type = Command.getCommand(command);
+		if (command_type == null) {
+			status("Unrecognized command! Type \"commands\" for a list over commands.");
 			return;
-		} else if (command.equals("man"))
-			if (arguments.size() == 1)
-				for (Command command_type : commands)
-					if (arguments.get(0).equals(command_type.getCommand())) {
-						man(command_type);
-						return;
-					}
-		
-		for (Command command_type : commands) {
-			if (command.equals(command_type.getCommand())) {
-				if (arguments.size() != command_type.getArguments().length) {
-					help(command_type);
-					return;
-				}
-				command_type.run(this, arguments);
-				return;
-			}
 		}
 		
-		status("Unrecognized command! Type \"help\" for a list over commands.");
-	}
-	
-	public void help() throws IOException {
-		
-		String message = "Valid commands:";
-		message += System.lineSeparator();
-		
-		message += " * help (command)";
-		message += System.lineSeparator();
-		message += " * man command";
-		message += System.lineSeparator();
-		
-		for (Command command : commands) {
-			message += " * " + command.getCommand();	
-			for (String argument : command.getArguments())
-				message += " " + argument;
-			message += System.lineSeparator();
+		if (arguments.size() != command_type.getArguments().length) {
+			Command.getCommand("help").run(this, Arrays.asList(command_type.getCommand()));
+			return;
 		}
 		
-		message += System.lineSeparator();
-		message += "Please use one of the commands above";
-		status(message);
-	}
-	
-	public void help(Command command) throws IOException {
-		String message = command.getCommand() + ":";
-		message += System.lineSeparator();
-		message += command.getDescription();
-		message += System.lineSeparator();
-		message += System.lineSeparator();
-		message += "Syntax: " + command.getCommand();
-		for (String argument : command.getArguments())
-			message += " " + argument;
-		status(message);
-	}
-	
-	public void man(Command command) throws IOException {
-		String message = "Manual for " + command.getCommand() + ":";
-		message += System.lineSeparator();
-		message += System.lineSeparator();
-		message += command.getManual();
-		message += System.lineSeparator();
-		message += System.lineSeparator();
-		message += "Syntax: " + command.getCommand();
-		for (String argument : command.getArguments())
-			message += " " + argument;
-		int i = 0;
-		for (String example : command.getExamples()) {
-			i++;
-			message += System.lineSeparator();
-			message += System.lineSeparator();
-			message += "Example " + i + ":";
-			message += System.lineSeparator();
-			message += example;
-		}
-		
-		status(message);
+		command_type.run(this, arguments);	
 	}
 	
 	private boolean login() {

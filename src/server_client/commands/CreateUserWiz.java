@@ -8,7 +8,7 @@ import exceptions.ForcedReturnException;
 import server_client.Command;
 import server_client.ServerClientHandler;
 
-public class CreateUserWiz implements Command {
+public class CreateUserWiz extends Command {
 
 	@Override
 	public String getCommand() {
@@ -17,7 +17,7 @@ public class CreateUserWiz implements Command {
 
 	@Override
 	public String getDescription() {
-		return "Create a new user using a wizard";
+		return "Create a new user using a wizard.";
 	}
 
 	@Override

@@ -8,16 +8,16 @@ import exceptions.ForcedReturnException;
 import server_client.Command;
 import server_client.ServerClientHandler;
 
-public class CreateUser extends Command {
-	
+public class Help extends Command {
+
 	@Override
 	public String getCommand() {
-		return "create-user";
+		return "help";
 	}
 
 	@Override
 	public String getDescription() {
-		return "Create a new user.";
+		return "Show a short description of a command.";
 	}
 
 	@Override
@@ -28,10 +28,7 @@ public class CreateUser extends Command {
 	@Override
 	public String[] getArguments() {
 		return new String[]{
-			"username",
-			"password",
-			"name",
-			"email"
+			"command"	
 		};
 	}
 
@@ -42,6 +39,21 @@ public class CreateUser extends Command {
 
 	@Override
 	public void run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
-		handler.status("TODO");
+		
+		Command command = Command.getCommand(arguments.get(0));
+		if (command == null) {
+			handler.status("Not a command!");
+			return;
+		}
+		
+		String message = command.getDescription();
+		message += System.lineSeparator();
+		message += System.lineSeparator();
+		message += "Syntax: " + command.getCommand();
+		for (String argument : command.getArguments())
+			message += " " + argument;
+		
+		handler.status(message);
 	}
+
 }
