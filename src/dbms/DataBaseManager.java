@@ -1,6 +1,7 @@
 package dbms;
 
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -46,13 +47,13 @@ import exceptions.UsernameAlreadyExistsException;
  * It also parses DB entries to java instances.
  *
  */
-public class DataBaseManager {
+public class DataBaseManager implements Closeable {
 	private Connection connection;
 	
 	/**
 	 * opens a connection to the DB.
 	 */
-	public DataBaseManager(){
+	public DataBaseManager() {
 		try {
 			String[] ci = readConnectionInformation();
 			if (ci.equals(null)) throw new IllegalArgumentException("Something is wrong with your db_id file and a connection can't be established");
@@ -1313,7 +1314,8 @@ public class DataBaseManager {
 	 * closes the connection to the DB.
 	 * @return
 	 */
-	public void close(){
+	@Override
+	public void close() throws IOException {
 		try {
 			connection.close();
 		} catch (SQLException e) {
