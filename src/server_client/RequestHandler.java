@@ -27,7 +27,7 @@ public class RequestHandler{
 	}
 	
 	public static void main(String[] args) {
-		RequestHandler rh = new RequestHandler();
+		
 		try {
 			ServerSocket ss = new ServerSocket(port);
 			
@@ -36,9 +36,10 @@ public class RequestHandler{
 				ServerClientHandler sch = new ServerClientHandler(so);
 			}
 			
+			ss.close();
+			
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			
 		}
 		
 		
@@ -50,16 +51,16 @@ public class RequestHandler{
 	 *================*/ 
 	
 	
-	public static void createUser(User user) throws UsernameAlreadyExistsException{
+	public synchronized static void createUser(User user) throws UsernameAlreadyExistsException{
 		dbm.addUser(user);
 	}
 	
-	public static void editUser(User u) throws UserDoesNotExistException{
+	public synchronized static void editUser(User u) throws UserDoesNotExistException{
 		dbm.editUser(u);
 	}
 	
 
-	public static void makeAdmin(User admin, User newAdmin, Entry entry) throws HasNotTheRightsException, EntryDoesNotExistException, UserDoesNotExistException {
+	public synchronized static void makeAdmin(User admin, User newAdmin, Entry entry) throws HasNotTheRightsException, EntryDoesNotExistException, UserDoesNotExistException {
 		dbm.makeAdmin(admin.getUsername(), newAdmin.getUsername(), entry.getEntryID());
 	}
 	
@@ -68,31 +69,31 @@ public class RequestHandler{
 	 * Entry functions
 	 *================*/ 
 	
-	public static void createEntry(Entry e, User user) throws UserDoesNotExistException{
+	public synchronized static void createEntry(Entry e, User user) throws UserDoesNotExistException{
 		dbm.addEntry(e, user.getUsername());
 	}
 	
-	public static void deleteEntry(Entry e){
+	public synchronized static void deleteEntry(Entry e){
 		dbm.deleteEntry(e.getEntryID());
 	}
 	
-	public static void editEntry(Entry e, User user) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException {
+	public synchronized static void editEntry(Entry e, User user) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException {
 		dbm.editEntry(e, user.getUsername());
 	}
 	
-	public static void kickUserFromEntry(User admin, User user, Entry entry) throws EntryDoesNotExistException, UserDoesNotExistException{
+	public synchronized static void kickUserFromEntry(User admin, User user, Entry entry) throws EntryDoesNotExistException, UserDoesNotExistException{
 		dbm.hideEvent(user.getUsername(), entry.getEntryID());
 	}
 	
-	public static void kickGroupFromEntry(User admin, Group group, Entry entry) throws GroupDoesNotExistException, UserInGroupDoesNotExistsException, EntryDoesNotExistException{
+	public synchronized static void kickGroupFromEntry(User admin, Group group, Entry entry) throws GroupDoesNotExistException, UserInGroupDoesNotExistsException, EntryDoesNotExistException{
 		dbm.hideEventGroup(group.getName(), entry.getEntryID());
 	}	
 	
-	public static void inviteUserToEntry(User admin, User user, Entry entry) throws EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException{
+	public synchronized static void inviteUserToEntry(User admin, User user, Entry entry) throws EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException{
 		dbm.inviteUser(admin.getUsername(), user.getUsername(), entry.getEntryID());
 	}
 	
-	public static void inviteGroupToEntry(User admin, Group group, Entry entry) throws GroupDoesNotExistException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException{
+	public synchronized static void inviteGroupToEntry(User admin, Group group, Entry entry) throws GroupDoesNotExistException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException{
 		dbm.inviteGroup(admin.getUsername(), group.getName(), entry.getEntryID());
 	}
 	
@@ -100,15 +101,15 @@ public class RequestHandler{
 	 * Group functions
 	 *================*/ 
 	
-	public static void createGroup(Group group) throws UserDoesNotExistException, GroupAlreadyExistsException, UserInGroupDoesNotExistsException{
+	public synchronized static void createGroup(Group group) throws UserDoesNotExistException, GroupAlreadyExistsException, UserInGroupDoesNotExistsException{
 		dbm.addGroup(group);
 	}
 	
-	public static void addUserToGroup(User user, Group group) throws UserDoesNotExistException, GroupDoesNotExistException{
+	public synchronized static void addUserToGroup(User user, Group group) throws UserDoesNotExistException, GroupDoesNotExistException{
 		dbm.addUserToGroup(user.getUsername(), group.getName());
 	}
 	
-	public static void removeUserFromGroup(User user, Group group) throws GroupDoesNotExistException{
+	public synchronized static void removeUserFromGroup(User user, Group group) throws GroupDoesNotExistException{
 		dbm.removeUserFromGroup(user.getUsername(), group.getName());
 	}
 	
@@ -117,11 +118,11 @@ public class RequestHandler{
 	 * 'Calendar' functions
 	 *================*/ 
 	
-	public static void createCalendar( User user) throws UserDoesNotExistException{
+	public synchronized static void createCalendar( User user) throws UserDoesNotExistException{
 		dbm.createCalendar(user.getUsername());
 	}
 	
-	public static void invitationAnswer(User u, Entry e, boolean answer) throws EntryDoesNotExistException, UserDoesNotExistException{
+	public synchronized static void invitationAnswer(User u, Entry e, boolean answer) throws EntryDoesNotExistException, UserDoesNotExistException{
 		if (answer == true){
 			dbm.going(u.getUsername(), e.getEntryID());
 		}else{
