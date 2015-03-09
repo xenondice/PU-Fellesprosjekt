@@ -88,8 +88,8 @@ public class RequestHandler{
 	}
 	
 	public static void disconnectUser(ServerClientHandler client) {
-		System.out.println("Disconnecting client:");
-		if (client.getUsername() == null ) System.out.println("Not identified");
+		System.out.print("Disconnecting ");
+		if (client.getUsername() == null ) System.out.println("not identified client");
 		else System.out.println(client.getUsername());
 		currently_connected.remove(client);
 	}

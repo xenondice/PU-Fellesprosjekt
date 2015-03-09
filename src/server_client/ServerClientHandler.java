@@ -9,10 +9,14 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ServiceLoader;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.naming.TimeLimitExceededException;
+import server_client.commands.CreateUser;
+import server_client.commands.CreateUserWiz;
+import exceptions.ForcedReturnException;
 
 public class ServerClientHandler implements Runnable, Closeable {
 	private BufferedReader client_input;
@@ -21,7 +25,12 @@ public class ServerClientHandler implements Runnable, Closeable {
 	private String username;
 	private String password;
 	
-	public static final String[][][] commands = { // Once login is done, store user creditals and change eg. calendar to show your calendar only
+	private static Command[] commands = {
+		new CreateUser(),
+		new CreateUserWiz(),
+	};
+	
+	/*public static final String[][][] commands = { // Once login is done, store user creditals and change eg. calendar to show your calendar only
 		{
 			{"user", "Commands connected to users"},
 				{
@@ -105,7 +114,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 					"username"
 				}
 		}
-	};
+	};*/
 	
 	public ServerClientHandler(Socket user) throws IOException {
 		client_output = new BufferedWriter(new OutputStreamWriter(user.getOutputStream()));
@@ -113,7 +122,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 		client = user;
 	}
 	
-	private List<String> formatRequest(String request) throws IOException {
+	private List<String> formatRequest(String request) {
 		List<String> splitted_answer = new ArrayList<>();
 		
 		Pattern regex_pattern = Pattern.compile("([^\\s\"']+)|\"([^\"]*)\"|'([^']*)'");
@@ -127,140 +136,180 @@ public class ServerClientHandler implements Runnable, Closeable {
 		return splitted_answer;
 	}
 	
-	private List<String> expectInput() throws TimeLimitExceededException, IOException {
-		try {
-			for (int i = 0; i < RequestHandler.WAIT_BEFORE_TIMOUT; i += RequestHandler.CHECK_FOR_EXPECTED_INPUT_INTERVAL) {
-				if (client_input.ready()) {
-					String request = "";
-					while (client_input.ready())
-						request += client_input.readLine();
-					return formatRequest(request);
+	public List<String> expectInput() throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+		
+		long time_inactive = 0;
+		
+		while (true) {
+			if (client_input.ready()) {
+				time_inactive = 0;
+				List<String> formatted = formatRequest(client_input.readLine());
+				if (formatted.size() > 0) {
+					if (formatted.get(0).equals("cancel")) throw new ForcedReturnException();
+					return formatted;
 				}
-				Thread.sleep(Client.SERVER_LISTENER_CHECK_INTERVAL);
 			}
-			throw new TimeLimitExceededException();
-		} catch (InterruptedException e) {
-			return null;
+				
+			if (time_inactive > RequestHandler.WAIT_BEFORE_TIMOUT) throw new TimeoutException();
+			time_inactive += RequestHandler.CHECK_FOR_EXPECTED_INPUT_INTERVAL;
+			Thread.sleep(RequestHandler.CHECK_FOR_EXPECTED_INPUT_INTERVAL);
 		}
 	}
 	
-	private int verifyInt(String argument) throws IOException, TimeLimitExceededException {
+	public void explain(String message) throws IOException {
+		client_output.write(message);
+		client_output.write(System.lineSeparator());
+		client_output.flush();
+	}
+	
+	public void status(String message) throws IOException {
+		client_output.write(message);
+		client_output.write(System.lineSeparator());
+		client_output.write(System.lineSeparator());
+		client_output.flush();
+	}
+	
+	public int verifyInt(String argument) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		while (true) {
 			try {
 				return Integer.parseInt(argument);
 			} catch (NumberFormatException e) {
-				argument = ask("Argument \"" + argument + "\" is not an integer, try again:", 1).get(0);
+				argument = ask("\"" + argument + "\" is not an integer, please type only this argument again.", 1).get(0);
 			}
 		}
 	}
 	
-	private long verifyLong(String argument) throws IOException, TimeLimitExceededException {
+	public long verifyLong(String argument) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		while (true) {
 			try {
 				return Long.parseLong(argument);
 			} catch (NumberFormatException e) {
-				argument = ask("Argument \"" + argument + "\" is not a long, please type only this argument again:", 1).get(0);
+				argument = ask("\"" + argument + "\" is not a long, please type only this argument again.", 1).get(0);
 			}
 		}
 	}
 	
-	private void send() throws IOException {
-		client_output.flush();
-	}
-	
-	private List<String> ask(String question, int number_of_arguments) throws IOException, TimeLimitExceededException {
+	public List<String> ask(String question, int number_of_arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+		
+		explain(question);
+		
 		while (true) {
-			message(question);
-			send();
-			
 			List<String> response = expectInput();
 			
-			if (response.size() == number_of_arguments)
-				return response;
+			if (response.size() == number_of_arguments) return response;
 			
-			message("Please provide " + number_of_arguments + " argument(s)!");
+			explain("Please provide " + number_of_arguments + " argument(s)!");
 		}
 	}
 	
-	private void message(String message) throws IOException {
-		client_output.write(message);
-		client_output.write(System.lineSeparator());
-	}
-	
-	private boolean askYesOrNo(String question) throws IOException, TimeLimitExceededException {
+	public boolean askYesOrNo(String question) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+		
+		List<String> response = ask(question + " (answer with yes[y] or no[n])", 1);
+		
 		while (true) {
-			List<String> response = ask(question + " (answer with yes[y] or no[n])", 1);
-			
 			if (response.get(0).equals("yes") || response.get(0).equals("y"))
 				return true;
 			else if (response.get(0).equals("no") || response.get(0).equals("n"))
 				return false;
 			
-			message("Invalid response!");
+			response = ask("Please answer with yes[y] or no[n]!", 1);
 		}
 	}
 	
-	private void askForSequenceOfArguments() {
-		//TODO
+	public List<Object> wizard(List<String> argument_types) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+		return null; //TODO: Make wizard and forced methods that return if any argument is wrong
 	}
 	
-	private String handleRequest(String request) throws IOException {
-		
-		List<String> arguments = formatRequest(request);
-		
-		if (arguments.isEmpty())
-			return "Invalid request!";
+	private void handleRequest(List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		
 		String command = arguments.remove(0);
 		
-		switch (command) {
-			case "user":
-				int group_loc = 0;
-				if (arguments.isEmpty())
-					return commandHelp(group_loc, 0);
-				else {
-					String sub_command = arguments.remove(0);
-					
-					switch(sub_command) {
-						case "create":
-							int command_loc = 1;
-							if (arguments.size() != numberOfCommandArguments(group_loc, command_loc))
-								return commandHelp(group_loc, command_loc);
-							return createUser(arguments.get(0));
-						default:
-							return commandHelp(0, 0);
+		if (command.equals("help")) {
+			if (arguments.size() == 1)
+				for (Command command_type : commands)
+					if (arguments.get(0).equals(command_type.getCommand())) {
+						help(command_type);
+						return;
 					}
+			help();
+			return;
+		} else if (command.equals("man"))
+			if (arguments.size() == 1)
+				for (Command command_type : commands)
+					if (arguments.get(0).equals(command_type.getCommand())) {
+						man(command_type);
+						return;
+					}
+		
+		for (Command command_type : commands) {
+			if (command.equals(command_type.getCommand())) {
+				if (arguments.size() != command_type.getArguments().length) {
+					help(command_type);
+					return;
 				}
-			default:
-				return "Command not recogniced!";
+				command_type.run(this, arguments);
+				return;
+			}
 		}
-	}
-
-	private String createUser(String username) {
-		return "create user"; //TODO
-	}
-
-	private int numberOfCommandArguments(int group, int command) {
-		return commands[group][command].length - 2;
+		
+		status("Unrecognized command! Type \"help\" for a list over commands.");
 	}
 	
-	private String commandHelp(int group, int command) {
-		String output = "Help for command " + commands[group][command][0] + ":\n";
-		output +=  commands[group][command][1] + "\n\n";
+	public void help() throws IOException {
 		
-		if (command == 0 && commands[group].length > 1) {
-			output += "This command have the following sub-commands:\n";
-			for (int i = 1; i < commands[group].length; i++)
-				output += "\t" + commands[group][i][0] + "\n";
-		} else if (commands[group][command].length > 2) {
-			output += "Syntax:\n\t" + commands[group][0][0] + " " + commands[group][command][0];
-			for (int i = 2; i < commands[group][command].length; i++)
-				output += " " + commands[group][command][i];
-		} else {
-			output += "No arguments\n";
+		String message = "Valid commands:";
+		message += System.lineSeparator();
+		
+		message += " * help (command)";
+		message += System.lineSeparator();
+		message += " * man command";
+		message += System.lineSeparator();
+		
+		for (Command command : commands) {
+			message += " * " + command.getCommand();	
+			for (String argument : command.getArguments())
+				message += " " + argument;
+			message += System.lineSeparator();
 		}
 		
-		return output + "\n";
+		message += System.lineSeparator();
+		message += "Please use one of the commands above";
+		status(message);
+	}
+	
+	public void help(Command command) throws IOException {
+		String message = command.getCommand() + ":";
+		message += System.lineSeparator();
+		message += command.getDescription();
+		message += System.lineSeparator();
+		message += System.lineSeparator();
+		message += "Syntax: " + command.getCommand();
+		for (String argument : command.getArguments())
+			message += " " + argument;
+		status(message);
+	}
+	
+	public void man(Command command) throws IOException {
+		String message = "Manual for " + command.getCommand() + ":";
+		message += System.lineSeparator();
+		message += System.lineSeparator();
+		message += command.getManual();
+		message += System.lineSeparator();
+		message += System.lineSeparator();
+		message += "Syntax: " + command.getCommand();
+		for (String argument : command.getArguments())
+			message += " " + argument;
+		int i = 0;
+		for (String example : command.getExamples()) {
+			i++;
+			message += System.lineSeparator();
+			message += System.lineSeparator();
+			message += "Example " + i + ":";
+			message += System.lineSeparator();
+			message += example;
+		}
+		
+		status(message);
 	}
 	
 	private boolean login() {
@@ -275,24 +324,17 @@ public class ServerClientHandler implements Runnable, Closeable {
 	public void run() {
 		login();
 		
-		long time_inactive = 0;
-		while (!Thread.interrupted()) {
+		while (true) {
 			try {
-				
-				if (time_inactive >= RequestHandler.WAIT_BEFORE_TIMOUT) break;
-				
-				while (client_input.ready()) {
-					time_inactive = 0;
-					message(handleRequest(client_input.readLine()));
-					send();
-				}
-				
-				time_inactive += RequestHandler.CHECK_FOR_EXPECTED_INPUT_INTERVAL;
-				Thread.sleep(RequestHandler.CHECK_FOR_EXPECTED_INPUT_INTERVAL);
-			} catch (InterruptedException | IOException e) {
+				handleRequest(expectInput());
+			} catch (ForcedReturnException e) {
+				try {status(e.getMessage());} catch (IOException e1) {e.printStackTrace();};
+				continue;
+			} catch (IOException | TimeoutException | InterruptedException e) {
 				break;
 			}
 		}
+		
 		try {close();} catch (IOException e) {e.printStackTrace();}
 	}
 	
