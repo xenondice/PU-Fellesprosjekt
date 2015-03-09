@@ -25,6 +25,8 @@ public class RequestHandler{
 	private static Set<ServerClientHandler> currently_connected;
 	
 	public static final int PORT = 80;
+	public static final long CHECK_FOR_EXPECTED_INPUT_INTERVAL = 100;
+	public static final long WAIT_BEFORE_TIMOUT = 10000;
 	
 	public static void main(String[] args) {
 		init();
@@ -60,6 +62,7 @@ public class RequestHandler{
 		try {
 			while (!server.isClosed()) {
 				Socket new_client = server.accept();
+				System.out.println("Accepting new client");
 				ServerClientHandler client_handler = new ServerClientHandler(new_client);
 				currently_connected.add(client_handler);
 				Thread client_handler_thread = new Thread(client_handler);
@@ -70,6 +73,15 @@ public class RequestHandler{
 			dispose();
 			System.exit(-1);
 		}
+	}
+	
+	public static boolean isLoggedIn(String username) {
+		//TODO:
+		return false;
+	}
+	
+	public static void disconnectUser(ServerClientHandler client) {
+		currently_connected.remove(client);
 	}
 	
 	/* ===============
@@ -158,6 +170,4 @@ public class RequestHandler{
 			dbm.notGoing(u.getUsername(), e.getEntryID());
 		}
 	}
-
-	
 }

@@ -17,8 +17,9 @@ import javax.naming.TimeLimitExceededException;
 public class ServerClientHandler implements Runnable, Closeable {
 	private BufferedReader client_input;
 	private BufferedWriter client_output;
+	private Socket client;
 	
-	public static final transient String[][][] commands = { // Once login is done, store user creditals and change eg. calendar to show your calendar only
+	public static final String[][][] commands = { // Once login is done, store user creditals and change eg. calendar to show your calendar only
 		{
 			{"user", "Commands connected to users"},
 				{
@@ -107,6 +108,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 	public ServerClientHandler(Socket user) throws IOException {
 		client_output = new BufferedWriter(new OutputStreamWriter(user.getOutputStream()));
 		client_input = new BufferedReader(new InputStreamReader(user.getInputStream()));
+		client = user;
 	}
 	
 	private List<String> formatRequest(String request) throws IOException {
@@ -125,7 +127,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 	
 	private List<String> expectInput() throws TimeLimitExceededException, IOException {
 		try {
-			for (int i = 0; i < Client.WAIT_BEFORE_TIMEOUT; i += Client.SERVER_LISTENER_CHECK_INTERVAL) { //TODO: move to RH
+			for (int i = 0; i < RequestHandler.WAIT_BEFORE_TIMOUT; i += RequestHandler.CHECK_FOR_EXPECTED_INPUT_INTERVAL) {
 				if (client_input.ready()) {
 					String request = "";
 					while (client_input.ready())
@@ -196,6 +198,10 @@ public class ServerClientHandler implements Runnable, Closeable {
 		}
 	}
 	
+	private void askForSequenceOfArguments() {
+		//TODO
+	}
+	
 	private String handleRequest(String request) throws IOException {
 		
 		List<String> arguments = formatRequest(request);
@@ -231,7 +237,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 	}
 
 	private String createUser(String username) {
-		return "";
+		return "create user"; //TODO
 	}
 
 	private int numberOfCommandArguments(int group, int command) {
@@ -254,26 +260,34 @@ public class ServerClientHandler implements Runnable, Closeable {
 			output += "No arguments\n";
 		}
 		
-		return output;
+		return output + "\n";
 	}
 
 	@Override
 	public void run() {
 		while (!Thread.interrupted()) {
 			try {
+				if (!client.isConnected()) break;
 				while (client_input.ready()) {
+					System.out.println("Recieved message!");
 					message(handleRequest(client_input.readLine()));
 					send();
 				}
-				Thread.sleep(Client.SERVER_LISTENER_CHECK_INTERVAL); //TODO: Add in requesthandler
+				Thread.sleep(RequestHandler.CHECK_FOR_EXPECTED_INPUT_INTERVAL);
 			} catch (InterruptedException | IOException e) {
+				try {close();} catch (IOException e1) {e1.printStackTrace();}
 				return;
 			}
 		}
+		try {close();} catch (IOException e) {e.printStackTrace();}
 	}
 	
 	@Override
 	public void close() throws IOException {
 		Thread.currentThread().interrupt();
+		RequestHandler.disconnectUser(this);
+		client_input.close();
+		client_output.close();
+		client.close();
 	}
 }

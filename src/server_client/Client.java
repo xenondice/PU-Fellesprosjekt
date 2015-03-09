@@ -156,9 +156,9 @@ public class Client {
 	}
 	
 	private static void sendRequest(String request) throws TimeLimitExceededException, IOException {
-		
+		System.out.println("Sent request!");
 		can_write = false;
-		server_output.write(request);
+		server_output.write(request + System.lineSeparator());
 		server_output.flush();
 		
 		waitForEnd();
