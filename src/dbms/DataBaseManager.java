@@ -359,7 +359,7 @@ public class DataBaseManager implements Closeable {
 	 * Only the CalendarEntry Table is changed. 
 	 * 
 	 * @param e
-	 * @return true iff the action was successful, false otherwise
+	 * @return true if the action was successful, false otherwise
 	 */
 	private boolean addIntoEntry(CalendarEntry e) {
 		
