@@ -7,9 +7,11 @@ import java.net.Socket;
 import calendar.Entry;
 import dbms.DataBaseManager;
 import exceptions.EntryDoesNotExistException;
+import exceptions.GroupAlreadyExistsException;
 import exceptions.GroupDoesNotExistException;
 import exceptions.HasNotTheRightsException;
 import exceptions.UserDoesNotExistException;
+import exceptions.UserInGroupDoesNotExistsException;
 import exceptions.UsernameAlreadyExistsException;
 import user.Group;
 import user.User;
@@ -31,7 +33,7 @@ public class RequestHandler{
 			
 			while (true){
 				Socket so = ss.accept();
-				ServerClientHandler sch = new ServerClientHandler(so, rh);
+				ServerClientHandler sch = new ServerClientHandler(so);
 			}
 			
 		} catch (IOException e) {
@@ -57,7 +59,7 @@ public class RequestHandler{
 	}
 	
 
-	public static void makeAdmin(User admin, User newAdmin, Entry entry) throws HasNotTheRightsException {
+	public static void makeAdmin(User admin, User newAdmin, Entry entry) throws HasNotTheRightsException, EntryDoesNotExistException, UserDoesNotExistException {
 		dbm.makeAdmin(admin.getUsername(), newAdmin.getUsername(), entry.getEntryID());
 	}
 	
@@ -78,19 +80,19 @@ public class RequestHandler{
 		dbm.editEntry(e, user.getUsername());
 	}
 	
-	public static void kickUserFromEntry(User admin, User user, Entry entry){
+	public static void kickUserFromEntry(User admin, User user, Entry entry) throws EntryDoesNotExistException, UserDoesNotExistException{
 		dbm.hideEvent(user.getUsername(), entry.getEntryID());
 	}
 	
-	public static void kickGroupFromEntry(User admin, Group group, Entry entry) throws GroupDoesNotExistException{
+	public static void kickGroupFromEntry(User admin, Group group, Entry entry) throws GroupDoesNotExistException, UserInGroupDoesNotExistsException, EntryDoesNotExistException{
 		dbm.hideEventGroup(group.getName(), entry.getEntryID());
 	}	
 	
-	public static void inviteUserToEntry(User admin, User user, Entry entry){
+	public static void inviteUserToEntry(User admin, User user, Entry entry) throws EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException{
 		dbm.inviteUser(admin.getUsername(), user.getUsername(), entry.getEntryID());
 	}
 	
-	public static void inviteGroupToEntry(User admin, Group group, Entry entry) throws GroupDoesNotExistException{
+	public static void inviteGroupToEntry(User admin, Group group, Entry entry) throws GroupDoesNotExistException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException{
 		dbm.inviteGroup(admin.getUsername(), group.getName(), entry.getEntryID());
 	}
 	
@@ -98,15 +100,15 @@ public class RequestHandler{
 	 * Group functions
 	 *================*/ 
 	
-	public static void createGroup(Group group) throws UserDoesNotExistException{
+	public static void createGroup(Group group) throws UserDoesNotExistException, GroupAlreadyExistsException, UserInGroupDoesNotExistsException{
 		dbm.addGroup(group);
 	}
 	
-	public static void addUserToGroup(User user, Group group) throws UserDoesNotExistException{
+	public static void addUserToGroup(User user, Group group) throws UserDoesNotExistException, GroupDoesNotExistException{
 		dbm.addUserToGroup(user.getUsername(), group.getName());
 	}
 	
-	public static void removeUserFromGroup(User user, Group group){
+	public static void removeUserFromGroup(User user, Group group) throws GroupDoesNotExistException{
 		dbm.removeUserFromGroup(user.getUsername(), group.getName());
 	}
 	
@@ -119,7 +121,7 @@ public class RequestHandler{
 		dbm.createCalendar(user.getUsername());
 	}
 	
-	public static void invitationAnswer(User u, Entry e, boolean answer){
+	public static void invitationAnswer(User u, Entry e, boolean answer) throws EntryDoesNotExistException, UserDoesNotExistException{
 		if (answer == true){
 			dbm.going(u.getUsername(), e.getEntryID());
 		}else{
