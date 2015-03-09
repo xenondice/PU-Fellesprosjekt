@@ -25,7 +25,7 @@ import user.UserBuilder;
 import calendar.Calendar;
 import calendar.CalendarBuilder;
 import calendar.CalendarEntry;
-import calendar.EntryBuilder;
+import calendar.CalendarEntryBuilder;
 import calendar.Invitation;
 import calendar.InvitationBuilder;
 
@@ -370,7 +370,7 @@ public class DataBaseManager implements Closeable {
 		// TODO change to same style as setIsGoing.
 		// TODO Do we need the isActive flag???
 		
-		EntryBuilder eb = new EntryBuilder(getEntry(entry_id));
+		CalendarEntryBuilder eb = new CalendarEntryBuilder(getEntry(entry_id));
 		eb.setIsActive(newValue);
 		return editEntry(eb.build(), username);
 	}
@@ -796,7 +796,7 @@ public class DataBaseManager implements Closeable {
 			stm.setLong(1, entry_id);
 			ResultSet rs = stm.executeQuery();
 			if (rs.next()) {
-				EntryBuilder ub = new EntryBuilder();
+				CalendarEntryBuilder ub = new CalendarEntryBuilder();
 				ub.setEventID(entry_id);
 				ub.setDescription(rs.getString("description"));
 				ub.setEndTime(rs.getLong("endTime"));
@@ -1287,7 +1287,7 @@ public class DataBaseManager implements Closeable {
 			
 			
 			while(rset.next()){
-				EntryBuilder entryB = new EntryBuilder();
+				CalendarEntryBuilder entryB = new CalendarEntryBuilder();
 				
 				entryB.setEventID(rset.getInt("entryID"));
 				entryB.setStartTime(rset.getLong("startTime"));

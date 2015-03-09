@@ -14,25 +14,25 @@ public class CalendarEntry {
 	private final  long endTime; 
 	private final  String location; 
 	private final  String description; 
-	private final  boolean isActive; 
 	private final  String roomID; 
+	private final  String creator;
 	
 	public CalendarEntry(int entryID, long startTime, long endTime, String location,
-			String description,	boolean isActive, String roomID){
+			String description, String roomID, String creator){
 		this.entryID = entryID; 
 		this.startTime = startTime; 
 		this.endTime = endTime; 
 		this.location = location; 
 		this.description = description; 
-		this.isActive = isActive; 
 		this.roomID = roomID; 
+		this.creator = creator;
 	}
 	
 	/**
 	 * @return a (immutable) clone of this instance
 	 */
 	public CalendarEntry clone(){
-		return new CalendarEntry(entryID, startTime, endTime, location, description, isActive, roomID);
+		return new CalendarEntry(entryID, startTime, endTime, location, description, roomID, creator);
 	}
 	
 	@Override
@@ -48,10 +48,10 @@ public class CalendarEntry {
 		sb.append(location); sb.append("\n");
 		sb.append("description: ");
 		sb.append(description); sb.append("\n");
-		sb.append("isActive: ");
-		sb.append(isActive); sb.append("\n");
 		sb.append("roomID: ");
 		sb.append(roomID); sb.append("\n");
+		sb.append("creator: ");
+		sb.append(creator); sb.append("\n");
 		return sb.toString();
 	}
 	
@@ -73,7 +73,8 @@ public class CalendarEntry {
 	public long getStartTime() {
 		return startTime;
 	}
-	public boolean isActive(){
-		return isActive;
+
+	public String getCreator(){
+		return creator;
 	}
 }
