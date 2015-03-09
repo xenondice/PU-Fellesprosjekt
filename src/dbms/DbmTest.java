@@ -2,11 +2,15 @@ package dbms;
 
 import static org.junit.Assert.*;
 
+import java.sql.DriverManager;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.sql.Connection;
 
 import exceptions.UsernameAlreadyExistsException;
 import user.User;
@@ -15,17 +19,22 @@ public class DbmTest {
 	private DataBaseManager dbm;
 	private User u1;
 	private User u2;
+	private Connection connection;
 
 	@Before
 	public void setUp() throws Exception {
 		dbm = new DataBaseManager();
 		u1 = new User("testUser1", "Theo", "1234", "ABCD", "Theo@test.ntnu");
 		u2 = new User("testUser2", "Thalia", "5678", "EFGS", "Thalia@test.ntnu");
+		Class.forName("com.mysql.jdbc.Driver");
+		String[] ci= {"jdbc:mysql://mysql.stud.ntnu.no/mariessa_pu", "mariessa_pu","fellesprosjekt" };
+		connection = DriverManager.getConnection(ci[0], ci[1], ci[2]);
 	}
 
 	@After
 	public void tearDown() throws Exception {
 		dbm.close();
+		connection.close();
 	}
 
 	@Test
