@@ -18,22 +18,42 @@ import user.User;
 
 public class RequestHandler{
 
-	static DataBaseManager dbm = new DataBaseManager();
+	private static DataBaseManager dbm;
+	private static ServerSocket server;
 	public static final int port = 80;
 	
-	
-	public static void logIn(User user){
-		// TODO
+	public static void main(String[] args) {
+		init();
+		acceptClients();
+		dispose();
 	}
 	
-	public static void main(String[] args) {
-		
+	private static void init() {
 		try {
-			ServerSocket ss = new ServerSocket(port);
+			dbm = new DataBaseManager();
+			server = new ServerSocket(port);
+		} catch (IOException e) {
+			dispose();
+		}
+	}
+	
+	private static void dispose() {
+		try {
+			server.close();
+			dbm.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(-1);
+		}
+	}
+	
+	private static void acceptClients() {
+		try {
 			
-			while (true){
+			while (!ss.isClosed()){
 				Socket so = ss.accept();
 				ServerClientHandler sch = new ServerClientHandler(so);
+				
 			}
 			
 			ss.close();
@@ -41,15 +61,15 @@ public class RequestHandler{
 		} catch (IOException e) {
 			
 		}
-		
-		
 	}
-	
 	
 	/* ===============
 	 * User functions
 	 *================*/ 
 	
+	public static void logIn(User user){
+		// TODO
+	}
 	
 	public synchronized static void createUser(User user) throws UsernameAlreadyExistsException{
 		dbm.addUser(user);
