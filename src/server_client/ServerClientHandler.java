@@ -18,6 +18,8 @@ public class ServerClientHandler implements Runnable, Closeable {
 	private BufferedReader client_input;
 	private BufferedWriter client_output;
 	private Socket client;
+	private String username;
+	private String password;
 	
 	public static final String[][][] commands = { // Once login is done, store user creditals and change eg. calendar to show your calendar only
 		{
@@ -214,7 +216,6 @@ public class ServerClientHandler implements Runnable, Closeable {
 		switch (command) {
 			case "user":
 				int group_loc = 0;
-				
 				if (arguments.isEmpty())
 					return commandHelp(group_loc, 0);
 				else {
@@ -223,7 +224,6 @@ public class ServerClientHandler implements Runnable, Closeable {
 					switch(sub_command) {
 						case "create":
 							int command_loc = 1;
-							
 							if (arguments.size() != numberOfCommandArguments(group_loc, command_loc))
 								return commandHelp(group_loc, command_loc);
 							return createUser(arguments.get(0));
@@ -262,21 +262,35 @@ public class ServerClientHandler implements Runnable, Closeable {
 		
 		return output + "\n";
 	}
+	
+	private boolean login() {
+		return true; //TODO
+	}
+	
+	public String getUsername() {
+		return username;
+	}
 
 	@Override
 	public void run() {
+		login();
+		
+		long time_inactive = 0;
 		while (!Thread.interrupted()) {
 			try {
-				if (!client.isConnected()) break;
+				
+				if (time_inactive >= RequestHandler.WAIT_BEFORE_TIMOUT) break;
+				
 				while (client_input.ready()) {
-					System.out.println("Recieved message!");
+					time_inactive = 0;
 					message(handleRequest(client_input.readLine()));
 					send();
 				}
+				
+				time_inactive += RequestHandler.CHECK_FOR_EXPECTED_INPUT_INTERVAL;
 				Thread.sleep(RequestHandler.CHECK_FOR_EXPECTED_INPUT_INTERVAL);
 			} catch (InterruptedException | IOException e) {
-				try {close();} catch (IOException e1) {e1.printStackTrace();}
-				return;
+				break;
 			}
 		}
 		try {close();} catch (IOException e) {e.printStackTrace();}
@@ -284,7 +298,6 @@ public class ServerClientHandler implements Runnable, Closeable {
 	
 	@Override
 	public void close() throws IOException {
-		Thread.currentThread().interrupt();
 		RequestHandler.disconnectUser(this);
 		client_input.close();
 		client_output.close();

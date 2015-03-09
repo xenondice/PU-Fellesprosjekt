@@ -183,17 +183,17 @@ public class Client {
 		
 		can_recieve_input = false;
 		
-		String answer = "";
+		String request = "";
 		
 		while (true) {
 			console_output.write("$ ");
 			console_output.flush();
 			
-			answer = console_input.readLine().trim().toLowerCase();
+			request = console_input.readLine().trim().toLowerCase();
 			
 			message();
 			
-			if (answer.length() > 0) break;
+			if (request.length() > 0) break;
 			
 			message("Can't send empty string!");
 			message();
@@ -201,7 +201,7 @@ public class Client {
 		
 		can_recieve_input = true;
 		
-		return answer;
+		return request;
 	}
 	
 	public static boolean ready() {
@@ -209,9 +209,18 @@ public class Client {
 	}
 	
 	private static void run() throws IOException {
+		
 		while (true) {
 			
 			String request = requestConsoleInput();
+			
+			if (request.equals("exit")) {
+				if (askYesOrNo("Are you sure you want to exit?")) {
+					message("Exiting...");
+					break;
+				}
+				continue;
+			}
 			
 			try {
 				sendRequest(request);

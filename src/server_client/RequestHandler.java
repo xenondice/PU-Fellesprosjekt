@@ -25,8 +25,8 @@ public class RequestHandler{
 	private static Set<ServerClientHandler> currently_connected;
 	
 	public static final int PORT = 80;
-	public static final long CHECK_FOR_EXPECTED_INPUT_INTERVAL = 100;
-	public static final long WAIT_BEFORE_TIMOUT = 10000;
+	public static final long CHECK_FOR_EXPECTED_INPUT_INTERVAL = 500;
+	public static final long WAIT_BEFORE_TIMOUT = 60000;
 	
 	public static void main(String[] args) {
 		init();
@@ -35,6 +35,7 @@ public class RequestHandler{
 	}
 	
 	private static void init() {
+		System.out.println("Staring server...");
 		try {
 			currently_connected = new HashSet<>();
 			dbm = new DataBaseManager();
@@ -44,9 +45,11 @@ public class RequestHandler{
 			dispose();
 			System.exit(-1);
 		}
+		System.out.println("Server started");
 	}
 	
 	private static void dispose() {
+		System.out.println("Shutting down server...");
 		try {
 			for (ServerClientHandler handler : currently_connected)
 				handler.close();
@@ -56,13 +59,15 @@ public class RequestHandler{
 			e.printStackTrace();
 			System.exit(-1);
 		}
+		System.out.println("Server down");
 	}
 	
 	private static void acceptClients() {
+		System.out.println("Accepting new clients");
 		try {
 			while (!server.isClosed()) {
 				Socket new_client = server.accept();
-				System.out.println("Accepting new client");
+				System.out.println("New client connected, awaiting identification...");
 				ServerClientHandler client_handler = new ServerClientHandler(new_client);
 				currently_connected.add(client_handler);
 				Thread client_handler_thread = new Thread(client_handler);
@@ -76,11 +81,16 @@ public class RequestHandler{
 	}
 	
 	public static boolean isLoggedIn(String username) {
-		//TODO:
+		for (ServerClientHandler handler : currently_connected) {
+			if (handler.getUsername() != null && handler.getUsername().equals(username)) return true;
+		}
 		return false;
 	}
 	
 	public static void disconnectUser(ServerClientHandler client) {
+		System.out.println("Disconnecting client:");
+		if (client.getUsername() == null ) System.out.println("Not identified");
+		else System.out.println(client.getUsername());
 		currently_connected.remove(client);
 	}
 	
