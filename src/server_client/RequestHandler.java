@@ -6,7 +6,7 @@ import java.net.Socket;
 import java.util.HashSet;
 import java.util.Set;
 
-import calendar.Entry;
+import calendar.CalendarEntry;
 import dbms.DataBaseManager;
 import exceptions.EntryDoesNotExistException;
 import exceptions.GroupAlreadyExistsException;
@@ -89,41 +89,41 @@ public class RequestHandler{
 	}
 	
 
-	public synchronized static void makeAdmin(User admin, User newAdmin, Entry entry) throws HasNotTheRightsException, EntryDoesNotExistException, UserDoesNotExistException {
-		dbm.makeAdmin(admin.getUsername(), newAdmin.getUsername(), entry.getEntryID());
+	public synchronized static void makeAdmin(User admin, User newAdmin, CalendarEntry calendarEntry) throws HasNotTheRightsException, EntryDoesNotExistException, UserDoesNotExistException {
+		dbm.makeAdmin(admin.getUsername(), newAdmin.getUsername(), calendarEntry.getEntryID());
 	}
 	
 	
 	/* ===============
-	 * Entry functions
+	 * CalendarEntry functions
 	 *================*/ 
 	
-	public synchronized static void createEntry(Entry e, User user) throws UserDoesNotExistException{
+	public synchronized static void createEntry(CalendarEntry e, User user) throws UserDoesNotExistException{
 		dbm.addEntry(e, user.getUsername());
 	}
 	
-	public synchronized static void deleteEntry(Entry e){
+	public synchronized static void deleteEntry(CalendarEntry e){
 		dbm.deleteEntry(e.getEntryID());
 	}
 	
-	public synchronized static void editEntry(Entry e, User user) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException {
+	public synchronized static void editEntry(CalendarEntry e, User user) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException {
 		dbm.editEntry(e, user.getUsername());
 	}
 	
-	public synchronized static void kickUserFromEntry(User admin, User user, Entry entry) throws EntryDoesNotExistException, UserDoesNotExistException{
-		dbm.hideEvent(user.getUsername(), entry.getEntryID());
+	public synchronized static void kickUserFromEntry(User admin, User user, CalendarEntry calendarEntry) throws EntryDoesNotExistException, UserDoesNotExistException{
+		dbm.hideEvent(user.getUsername(), calendarEntry.getEntryID());
 	}
 	
-	public synchronized static void kickGroupFromEntry(User admin, Group group, Entry entry) throws GroupDoesNotExistException, UserInGroupDoesNotExistsException, EntryDoesNotExistException{
-		dbm.hideEventGroup(group.getName(), entry.getEntryID());
+	public synchronized static void kickGroupFromEntry(User admin, Group group, CalendarEntry calendarEntry) throws GroupDoesNotExistException, UserInGroupDoesNotExistsException, EntryDoesNotExistException{
+		dbm.hideEventGroup(group.getName(), calendarEntry.getEntryID());
 	}	
 	
-	public synchronized static void inviteUserToEntry(User admin, User user, Entry entry) throws EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException{
-		dbm.inviteUser(admin.getUsername(), user.getUsername(), entry.getEntryID());
+	public synchronized static void inviteUserToEntry(User admin, User user, CalendarEntry calendarEntry) throws EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException{
+		dbm.inviteUser(admin.getUsername(), user.getUsername(), calendarEntry.getEntryID());
 	}
 	
-	public synchronized static void inviteGroupToEntry(User admin, Group group, Entry entry) throws GroupDoesNotExistException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException{
-		dbm.inviteGroup(admin.getUsername(), group.getName(), entry.getEntryID());
+	public synchronized static void inviteGroupToEntry(User admin, Group group, CalendarEntry calendarEntry) throws GroupDoesNotExistException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException{
+		dbm.inviteGroup(admin.getUsername(), group.getName(), calendarEntry.getEntryID());
 	}
 	
 	/* ===============
@@ -151,7 +151,7 @@ public class RequestHandler{
 		dbm.createCalendar(user.getUsername());
 	}
 	
-	public synchronized static void invitationAnswer(User u, Entry e, boolean answer) throws EntryDoesNotExistException, UserDoesNotExistException{
+	public synchronized static void invitationAnswer(User u, CalendarEntry e, boolean answer) throws EntryDoesNotExistException, UserDoesNotExistException{
 		if (answer == true){
 			dbm.going(u.getUsername(), e.getEntryID());
 		}else{

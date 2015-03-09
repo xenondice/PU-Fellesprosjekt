@@ -3,10 +3,10 @@ package calendar;
 import interfaces.Builder;
 
 /**
- * This class is here to incrementally build a immutable Entry. 
+ * This class is here to incrementally build a immutable CalendarEntry. 
  *
  */
-public class EntryBuilder implements Builder<Entry>{
+public class EntryBuilder implements Builder<CalendarEntry>{
 	private int entryID = 0;
 	private long startTime = 0;
 	private long endTime = 0;
@@ -19,7 +19,7 @@ public class EntryBuilder implements Builder<Entry>{
 		
 	}
 	
-	public EntryBuilder(Entry e){
+	public EntryBuilder(CalendarEntry e){
 		this.setDescription(e.getDescription());
 		this.setEndTime(e.getEndTime());
 		this.setEventID(e.getEntryID());
@@ -30,8 +30,8 @@ public class EntryBuilder implements Builder<Entry>{
 	}
 	
 	@Override
-	public Entry build(){
-		return new Entry(entryID, startTime, endTime, location, description, isActive, roomID);
+	public CalendarEntry build(){
+		return new CalendarEntry(entryID, startTime, endTime, location, description, isActive, roomID);
 	}
 	
 	public void setDescription(String description) {

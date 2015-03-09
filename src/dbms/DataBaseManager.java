@@ -24,7 +24,7 @@ import user.User;
 import user.UserBuilder;
 import calendar.Calendar;
 import calendar.CalendarBuilder;
-import calendar.Entry;
+import calendar.CalendarEntry;
 import calendar.EntryBuilder;
 import calendar.Invitation;
 import calendar.InvitationBuilder;
@@ -115,7 +115,7 @@ public class DataBaseManager implements Closeable {
 	private boolean doesEntryExist(long entryID){
 		PreparedStatement findEntry_stmt;
 		try {
-			findEntry_stmt = connection.prepareStatement("SELECT * FROM Entry WHERE entryID = ?;");
+			findEntry_stmt = connection.prepareStatement("SELECT * FROM CalendarEntry WHERE entryID = ?;");
 			findEntry_stmt.setLong(1, entryID);
 			ResultSet rset = findEntry_stmt.executeQuery();
 			return rset.next();
@@ -376,15 +376,15 @@ public class DataBaseManager implements Closeable {
 	}
 
 	/**
-	 * adds the Entry as a new Entry (with unique id) into the Entry Table.</br>
-	 * Only the Entry Table is changed. 
+	 * adds the CalendarEntry as a new CalendarEntry (with unique id) into the CalendarEntry Table.</br>
+	 * Only the CalendarEntry Table is changed. 
 	 * 
 	 * @param e
 	 * @return true iff the action was successful, false otherwise
 	 */
-	private boolean addIntoEntry(Entry e) {
+	private boolean addIntoEntry(CalendarEntry e) {
 		
-		String insert_entry = "INSERT INTO Entry (startTime, endTime, location, description, isActive, roomID) "
+		String insert_entry = "INSERT INTO CalendarEntry (startTime, endTime, location, description, isActive, roomID) "
 				+ "VALUES (?, ?, ?, ?, ?, ?)"; // without setting entryID -> default value
 	
 		try {
@@ -417,7 +417,7 @@ public class DataBaseManager implements Closeable {
 	 */
 	private long getLastEntryID(){
 		// get entry_id of the just added entry
-		String get_id = "SELECT MAX(entryID) FROM Entry;";
+		String get_id = "SELECT MAX(entryID) FROM CalendarEntry;";
 		Statement get_id_stmt;
 		try {
 		get_id_stmt = connection.createStatement();
@@ -782,16 +782,16 @@ public class DataBaseManager implements Closeable {
 	/**
 	 * returns the entry with the specified entryId from the database.
 	 * @param entry_id
-	 * @return the Entry instance from the DB with the specified id.
+	 * @return the CalendarEntry instance from the DB with the specified id.
 	 * @throws EntryDoesNotExistException if the entry does not exist.
 	 */
-	public Entry getEntry(int entry_id) throws EntryDoesNotExistException {
+	public CalendarEntry getEntry(int entry_id) throws EntryDoesNotExistException {
 		
 		checkIfEntryExists(entry_id);
 	
 		PreparedStatement stm;
 		try {
-			stm = connection.prepareStatement("SELECT * FROM Entry WHERE entryID=?");
+			stm = connection.prepareStatement("SELECT * FROM CalendarEntry WHERE entryID=?");
 	
 			stm.setLong(1, entry_id);
 			ResultSet rs = stm.executeQuery();
@@ -822,7 +822,7 @@ public class DataBaseManager implements Closeable {
 	 */
 	public boolean deleteEntry(int entry_id){
 		try {
-			PreparedStatement stm = connection.prepareStatement("DELETE FROM Entry WHERE entryID = ?");
+			PreparedStatement stm = connection.prepareStatement("DELETE FROM CalendarEntry WHERE entryID = ?");
 			stm.setLong(1, entry_id);
 			stm.executeUpdate();
 			return true;
@@ -834,15 +834,15 @@ public class DataBaseManager implements Closeable {
 	}
 
 	/**
-	 * Adds the given Entry as a new entry into the DB
-	 * To edit an existing entry use editEntry(Entry e) instead.
+	 * Adds the given CalendarEntry as a new entry into the DB
+	 * To edit an existing entry use editEntry(CalendarEntry e) instead.
 	 * @return true if the action was successful. False otherwise.
 	 * @param e the entry
 	 * @param u the user creating the entry
 	 * @throws UserDoesNotExistException 
 	 * @throws InvitationDoesNotExistException 
 	 */
-	public boolean addEntry(Entry e, String username) throws UserDoesNotExistException{
+	public boolean addEntry(CalendarEntry e, String username) throws UserDoesNotExistException{
 		
 		checkIfUserExists(username);
 		
@@ -874,13 +874,13 @@ public class DataBaseManager implements Closeable {
 	 * @throws HasNotTheRightsException if the user is not Admin of the entry
 	 * @throws UserDoesNotExistException 
 	 */
-	public boolean editEntry(Entry newEntry, String username) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException{
+	public boolean editEntry(CalendarEntry newEntry, String username) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException{
 				
 		// checks
 		checkUserAndEntry(username, newEntry.getEntryID());
 		checkIfisAdmin(username, newEntry.getEntryID());
 		
-		String edit_entry = "UPDATE Entry "
+		String edit_entry = "UPDATE CalendarEntry "
 				+ "SET startTime = ?, endTime = ?, location = ?, description = ?, isActive = ?, roomID = ? "
 				+ "WHERE entryID = ?; ";
 		
@@ -1235,7 +1235,7 @@ public class DataBaseManager implements Closeable {
 		checkUserAndEntry(username, entry_id);
 		
 		String get_is_admin = "SELECT COUNT(*) "
-				+ "FROM IsAdmin A, User U, Entry E "
+				+ "FROM IsAdmin A, User U, CalendarEntry E "
 				+ "WHERE A.username = U.username "
 				+ "AND A.entryID = E.EntryID "
 				+ "AND U.username = ? "
@@ -1270,7 +1270,7 @@ public class DataBaseManager implements Closeable {
 		checkIfUserExists(username);
 		
 		String select_all_events_for_user = "SELECT E.* "
-										  + "FROM Entry E, User U, Status S "
+										  + "FROM CalendarEntry E, User U, Status S "
 										  + "WHERE S.isShowing = 1 "
 										  	+ "AND E.entryID = S.entryID "
 										  	+ "AND U.username = S.username "

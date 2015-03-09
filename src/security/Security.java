@@ -2,7 +2,7 @@
 package security;
 
 import user.User;
-import calendar.Entry;
+import calendar.CalendarEntry;
 
 import com.mysql.jdbc.exceptions.NotYetImplementedException;
 
@@ -29,7 +29,7 @@ public class Security {
 	 * @param e
 	 * @return true iff the user is allowed to edit the entry
 	 */
-	public boolean canEdit(User u, Entry e){
+	public boolean canEdit(User u, CalendarEntry e){
 		// TODO
 		throw new NotYetImplementedException();
 	}

@@ -3,11 +3,11 @@ package calendar;
 
 import java.util.Date;
 /**
- * Represents an Entry in a Calendar
+ * Represents an CalendarEntry in a Calendar
  * The class is immutable. That means no instance of this class can change any of its attributes.
  *
 */
-public class Entry {
+public class CalendarEntry {
 	
 	private final  int entryID;
 	private final  long startTime; 
@@ -17,7 +17,7 @@ public class Entry {
 	private final  boolean isActive; 
 	private final  String roomID; 
 	
-	public Entry(int entryID, long startTime, long endTime, String location,
+	public CalendarEntry(int entryID, long startTime, long endTime, String location,
 			String description,	boolean isActive, String roomID){
 		this.entryID = entryID; 
 		this.startTime = startTime; 
@@ -31,14 +31,14 @@ public class Entry {
 	/**
 	 * @return a (immutable) clone of this instance
 	 */
-	public Entry clone(){
-		return new Entry(entryID, startTime, endTime, location, description, isActive, roomID);
+	public CalendarEntry clone(){
+		return new CalendarEntry(entryID, startTime, endTime, location, description, isActive, roomID);
 	}
 	
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("Entry (id: ");
+		sb.append("CalendarEntry (id: ");
 		sb.append(entryID); sb.append(")\n");
 		sb.append("start: ");
 		sb.append(new Date(startTime)); sb.append("\n");

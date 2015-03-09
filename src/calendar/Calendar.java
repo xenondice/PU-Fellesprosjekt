@@ -18,27 +18,27 @@ import user.UserBuilder;
  * The class is immutable. That means no instance of this class can change any of its attributes.
  */
 public class Calendar {
-	private final Entry[] entries;
+	private final CalendarEntry[] calendarEntries;
 	private final User[] users;
 	
 	/**
 	 * 
-	 * @param entries: the entries of this calendar.
+	 * @param calendarEntries: the calendarEntries of this calendar.
 	 * @param users; the users belonging to this calendar.
 	 */
-	public Calendar(Entry[] entries, User[] users){
-		this.entries = entries;
+	public Calendar(CalendarEntry[] entries, User[] users){
+		this.calendarEntries = entries;
 		this.users = users;
 	}
 	
 	/**
 	 * 
-	 * @return a copy entries of this calendar in an array.
+	 * @return a copy calendarEntries of this calendar in an array.
 	 */
-	public Entry[] getEntries() {
-		Entry[] clonedList = new Entry[entries.length];
+	public CalendarEntry[] getEntries() {
+		CalendarEntry[] clonedList = new CalendarEntry[calendarEntries.length];
 		for(int i = 0; i < clonedList.length; i++){
-			clonedList[i] = entries[i].clone();
+			clonedList[i] = calendarEntries[i].clone();
 		}
 		return clonedList;
 	}
@@ -67,7 +67,7 @@ public class Calendar {
 		sb.append("]\n");
 		sb.append("\n");
 		sb.append("Entries: \n");
-		for(Entry e : entries){
+		for(CalendarEntry e : calendarEntries){
 			sb.append(e.toString());
 			sb.append("\n");
 		}
@@ -84,8 +84,8 @@ public class Calendar {
 //		User u1 = new User("u1", "n1", "", "", "");
 //		User u2 = new User("u2", "n2", "", "", "");
 //		
-//		Entry e1 = new Entry(1, 13456543, 234345230, "l1", "d1", true, null);
-//		Entry e2 = new Entry(9, 13456543, 234345230, "l2", "d2", true, null);
+//		CalendarEntry e1 = new CalendarEntry(1, 13456543, 234345230, "l1", "d1", true, null);
+//		CalendarEntry e2 = new CalendarEntry(9, 13456543, 234345230, "l2", "d2", true, null);
 //		
 //		DataBaseManager dbm = new DataBaseManager();
 //		dbm.addUser(u1);
