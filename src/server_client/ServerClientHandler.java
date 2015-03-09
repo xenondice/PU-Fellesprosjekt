@@ -2,29 +2,111 @@ package server_client;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.management.timer.TimerNotification;
 import javax.naming.TimeLimitExceededException;
 
-public class ServerClientHandler implements Runnable {
+public class ServerClientHandler implements Runnable, Closeable {
 	private BufferedReader client_input;
 	private BufferedWriter client_output;
-	private RequestHandler request_handler;
 	
-	public ServerClientHandler(Socket user, RequestHandler request_handler) throws IOException {
+	public static final transient String[][][] commands = { // Once login is done, store user creditals and change eg. calendar to show your calendar only
+		{
+			{"user", "Commands connected to users"},
+				{
+					"create",
+					"Create a new user",
+					"username"
+				},{
+					"edit",
+					"Edit an existing user",
+					"username"
+				},{
+					"make-admin",
+					"Make an existing user a admin",
+					"username"
+				}
+		},{
+			{"entry", "Commands connected to entries"},
+				{
+					"create",
+					"Create a new entry"
+				},{
+					"edit",
+					"Edit an existing entry",
+					"entryid"
+				},{
+					"delete",
+					"Delete an existing entry",
+					"entryid"
+				},{
+					"kick-user",
+					"Kick an invited user from an entry",
+					"username", "entryid"
+				},{
+					"kick-group",
+					"Kick invited users in a group from an entry",
+					"groupname", "entryid"
+				},{
+					"invite-user",
+					"Invite an user to an entry",
+					"username"
+				},{
+					"invite-group",
+					"Invite a group to an entry",
+					"groupname"
+				}
+		},{
+			{"group", "Commands connected to groups"},
+				{
+					"create",
+					"Create a new group",
+					"groupname"
+				},{
+					"add",
+					"Add an existing user to a group",
+					"username", "groupname"
+				},{
+					"remove",
+					"Remove an existing user from a group",
+					"username", "groupname"
+				}
+		},{
+			{
+				"calendar",
+				"Show the calendar of the given user",
+				"username"
+			}
+		},{
+			{
+				"help",
+				"Show a list over all the commands"
+			}
+		},{
+			{"notification", "Commands connected to notifications"},
+				{
+					"answer",
+					"Answer to a invitation",
+					"username", "entryid"
+				},{
+					"show",
+					"Show all active notifications of a given user",
+					"username"
+				}
+		}
+	};
+	
+	public ServerClientHandler(Socket user) throws IOException {
 		client_output = new BufferedWriter(new OutputStreamWriter(user.getOutputStream()));
 		client_input = new BufferedReader(new InputStreamReader(user.getInputStream()));
-		this.request_handler = request_handler;
 	}
 	
 	private List<String> formatRequest(String request) throws IOException {
@@ -68,6 +150,16 @@ public class ServerClientHandler implements Runnable {
 		}
 	}
 	
+	private long verifyLong(String argument) throws IOException, TimeLimitExceededException {
+		while (true) {
+			try {
+				return Long.parseLong(argument);
+			} catch (NumberFormatException e) {
+				argument = ask("Argument \"" + argument + "\" is not a long, please type only this argument again:", 1).get(0);
+			}
+		}
+	}
+	
 	private void send() throws IOException {
 		client_output.flush();
 	}
@@ -104,24 +196,65 @@ public class ServerClientHandler implements Runnable {
 		}
 	}
 	
-	private String handleRequest(String request) throws IOException {
+	private synchronized String handleRequest(String request) throws IOException {
 		
-		List<String> formatted = formatRequest(request);
+		List<String> arguments = formatRequest(request);
 		
-		if (formatted.isEmpty())
+		if (arguments.isEmpty())
 			return "Invalid request!";
 		
-		String command = formatted.get(0);
-		List<String> arguments = formatted.subList(1, formatted.size()-1);
+		String command = arguments.remove(0);
 		
 		switch (command) {
-			case "asd":
-				break;
+			case "user":
+				int group_loc = 0;
+				
+				if (arguments.isEmpty())
+					return commandHelp(group_loc, 0);
+				else {
+					String sub_command = arguments.remove(0);
+					
+					switch(sub_command) {
+						case "create":
+							int command_loc = 1;
+							
+							if (arguments.size() != numberOfCommandArguments(group_loc, command_loc))
+								return commandHelp(group_loc, command_loc);
+							return createUser(arguments.get(0));
+						default:
+							return commandHelp(0, 0);
+					}
+				}
 			default:
-				break;
+				return "Command not recogniced!";
+		}
+	}
+
+	private String createUser(String username) {
+		return "";
+	}
+
+	private int numberOfCommandArguments(int group, int command) {
+		return commands[group][command].length - 2;
+	}
+	
+	private String commandHelp(int group, int command) {
+		String output = "Help for command " + commands[group][command][0] + ":\n";
+		output +=  commands[group][command][1] + "\n\n";
+		
+		if (command == 0 && commands[group].length > 1) {
+			output += "This command have the following sub-commands:\n";
+			for (int i = 1; i < commands[group].length; i++)
+				output += "\t" + commands[group][i][0] + "\n";
+		} else if (commands[group][command].length > 2) {
+			output += "Syntax:\n\t" + commands[group][0][0] + " " + commands[group][command][0];
+			for (int i = 2; i < commands[group][command].length; i++)
+				output += " " + commands[group][command][i];
+		} else {
+			output += "No arguments\n";
 		}
 		
-		return "Test";
+		return output;
 	}
 
 	@Override
@@ -137,5 +270,10 @@ public class ServerClientHandler implements Runnable {
 				return;
 			}
 		}
+	}
+	
+	@Override
+	public void close() throws IOException {
+		Thread.currentThread().interrupt();
 	}
 }

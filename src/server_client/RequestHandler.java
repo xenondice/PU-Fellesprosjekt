@@ -3,6 +3,8 @@ package server_client;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashSet;
+import java.util.Set;
 
 import calendar.Entry;
 import dbms.DataBaseManager;
@@ -20,7 +22,9 @@ public class RequestHandler{
 
 	private static DataBaseManager dbm;
 	private static ServerSocket server;
-	public static final int port = 80;
+	private static Set<ServerClientHandler> currently_connected;
+	
+	public static final int PORT = 80;
 	
 	public static void main(String[] args) {
 		init();
@@ -30,15 +34,20 @@ public class RequestHandler{
 	
 	private static void init() {
 		try {
+			currently_connected = new HashSet<>();
 			dbm = new DataBaseManager();
-			server = new ServerSocket(port);
+			server = new ServerSocket(PORT);
 		} catch (IOException e) {
+			e.printStackTrace();
 			dispose();
+			System.exit(-1);
 		}
 	}
 	
 	private static void dispose() {
 		try {
+			for (ServerClientHandler handler : currently_connected)
+				handler.close();
 			server.close();
 			dbm.close();
 		} catch (IOException e) {
@@ -49,17 +58,17 @@ public class RequestHandler{
 	
 	private static void acceptClients() {
 		try {
-			
-			while (!ss.isClosed()){
-				Socket so = ss.accept();
-				ServerClientHandler sch = new ServerClientHandler(so);
-				
+			while (!server.isClosed()) {
+				Socket new_client = server.accept();
+				ServerClientHandler client_handler = new ServerClientHandler(new_client);
+				currently_connected.add(client_handler);
+				Thread client_handler_thread = new Thread(client_handler);
+				client_handler_thread.start();
 			}
-			
-			ss.close();
-			
 		} catch (IOException e) {
-			
+			e.printStackTrace();
+			dispose();
+			System.exit(-1);
 		}
 	}
 	
