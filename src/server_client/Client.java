@@ -24,8 +24,8 @@ import javax.naming.TimeLimitExceededException;
 public class Client {
 	public static final String DEFAULT_SERVER_ADDRESS = "127.0.0.1";
 	public static final int DEFAULT_SERVER_PORT = 80;
-	public static final long SERVER_LISTENER_CHECK_INTERVAL = 1000;
-	public static final long WAIT_BEFORE_TIMEOUT = 5000;
+	public static final long SERVER_LISTENER_CHECK_INTERVAL = 100;
+	public static final long WAIT_BEFORE_TIMEOUT = 15000;
 	private static boolean can_write = true;
 	private static boolean can_recieve_input = true;
 	
