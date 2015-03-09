@@ -3,42 +3,42 @@ package calendar;
 
 import java.util.Date;
 /**
- * Represents an Entry in a Calendar
+ * Represents an CalendarEntry in a Calendar
  * The class is immutable. That means no instance of this class can change any of its attributes.
  *
 */
-public class Entry {
+public class CalendarEntry {
 	
 	private final  int entryID;
 	private final  long startTime; 
 	private final  long endTime; 
 	private final  String location; 
 	private final  String description; 
-	private final  boolean isActive; 
 	private final  String roomID; 
+	private final  String creator;
 	
-	public Entry(int entryID, long startTime, long endTime, String location,
-			String description,	boolean isActive, String roomID){
+	public CalendarEntry(int entryID, long startTime, long endTime, String location,
+			String description, String roomID, String creator){
 		this.entryID = entryID; 
 		this.startTime = startTime; 
 		this.endTime = endTime; 
 		this.location = location; 
 		this.description = description; 
-		this.isActive = isActive; 
 		this.roomID = roomID; 
+		this.creator = creator;
 	}
 	
 	/**
 	 * @return a (immutable) clone of this instance
 	 */
-	public Entry clone(){
-		return new Entry(entryID, startTime, endTime, location, description, isActive, roomID);
+	public CalendarEntry clone(){
+		return new CalendarEntry(entryID, startTime, endTime, location, description, roomID, creator);
 	}
 	
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("Entry (id: ");
+		sb.append("CalendarEntry (id: ");
 		sb.append(entryID); sb.append(")\n");
 		sb.append("start: ");
 		sb.append(new Date(startTime)); sb.append("\n");
@@ -48,10 +48,10 @@ public class Entry {
 		sb.append(location); sb.append("\n");
 		sb.append("description: ");
 		sb.append(description); sb.append("\n");
-		sb.append("isActive: ");
-		sb.append(isActive); sb.append("\n");
 		sb.append("roomID: ");
 		sb.append(roomID); sb.append("\n");
+		sb.append("creator: ");
+		sb.append(creator); sb.append("\n");
 		return sb.toString();
 	}
 	
@@ -73,7 +73,8 @@ public class Entry {
 	public long getStartTime() {
 		return startTime;
 	}
-	public boolean isActive(){
-		return isActive;
+
+	public String getCreator(){
+		return creator;
 	}
 }

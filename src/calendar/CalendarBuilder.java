@@ -10,7 +10,7 @@ import user.User;
  *
  */
 public class CalendarBuilder implements Builder<Calendar>{
-	private ArrayList<Entry> entries = new ArrayList<Entry>();
+	private ArrayList<CalendarEntry> calendarEntries = new ArrayList<CalendarEntry>();
 	private ArrayList<User> users = new ArrayList<User>();
 	
 	public CalendarBuilder(){
@@ -19,9 +19,9 @@ public class CalendarBuilder implements Builder<Calendar>{
 	
 	@Override
 	public Calendar build(){
-		Entry[] earary = new Entry[entries.size()];
+		CalendarEntry[] earary = new CalendarEntry[calendarEntries.size()];
 		User[] uarary = new User[users.size()];
-		return new Calendar(entries.toArray(earary), users.toArray(uarary));
+		return new Calendar(calendarEntries.toArray(earary), users.toArray(uarary));
 	}
 
 	
@@ -37,16 +37,16 @@ public class CalendarBuilder implements Builder<Calendar>{
 	 * Adsd an entry to the calendar
 	 * @param e
 	 */
-	public void addEntry(Entry e){
-		entries.add(e);
+	public void addEntry(CalendarEntry e){
+		calendarEntries.add(e);
 	}
 	
 	/**
 	 * 
 	 * @return: the entry arrayList of this builder
 	 */
-	public ArrayList<Entry> getEntries() {
-		return entries;
+	public ArrayList<CalendarEntry> getEntries() {
+		return calendarEntries;
 	}
 	
 	/**
