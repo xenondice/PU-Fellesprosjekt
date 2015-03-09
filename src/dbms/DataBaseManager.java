@@ -355,27 +355,6 @@ public class DataBaseManager implements Closeable {
 	}
 
 	/**
-	 * sets the isActive flag in the entry.
-	 * @param username
-	 * @param entry_id
-	 * @param newValue
-	 * @return true iff the action was successful. false otherwise
-	 * @throws EntryDoesNotExistException 
-	 * @throws HasNotTheRightsException 
-	 * @throws UserDoesNotExistException 
-	 */
-	private boolean setIsActive(String username, int entry_id, boolean newValue) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException{
-		checkUserAndEntry(username, entry_id);
-		
-		// TODO change to same style as setIsGoing.
-		// TODO Do we need the isActive flag???
-		
-		CalendarEntryBuilder eb = new CalendarEntryBuilder(getEntry(entry_id));
-		eb.setIsActive(newValue);
-		return editEntry(eb.build(), username);
-	}
-
-	/**
 	 * adds the CalendarEntry as a new CalendarEntry (with unique id) into the CalendarEntry Table.</br>
 	 * Only the CalendarEntry Table is changed. 
 	 * 
@@ -384,7 +363,7 @@ public class DataBaseManager implements Closeable {
 	 */
 	private boolean addIntoEntry(CalendarEntry e) {
 		
-		String insert_entry = "INSERT INTO CalendarEntry (startTime, endTime, location, description, isActive, roomID) "
+		String insert_entry = "INSERT INTO CalendarEntry (startTime, endTime, location, description, roomID) "
 				+ "VALUES (?, ?, ?, ?, ?, ?)"; // without setting entryID -> default value
 	
 		try {
@@ -398,7 +377,6 @@ public class DataBaseManager implements Closeable {
 					new java.sql.Timestamp(e.getEndTime()));
 			addEntry_stmt.setString(++i, e.getLocation());
 			addEntry_stmt.setString(++i, e.getDescription());
-			addEntry_stmt.setBoolean(++i, e.isActive());
 			addEntry_stmt.setString(++i, e.getRoomID());
 	
 			addEntry_stmt.executeUpdate();
@@ -751,33 +729,6 @@ public class DataBaseManager implements Closeable {
 		return setIsGoing(username, entry_id, false);
 	}
 	
-	/**
-	 * sets the isActive flag to true in the event
-	 * @param entry_id
-	 * @param newValue
-	 * @return true iff the action was successful. false otherwise
-	 * @throws EntryDoesNotExistException 
-	 * @throws HasNotTheRightsException 
-	 * @throws UserDoesNotExistException 
-	 */
-	public boolean isActive(String username, int entry_id) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException{
-		// TODO Again, Do we need this flag???
-		return setIsActive(username, entry_id, true);
-	}
-	
-	/**
-	 * sets the isActive flag to false in the event
-	 * @param entry_id
-	 * @param newValue
-	 * @return true iff the action was successful. false otherwise
-	 * @throws EntryDoesNotExistException 
-	 * @throws HasNotTheRightsException 
-	 * @throws UserDoesNotExistException 
-	 */
-	public boolean isNotActive(String username, int entry_id) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException{
-		// TODO Again, Do we need this flag???
-		return setIsActive(username, entry_id, false);
-	}
 	
 	/**
 	 * returns the entry with the specified entryId from the database.
@@ -802,7 +753,6 @@ public class DataBaseManager implements Closeable {
 				ub.setEndTime(rs.getLong("endTime"));
 				ub.setStartTime(rs.getLong("startTime"));
 				ub.setRoomID(rs.getString("roomID"));
-				ub.setIsActive(rs.getBoolean("isActive"));
 				ub.setLocation(rs.getString("location"));
 				return ub.build();
 			} else{
@@ -881,7 +831,7 @@ public class DataBaseManager implements Closeable {
 		checkIfisAdmin(username, newEntry.getEntryID());
 		
 		String edit_entry = "UPDATE CalendarEntry "
-				+ "SET startTime = ?, endTime = ?, location = ?, description = ?, isActive = ?, roomID = ? "
+				+ "SET startTime = ?, endTime = ?, location = ?, description = ?, roomID = ? "
 				+ "WHERE entryID = ?; ";
 		
 		try {
@@ -891,7 +841,6 @@ public class DataBaseManager implements Closeable {
 			editEntry_stmt.setTimestamp(++i, new java.sql.Timestamp(newEntry.getEndTime()));
 			editEntry_stmt.setString(++i, newEntry.getLocation());
 			editEntry_stmt.setString(++i, newEntry.getDescription());
-			editEntry_stmt.setBoolean(++i, newEntry.isActive());
 			editEntry_stmt.setString(++i, newEntry.getRoomID());
 			editEntry_stmt.setInt(++i, newEntry.getEntryID());
 			
@@ -1294,7 +1243,6 @@ public class DataBaseManager implements Closeable {
 				entryB.setEndTime(rset.getLong("endTime"));
 				entryB.setLocation(rset.getString("location"));
 				entryB.setDescription(rset.getString("description"));
-				entryB.setIsActive(rset.getBoolean("isActive"));
 				entryB.setRoomID(rset.getString("roomID"));
 								
 				cb.addEntry(entryB.build());
