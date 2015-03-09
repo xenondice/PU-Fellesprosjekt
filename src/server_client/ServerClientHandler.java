@@ -196,7 +196,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 		}
 	}
 	
-	private synchronized String handleRequest(String request) throws IOException {
+	private String handleRequest(String request) throws IOException {
 		
 		List<String> arguments = formatRequest(request);
 		
