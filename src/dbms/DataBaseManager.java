@@ -339,9 +339,7 @@ public class DataBaseManager implements Closeable {
 	 * @throws EntryDoesNotExistException 
 	 */
 	public boolean isAllowedToEdit(String username, int entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
-		
-		checkUserAndEntry(username, entry_id);
-		return isAdmin(username, entry_id) || isCreator(username, entry_id);
+		return isAdmin(username, entry_id);
 	}
 
 	/**
@@ -906,13 +904,11 @@ public class DataBaseManager implements Closeable {
 	 * @param admin the one issuing the admin-rights
 	 * @param username
 	 * @param entry_id
-	 * @return true iff the action was successful. false otherwise
-	 * @throws HasNotTheRightsException 
+	 * @return true iff the action was successful. false otherwise 
 	 * @throws UserDoesNotExistException 
 	 * @throws EntryDoesNotExistException 
 	 */
-	public boolean makeAdmin(String admin, String username, int entry_id) throws HasNotTheRightsException, EntryDoesNotExistException, UserDoesNotExistException{
-		checkIfisAdmin(admin, entry_id);
+	public boolean makeAdmin(String admin, String username, int entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
 		return addIntoIsAdmin(username, entry_id);
 	}
 
@@ -1326,14 +1322,12 @@ public class DataBaseManager implements Closeable {
 	 * @param username this is the user who wants to edit the entry
 	 * @return true iff the action was successful.
 	 * @throws EntryDoesNotExistException if the entryID is not in the database
-	 * @throws HasNotTheRightsException if the user is not Admin of the entry
 	 * @throws UserDoesNotExistException 
 	 */
-	public boolean editEntry(CalendarEntry newEntry, String username) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException{
+	public boolean editEntry(CalendarEntry newEntry, String username) throws EntryDoesNotExistException, UserDoesNotExistException{
 				
 		// checks
 		checkUserAndEntry(username, newEntry.getEntryID());
-		checkIfisAdmin(username, newEntry.getEntryID());
 		
 		String edit_entry = "UPDATE CalendarEntry "
 				+ "SET startTime = ?, endTime = ?, location = ?, description = ?, roomID = ? "
@@ -1535,12 +1529,10 @@ public class DataBaseManager implements Closeable {
 	 * Does nothing if no entry with the given id exists.
 	 * @param entry_id
 	 * @return true iff the action was successful. Otherwise false.
-	 * @throws HasNotTheRightsException 
 	 * @throws UserDoesNotExistException 
 	 * @throws EntryDoesNotExistException 
 	 */
-	public boolean deleteEntry(String username, int entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException{
-		checkIfisAdmin(username, entry_id);
+	public boolean deleteEntry(String username, int entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
 		
 		try {
 			PreparedStatement stm = connection.prepareStatement("DELETE FROM CalendarEntry WHERE entryID = ?");
@@ -1641,13 +1633,8 @@ public class DataBaseManager implements Closeable {
 	 * @param username
 	 * @param entry_id
 	 * @return
-	 * @throws HasNotTheRightsException 
-	 * @throws UserDoesNotExistException 
-	 * @throws EntryDoesNotExistException 
 	 */
-	public boolean inviteUser(String admin, String username, int entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException{
-		checkIfisAdmin(admin, entry_id);
-		checkIfUserExists(username);
+	public boolean inviteUser(String admin, String username, int entry_id){
 		// TODO 
 		
 		throw new NotYetImplementedException();
@@ -1664,9 +1651,8 @@ public class DataBaseManager implements Closeable {
 	 * @throws GroupDoesNotExistException
 	 * @throws UserDoesNotExistException 
 	 * @throws EntryDoesNotExistException 
-	 * @throws HasNotTheRightsException 
 	 */
-	public boolean inviteGroup(String admin, String groupname, int entry_id) throws GroupDoesNotExistException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException{
+	public boolean inviteGroup(String admin, String groupname, int entry_id) throws GroupDoesNotExistException, EntryDoesNotExistException, UserDoesNotExistException{
 		checkIfGroupExists(groupname);
 		checkUserAndEntry(admin, entry_id);
 		
