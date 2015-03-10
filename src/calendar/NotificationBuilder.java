@@ -8,7 +8,7 @@ public class NotificationBuilder implements Builder<Notification> {
 	private boolean isOpened = false;
 	private long time = -1;
 	private String username = null;
-	private int entry_id = -1;
+	private long entry_id = -1;
 	
 	public NotificationBuilder() {
 		
@@ -40,7 +40,7 @@ public class NotificationBuilder implements Builder<Notification> {
 	public String getDescription() {
 		return description;
 	}
-	public int getEntry_id() {
+	public long getEntry_id() {
 		return entry_id;
 	}
 	public long getTime() {
@@ -59,8 +59,8 @@ public class NotificationBuilder implements Builder<Notification> {
 	public void setDescription(String description) {
 		this.description = description;
 	}
-	public void setEntry_id(int entry_id) {
-		this.entry_id = entry_id;
+	public void setEntry_id(long l) {
+		this.entry_id = l;
 	}
 	public void setOpened(boolean isOpened) {
 		this.isOpened = isOpened;

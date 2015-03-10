@@ -6,9 +6,9 @@ public class Notification {
 	private final boolean isOpened;
 	private final long time;
 	private final String username;
-	private final int entry_id;
+	private final long entry_id;
 	
-	public Notification(long id, String description, boolean isOpened, long time, String username, int entry_id) {
+	public Notification(long id, String description, boolean isOpened, long time, String username, long entry_id) {
 		this.notificationID = id;
 		this.description = description;
 		this.isOpened = isOpened;
@@ -23,7 +23,7 @@ public class Notification {
 	public String getDescription() {
 		return description;
 	}
-	public int getEntry_id() {
+	public long getEntry_id() {
 		return entry_id;
 	}
 	public long getTime() {
