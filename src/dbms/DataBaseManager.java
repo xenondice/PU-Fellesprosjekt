@@ -13,7 +13,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.ibatis.jdbc.ScriptRunner;
 
@@ -29,6 +31,7 @@ import calendar.CalendarEntry;
 import calendar.CalendarEntryBuilder;
 import calendar.Invitation;
 import calendar.InvitationBuilder;
+import calendar.Notification;
 
 import com.mysql.jdbc.exceptions.NotYetImplementedException;
 
@@ -40,6 +43,7 @@ import exceptions.GroupDoesNotExistException;
 import exceptions.HasNotTheRightsException;
 import exceptions.InvitationAlreadyExistsException;
 import exceptions.InvitationDoesNotExistException;
+import exceptions.NotAllowedException;
 import exceptions.UserDoesNotExistException;
 import exceptions.UserInGroupDoesNotExistsException;
 import exceptions.UsernameAlreadyExistsException;
@@ -214,6 +218,33 @@ public class DataBaseManager implements Closeable {
 			return false;
 		}
 	}
+	
+	/**
+	 * 
+	 * @param username
+	 * @param entry_id
+	 * @return true iff the user is the creator of the given entry
+	 * @throws EntryDoesNotExistException
+	 * @throws UserDoesNotExistException
+	 */
+	private boolean isCreator(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
+		checkUserAndEntry(username, entry_id);
+		try {
+			PreparedStatement stm = connection.prepareStatement(""
+					+ "SELECT creator "
+					+ "FROM CalendarEntry "
+					+ "WHERE entryID = ?;");
+	
+			stm.setLong(1, entry_id);
+			ResultSet rs = stm.executeQuery();
+			rs.next();
+			return rs.getString("creator").equals(username);
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
 
 	/**
 	 * 
@@ -265,28 +296,7 @@ public class DataBaseManager implements Closeable {
 	public boolean isAllowedToEdit(String username, int entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
 		
 		checkUserAndEntry(username, entry_id);
-		
-		String get_is_admin = "SELECT COUNT(*) "
-				+ "FROM IsAdmin A, User U, CalendarEntry E "
-				+ "WHERE A.username = U.username "
-				+ "AND A.entryID = E.EntryID "
-				+ "AND U.username = ? "
-				+ "AND E.entryID = ?";
-		
-		try {
-			PreparedStatement getIsAdmin_stmt = connection.prepareStatement(get_is_admin);
-			getIsAdmin_stmt.setString(1, username);
-			getIsAdmin_stmt.setInt(2, entry_id);
-			
-			ResultSet rset = getIsAdmin_stmt.executeQuery();
-			
-			rset.next();
-			return rset.getInt(1) > 0;
-			
-		} catch (SQLException e1) {
-			e1.printStackTrace();
-			return false;
-		} 
+		return isAdmin(username, entry_id) || isCreator(username, entry_id);
 	}
 
 	/**
@@ -392,7 +402,125 @@ public class DataBaseManager implements Closeable {
 	//----------------------------------------------------------------------------------------------
 	// Add Into Table Methods
 	
-	// TODO: addIntoGroup, addInotMemberOf, addIntoNotification, addIntoRoom, addIntoUser
+	private boolean addIntoGroup(Group g) throws GroupAlreadyExistsException, UserInGroupDoesNotExistsException {
+		try {
+			checkIfGroupExists(g.getName());
+			throw new GroupAlreadyExistsException(g.getName());
+			
+		} catch (GroupDoesNotExistException e) {
+			// the groupname is not taken.
+			try {
+				
+				// Create the group
+				String addGroup = "INSERT INTO Gruppe VALUES (?);";
+				PreparedStatement addGroup_stm = connection.prepareStatement(addGroup);
+				addGroup_stm.setString(1, g.getName());
+				addGroup_stm.execute();
+				addGroup_stm.close();
+				
+				// add people to the group
+				for(User u: g.getUsers()){
+					try {
+						addUserToGroup(u.getUsername(), g.getName());
+					} catch (GroupDoesNotExistException e1) {
+						// should never happen since we just created the group!
+						e1.printStackTrace();
+					}catch (UserDoesNotExistException e2){
+						throw new UserInGroupDoesNotExistsException(u.getUsername(), g.getName());
+					}
+				}
+				
+			} catch (SQLException sql_e) {
+				sql_e.printStackTrace();
+				return false;
+			}
+			return true;
+		}	
+	}
+	
+	private boolean addIntoMemberOf(String groupname, String username) throws UserDoesNotExistException, GroupDoesNotExistException {
+		checkIfUserExists(username);
+		checkIfGroupExists(groupname);
+		
+		PreparedStatement isertUser_stm;
+		try {
+			isertUser_stm = connection.prepareStatement("INSERT INTO MemberOf (groupname, username) Values (?, ?)");
+			isertUser_stm.setString(1, groupname);
+			isertUser_stm.setString(2, username);
+			
+			isertUser_stm.executeUpdate();
+			isertUser_stm.close();
+			return true;
+			
+			
+		}catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	private boolean addIntoNotification(Notification n) {
+//		String addRoom = "INSERT INTO Room VALUES (?, ?)";
+//		try {
+//			PreparedStatement stm = connection.prepareStatement(addRoom);
+//			stm.setString(1, r.getRoom_id());
+//			stm.setInt(2, r.getSize());
+//			stm.execute();
+//			stm.close();
+//			return true;
+//			
+//		} catch (SQLException e) {
+//			e.printStackTrace();
+//			return false;
+//		}
+		return false;
+	}
+	
+	private boolean addIntoRoom(Room r) {
+		// TODO make checkIfRoomExists method
+		
+		String addRoom = "INSERT INTO Room VALUES (?, ?)";
+		try {
+			PreparedStatement stm = connection.prepareStatement(addRoom);
+			stm.setString(1, r.getRoom_id());
+			stm.setInt(2, r.getSize());
+			stm.execute();
+			stm.close();
+			return true;
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	private boolean addIntoUser(User u) throws UsernameAlreadyExistsException {
+		// check if the username already exists.
+		if (doesUserExist(u.getUsername())) {
+			throw new UsernameAlreadyExistsException();
+		}
+
+		String addUser = "INSERT INTO User VALUES (?, ?, ?, ?, ?);";
+
+		try {
+			PreparedStatement stm = connection.prepareStatement(addUser);
+			int i = 0;
+			
+			stm.setString(++i, u.getUsername());
+			stm.setString(++i, u.getName());
+			stm.setString(++i, u.getPassword());
+			stm.setString(++i, u.getSalt());
+			stm.setString(++i, u.getEmail());
+			stm.execute();
+			stm.close();
+
+			return true;
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
 	
 	/**
 	 * adds the CalendarEntry as a new CalendarEntry (with unique id) into the CalendarEntry Table.</br>
@@ -606,6 +734,7 @@ public class DataBaseManager implements Closeable {
 			return false;
 		}
 	}
+	
 
 	//----------------------------------------------------------------------------------------------
 	// Other private Methods
@@ -637,7 +766,13 @@ public class DataBaseManager implements Closeable {
 	//----------------------------------------------------------------------------------------------
 	// Add Methods
 	
-	// TODO: addAlarm, addInvitation
+	public boolean addAlarm(Alarm a) throws AlarmAlreadyExistsException, EntryDoesNotExistException, UserDoesNotExistException{
+		return this.addIntoAlarm(a);
+	}
+	
+	public boolean addInvitation(Invitation inv) throws EntryDoesNotExistException, UserDoesNotExistException, InvitationAlreadyExistsException{
+		return this.addIntoInvitation(inv);
+	}
 
 	/**
 	 * adds the User to the DB. </br>
@@ -647,29 +782,7 @@ public class DataBaseManager implements Closeable {
 	 * @throws UsernameAlreadyExistsException if the username is already taken.
 	 */
 	public boolean addUser(User u) throws UsernameAlreadyExistsException{
-		
-		// check if the username already exists.
-		if(doesUserExist(u.getUsername())){throw new UsernameAlreadyExistsException();}
-		
-		String addUser = "INSERT INTO User VALUES (?, ?, ?, ?, ?);";
-			
-		
-		try {
-			PreparedStatement stm = connection.prepareStatement(addUser);
-			stm.setString(1, u.getUsername());
-			stm.setString(2, u.getName());
-			stm.setString(3, u.getPassword());
-			stm.setString(4, u.getSalt());
-			stm.setString(5, u.getEmail());
-			stm.execute();
-			stm.close();
-			
-			return true;
-			
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return false;
-		}
+		return this.addIntoUser(u);
 	}
 
 	/**
@@ -709,19 +822,7 @@ public class DataBaseManager implements Closeable {
 	 * @return true if the action was successful. False otherwise.
 	 */
 	public boolean addRoom(Room r){
-		// TODO make checkIfRoomExists method
-		String addRoom = "INSERT INTO Room VALUES (?, ?)";
-		try {
-			PreparedStatement stm = connection.prepareStatement(addRoom);
-			stm.setString(1, r.getRoom_id());
-			stm.setInt(2, r.getSize());
-			stm.execute();
-			stm.close();
-			return true;
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return false;
-		}
+		return this.addIntoRoom(r);
 	}
 
 	/**
@@ -733,40 +834,7 @@ public class DataBaseManager implements Closeable {
 	 * @throws UserInGroupDoesNotExistsException if a user in the group does not exist.
 	 */
 	public boolean addGroup(Group g) throws UserDoesNotExistException, GroupAlreadyExistsException, UserInGroupDoesNotExistsException{
-		
-		try {
-			checkIfGroupExists(g.getName());
-			throw new GroupAlreadyExistsException(g.getName());
-			
-		} catch (GroupDoesNotExistException e) {
-			// the groupname is not taken.
-			try {
-				
-				// Create the group
-				String addGroup = "INSERT INTO Gruppe VALUES (?);";
-				PreparedStatement addGroup_stm = connection.prepareStatement(addGroup);
-				addGroup_stm.setString(1, g.getName());
-				addGroup_stm.execute();
-				addGroup_stm.close();
-				
-				// add people to the group
-				for(User u: g.getUsers()){
-					try {
-						addUserToGroup(u.getUsername(), g.getName());
-					} catch (GroupDoesNotExistException e1) {
-						// should never happen since we just created the group!
-						e1.printStackTrace();
-					}catch (UserDoesNotExistException e2){
-						throw new UserInGroupDoesNotExistsException(u.getUsername(), g.getName());
-					}
-				}
-				
-			} catch (SQLException sql_e) {
-				sql_e.printStackTrace();
-				return false;
-			}
-			return true;
-		}		
+		return this.addIntoGroup(g);
 	}
 
 	/**
@@ -793,36 +861,37 @@ public class DataBaseManager implements Closeable {
 	 * @throws GroupDoesNotExistException 
 	 */
 	public boolean addUserToGroup(String username, String groupname) throws UserDoesNotExistException, GroupDoesNotExistException{
-		checkIfUserExists(username);
-		checkIfGroupExists(groupname);
-		
-		
-		PreparedStatement isertUser_stm;
-		try {
-			isertUser_stm = connection.prepareStatement("INSERT INTO MemberOf (groupname, username) Values (?, ?)");
-			isertUser_stm.setString(1, groupname);
-			isertUser_stm.setString(2, username);
-			
-			isertUser_stm.executeUpdate();
-			isertUser_stm.close();
-			return true;
-			
-			
-		}catch (SQLException e) {
-			e.printStackTrace();
-			return false;
-		}
+		return this.addIntoMemberOf(groupname, username);
+	}
+	
+	public boolean addNotification(Notification n){
+		return this.addIntoNotification(n);
 	}
 	
 	//----------------------------------------------------------------------------------------------
 	// Get Methods
 	
-	// TODO getAlarm, getIsMemberOf, getNotification, getRoom
-
-	public boolean addNotification(String username, int entry_id, String description, boolean isOpened, long timestamp){
+	
+	public Alarm getAlarm(String username, long entry_id){
 		// TODO
 		throw new NotYetImplementedException();
 	}
+	public boolean isMemberOf(String groupname, String username){
+		// TODO
+		throw new NotYetImplementedException();
+	}
+	
+	public HashSet<Notification> getNotificationsForUser(String username){
+		// TODO
+		throw new NotYetImplementedException();
+	}
+	
+	public Room getRoom(String room_id){
+		// TODO
+		throw new NotYetImplementedException();
+	}
+	
+	
 
 	/**
 	 * 
@@ -968,7 +1037,16 @@ public class DataBaseManager implements Closeable {
 	//----------------------------------------------------------------------------------------------
 	// Edit Table Methods
 
-	// TODO: editAlarm, editInvitation
+	
+	public boolean editAlarm(Alarm a){
+		// TODO
+		throw new NotYetImplementedException();
+	}
+	
+	public boolean editNotification(Notification n){
+		// TODO
+		throw new NotYetImplementedException();
+	}
 	
 	/**
 	 * u replaces the user with the same username in the DB.</br>
@@ -1166,6 +1244,58 @@ public class DataBaseManager implements Closeable {
 	//----------------------------------------------------------------------------------------------
 	// Delete Methods
 	
+	public boolean deleteAlarm(Alarm a) throws EntryDoesNotExistException, UserDoesNotExistException{
+		return deleteAlarm(a.getUsername(), a.getEntry_id());
+	}
+	
+	public boolean deleteAlarm(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
+		checkUserAndEntry(username, entry_id);
+		try {
+			PreparedStatement stm = connection.prepareStatement("DELETE FROM Alarm WHERE entryID = ? AND username = ?");
+			int i = 0;
+			stm.setLong(++i, entry_id);
+			stm.setString(++i, username);
+			stm.executeUpdate();
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	public boolean revokeAdmin(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, NotAllowedException{
+		if(isCreator(username, entry_id)){
+			throw new NotAllowedException("The creator can not be removed as admin! ('"+username+"' is the creator of '"+entry_id+"')");
+		}
+		
+		try {
+			PreparedStatement stm = connection.prepareStatement("DELETE FROM IsAdmin WHERE entryID = ? AND username = ?");
+			int i = 0;
+			stm.setLong(++i, entry_id);
+			stm.setString(++i, username);
+			stm.executeUpdate();
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	public boolean deleteNotification(long notification_id){
+		try {
+			PreparedStatement stm = connection.prepareStatement("DELETE FROM Notification WHERE notificationID = ?;");
+			int i = 0;
+			stm.setLong(++i, notification_id);
+			stm.executeUpdate();
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+
+	
 	/**
 	 * removes the entry with the given id from the DB.
 	 * Does nothing if no entry with the given id exists.
@@ -1183,11 +1313,6 @@ public class DataBaseManager implements Closeable {
 			return false;
 		}
 		
-	}
-
-	public boolean deleteNotification(String username, int entry_id){
-		// TODO
-		throw new NotYetImplementedException();
 	}
 	
 	/**
