@@ -8,23 +8,22 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.ServiceLoader;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import server_client.commands.CreateUser;
-import server_client.commands.CreateUserWiz;
+import user.User;
+import user.UserBuilder;
 import exceptions.ForcedReturnException;
+import exceptions.UserDoesNotExistException;
+import exceptions.WrongPasswordException;
 
 public class ServerClientHandler implements Runnable, Closeable {
 	private BufferedReader client_input;
 	private BufferedWriter client_output;
 	private Socket client;
-	private String username;
-	private String password;
+	private User user;
 	
 	/*public static final String[][][] commands = { // Once login is done, store user creditals and change eg. calendar to show your calendar only
 		{
@@ -155,13 +154,19 @@ public class ServerClientHandler implements Runnable, Closeable {
 	public void explain(String message) throws IOException {
 		client_output.write(message);
 		client_output.write(System.lineSeparator());
-		client_output.flush();
+	}
+	
+	public void space() throws IOException {
+		client_output.write(System.lineSeparator());
 	}
 	
 	public void status(String message) throws IOException {
 		client_output.write(message);
 		client_output.write(System.lineSeparator());
 		client_output.write(System.lineSeparator());
+	}
+	
+	private void send() throws IOException {
 		client_output.flush();
 	}
 	
@@ -188,6 +193,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 	public List<String> ask(String question, int number_of_arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		
 		explain(question);
+		send();
 		
 		while (true) {
 			List<String> response = expectInput();
@@ -195,6 +201,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 			if (response.size() == number_of_arguments) return response;
 			
 			explain("Please provide " + number_of_arguments + " argument(s)!");
+			send();
 		}
 	}
 	
@@ -223,37 +230,72 @@ public class ServerClientHandler implements Runnable, Closeable {
 		Command command_type = Command.getCommand(command);
 		if (command_type == null) {
 			status("Unrecognized command! Type \"commands\" for a list over commands.");
+			send();
 			return;
 		}
 		
 		if (arguments.size() != command_type.getArguments().length) {
-			Command.getCommand("help").run(this, Arrays.asList(command_type.getCommand()));
+			status("Command syntax is wrong! Type \"help command\" or \"man command\" for information about the command.");
+			send();
 			return;
 		}
 		
-		command_type.run(this, arguments);	
+		status(command_type.run(this, arguments));
+		send();
 	}
 	
-	private boolean login() {
-		return true; //TODO
+	private boolean login() throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+		
+		String username = ask("Enter username.", 1).get(0);
+		String password = ask("Enter password.",1).get(0);
+		
+		UserBuilder user_builder = new UserBuilder();
+		user_builder.setUsername(username);
+		user_builder.setPassword(password);
+		User user = user_builder.build();
+		
+		try {
+			this.user = RequestHandler.logIn(user);
+		} catch (UserDoesNotExistException | WrongPasswordException e) {
+			return false;
+		}
+		
+		return true;
 	}
 	
-	public String getUsername() {
-		return username;
+	public User getUser() {
+		return user;
 	}
 
 	@Override
 	public void run() {
-		login();
 		
-		while (true) {
+		boolean logged_in = false;
+		
+		try {
+			logged_in = login();
+			if (logged_in)
+				status("Successfully logged in!");
+		} catch (IOException | TimeoutException | InterruptedException | ForcedReturnException e2) {
+			logged_in = false;
+		}
+		
+		if (logged_in)
+			while (true) {
+				try {
+					handleRequest(expectInput());
+				} catch (ForcedReturnException e) {
+					try {status(e.getMessage());} catch (IOException e1) {e.printStackTrace();};
+					continue;
+				} catch (IOException | TimeoutException | InterruptedException e) {
+					break;
+				}
+			}
+		else {
 			try {
-				handleRequest(expectInput());
-			} catch (ForcedReturnException e) {
-				try {status(e.getMessage());} catch (IOException e1) {e.printStackTrace();};
-				continue;
-			} catch (IOException | TimeoutException | InterruptedException e) {
-				break;
+				status("Wrong password or username!");
+				send();
+			} catch (IOException e) {
 			}
 		}
 		

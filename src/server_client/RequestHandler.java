@@ -15,6 +15,7 @@ import exceptions.HasNotTheRightsException;
 import exceptions.UserDoesNotExistException;
 import exceptions.UserInGroupDoesNotExistsException;
 import exceptions.UsernameAlreadyExistsException;
+import exceptions.WrongPasswordException;
 import user.Group;
 import user.User;
 
@@ -82,15 +83,15 @@ public class RequestHandler{
 	
 	public static boolean isLoggedIn(String username) {
 		for (ServerClientHandler handler : currently_connected) {
-			if (handler.getUsername() != null && handler.getUsername().equals(username)) return true;
+			if (handler.getUser() != null && handler.getUser().getUsername().equals(username)) return true;
 		}
 		return false;
 	}
 	
 	public static void disconnectUser(ServerClientHandler client) {
 		System.out.print("Disconnecting ");
-		if (client.getUsername() == null ) System.out.println("not identified client");
-		else System.out.println(client.getUsername());
+		if (client.getUser() == null ) System.out.println("not identified client");
+		else System.out.println(client.getUser().getUsername());
 		currently_connected.remove(client);
 	}
 	
@@ -98,8 +99,19 @@ public class RequestHandler{
 	 * User functions
 	 *================*/ 
 	
-	public static void logIn(User user){
-		// TODO
+	public static User logIn(User user) throws UserDoesNotExistException, WrongPasswordException {
+		try {
+			User existing_user = dbm.getUser(user.getUsername());
+			if (user.getPassword().equals(existing_user.getPassword())) {
+				System.out.println("New user verified as " + existing_user.getUsername());
+				return existing_user; //TODO: Make better login
+			}
+			System.out.println("New user failed login");
+			throw new WrongPasswordException();
+		} catch (UserDoesNotExistException | WrongPasswordException e) {
+			System.out.println("New user failed login");
+			throw e;
+		}
 	}
 	
 	public synchronized static void createUser(User user) throws UsernameAlreadyExistsException{

@@ -8,6 +8,7 @@ import server_client.commands.CreateUser;
 import server_client.commands.CreateUserWiz;
 import server_client.commands.Help;
 import server_client.commands.Manual;
+import server_client.commands.ShowCommands;
 import exceptions.ForcedReturnException;
 
 /**
@@ -19,6 +20,7 @@ public abstract class Command {
 	public static final Command[] commands = {
 		new Help(),
 		new Manual(),
+		new ShowCommands(),
 		new CreateUser(),
 		new CreateUserWiz(),
 	};
@@ -58,5 +60,5 @@ public abstract class Command {
 	/**
 	 * Run the command. Returns true if the command was run successful and false otherwise.
 	 */
-	public abstract void run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException;
+	public abstract String run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException;
 }

@@ -8,10 +8,9 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.naming.TimeLimitExceededException;
 
 	/**
 	 * Client interface used to connect to ServerClientHandler, which in turn sends requests to the RequestHandler.
@@ -28,6 +27,7 @@ public class Client {
 	public static final long WAIT_BEFORE_TIMEOUT = 15000;
 	private static boolean can_write = true;
 	private static boolean can_recieve_input = true;
+	private static boolean connected = true;
 	
 	private static Socket server_connection;
 	private static BufferedWriter server_output;
@@ -155,7 +155,7 @@ public class Client {
 		}
 	}
 	
-	private static void sendRequest(String request) throws TimeLimitExceededException, IOException {
+	private static void sendRequest(String request) throws TimeoutException, IOException {
 		can_write = false;
 		server_output.write(request + System.lineSeparator());
 		server_output.flush();
@@ -163,11 +163,11 @@ public class Client {
 		waitForEnd();
 	}
 	
-	private static void waitForEnd() throws TimeLimitExceededException {
+	private static void waitForEnd() throws TimeoutException {
 		while (true) {
 			try {
 				Thread.sleep(WAIT_BEFORE_TIMEOUT);
-				throw new TimeLimitExceededException();
+				throw new TimeoutException();
 			} catch (InterruptedException e) {
 				if (can_write) return;
 			}
@@ -176,6 +176,10 @@ public class Client {
 	
 	public static void markEnd() {
 		can_write = true;
+	}
+	
+	public static void disconnect() {
+		connected = false;
 	}
 	
 	private static String requestConsoleInput() throws IOException {
@@ -209,7 +213,16 @@ public class Client {
 	
 	private static void run() throws IOException {
 		
-		while (true) {
+		try {
+			can_write = false;
+			waitForEnd();
+		} catch (TimeoutException e) {
+			message("Login not promted!");
+			disconnect();
+			return;
+		}
+		
+		while (connected) {
 			
 			String request = requestConsoleInput();
 			
@@ -223,17 +236,20 @@ public class Client {
 			
 			try {
 				sendRequest(request);
-			} catch (TimeLimitExceededException e1) {
+			} catch (TimeoutException e1) {
 				error("Server timeout!", false);
-				return;
+				break;
 			} catch (IOException e2) {
 				error("Something went wrong while sending the request!", false);
-				return;
+				break;
 			}
 		}
+		
+		dispose();
 	}
 	
 	private static void dispose() throws IOException {
+		disconnect();
 		server_connection.close();
 		server_listener_thread.interrupt();
 	}

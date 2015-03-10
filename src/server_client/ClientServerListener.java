@@ -42,7 +42,7 @@ public class ClientServerListener implements Runnable {
 					
 					Client.markEnd();
 					
-					client_thread.interrupt(); //TODO: use Client.ready()
+					client_thread.interrupt();
 				}
 				
 				Thread.sleep(Client.SERVER_LISTENER_CHECK_INTERVAL);

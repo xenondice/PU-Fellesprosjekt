@@ -38,23 +38,21 @@ public class Manual extends Command {
 	}
 
 	@Override
-	public void run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+	public String run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		
 		Command command = Command.getCommand(arguments.get(0));
 		if (command == null) {
-			handler.status("Not a command!");
-			return;
+			return "Not a command!";
 		}
 		
-		String message = "Manual for " + command.getCommand() + ":";
-		message += System.lineSeparator();
-		message += System.lineSeparator();
-		message += command.getManual();
-		message += System.lineSeparator();
-		message += System.lineSeparator();
-		message += "Syntax: " + command.getCommand();
+		handler.status("Manual for " + command.getCommand() + ":");
+		
+		handler.status(command.getManual());
+		
+		String message = "Syntax: " + command.getCommand();
 		for (String argument : command.getArguments())
 			message += " " + argument;
+		
 		int i = 0;
 		for (String example : command.getExamples()) {
 			i++;
@@ -65,7 +63,7 @@ public class Manual extends Command {
 			message += example;
 		}
 		
-		handler.status(message);
+		return message;
 	}
 
 }

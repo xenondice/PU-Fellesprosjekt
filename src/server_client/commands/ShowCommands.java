@@ -36,21 +36,19 @@ public class ShowCommands extends Command {
 	}
 
 	@Override
-	public void run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+	public String run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		
-		String message = "Valid commands:";
-		message += System.lineSeparator();
+		handler.explain("Valid commands:");
 		
 		for (Command command : Command.commands) {
-			message += " * " + command.getCommand();	
+			String message = " * " + command.getCommand();	
 			for (String argument : command.getArguments())
 				message += " " + argument;
-			message += System.lineSeparator();
+			handler.explain(message);
 		}
-		
-		message += System.lineSeparator();
-		message += "Please use one of the commands above";
-		handler.status(message);
+
+		handler.space();
+		return "Please use one of the commands above";
 	}
 
 }

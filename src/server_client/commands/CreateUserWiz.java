@@ -38,7 +38,7 @@ public class CreateUserWiz extends Command {
 	}
 
 	@Override
-	public void run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
-		handler.status("TODO");
+	public String run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+		return "TODO";
 	}
 }

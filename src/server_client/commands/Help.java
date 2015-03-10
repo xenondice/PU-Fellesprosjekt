@@ -38,22 +38,20 @@ public class Help extends Command {
 	}
 
 	@Override
-	public void run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+	public String run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		
 		Command command = Command.getCommand(arguments.get(0));
-		if (command == null) {
-			handler.status("Not a command!");
-			return;
-		}
+		if (command == null)
+			return "Not a command!";
 		
-		String message = command.getDescription();
-		message += System.lineSeparator();
-		message += System.lineSeparator();
-		message += "Syntax: " + command.getCommand();
+		handler.status(command.getDescription());
+		handler.space();
+		
+		String message = "Syntax: " + command.getCommand();
 		for (String argument : command.getArguments())
 			message += " " + argument;
 		
-		handler.status(message);
+		return message;
 	}
 
 }
