@@ -7,7 +7,7 @@ import interfaces.Builder;
  *
  */
 public class CalendarEntryBuilder implements Builder<CalendarEntry>{
-	private int entryID = 0;
+	private long entryID = 0;
 	private long startTime = 0;
 	private long endTime = 0;
 	private String location = null;
@@ -40,7 +40,7 @@ public class CalendarEntryBuilder implements Builder<CalendarEntry>{
 	public void setEndTime(long endTime) {
 		this.endTime = endTime;
 	}
-	public void setEventID(int entryID) {
+	public void setEventID(long entryID) {
 		this.entryID = entryID;
 	}
 	public void setLocation(String location) {
