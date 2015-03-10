@@ -1,6 +1,6 @@
-Drop database test_pu;
-create database test_pu;
-use test_pu;
+Drop database mariessa_pu;
+create database mariessa_pu;
+use mariessa_pu;
 
 CREATE TABLE Room (
     roomID        VARCHAR(10)    NOT NULL,

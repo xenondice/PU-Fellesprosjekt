@@ -1,14 +1,15 @@
 package calendar;
 
 public class Notification {
-	// TODO add another key value in the DB
+	private final long notificationID;
 	private final String description;
 	private final boolean isOpened;
 	private final long time;
 	private final String username;
 	private final int entry_id;
 	
-	public Notification(String description, boolean isOpened, long time, String username, int entry_id) {
+	public Notification(long id, String description, boolean isOpened, long time, String username, int entry_id) {
+		this.notificationID = id;
 		this.description = description;
 		this.isOpened = isOpened;
 		this.time = time;
@@ -16,7 +17,9 @@ public class Notification {
 		this.entry_id = entry_id;
 				
 	}
-	
+	public long getNotificationID() {
+		return notificationID;
+	}
 	public String getDescription() {
 		return description;
 	}
