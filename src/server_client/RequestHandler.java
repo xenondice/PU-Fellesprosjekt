@@ -28,6 +28,8 @@ public class RequestHandler{
 	public static final int PORT = 80;
 	public static final long CHECK_FOR_EXPECTED_INPUT_INTERVAL = 500;
 	public static final long WAIT_BEFORE_TIMOUT = 60000;
+	public static final char STATUS_OK = 'a';
+	public static final char STATUS_DISCONNECTED = 's';
 	
 	public static void main(String[] args) {
 		init();
