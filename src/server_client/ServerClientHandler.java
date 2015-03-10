@@ -24,6 +24,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 	private BufferedWriter client_output;
 	private Socket client;
 	private User user;
+	private String temp_message;
 	
 	/*public static final String[][][] commands = { // Once login is done, store user creditals and change eg. calendar to show your calendar only
 		{
@@ -115,6 +116,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 		client_output = new BufferedWriter(new OutputStreamWriter(user.getOutputStream()));
 		client_input = new BufferedReader(new InputStreamReader(user.getInputStream()));
 		client = user;
+		temp_message = "";
 	}
 	
 	private List<String> formatRequest(String request) {
@@ -152,21 +154,23 @@ public class ServerClientHandler implements Runnable, Closeable {
 	}
 	
 	public void explain(String message) throws IOException {
-		client_output.write(message);
-		client_output.write(System.lineSeparator());
+		temp_message += message;
+		temp_message += System.lineSeparator();
 	}
 	
 	public void space() throws IOException {
-		client_output.write(System.lineSeparator());
+		temp_message += System.lineSeparator();
 	}
 	
 	public void status(String message) throws IOException {
-		client_output.write(message);
-		client_output.write(System.lineSeparator());
-		client_output.write(System.lineSeparator());
+		temp_message += message;
+		temp_message += System.lineSeparator();
+		temp_message += System.lineSeparator();
 	}
 	
-	private void send() throws IOException {
+	private void send(char status) throws IOException {
+		client_output.write(status + temp_message);
+		temp_message = "";
 		client_output.flush();
 	}
 	
@@ -193,7 +197,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 	public List<String> ask(String question, int number_of_arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		
 		explain(question);
-		send();
+		send('a');
 		
 		while (true) {
 			List<String> response = expectInput();
@@ -201,7 +205,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 			if (response.size() == number_of_arguments) return response;
 			
 			explain("Please provide " + number_of_arguments + " argument(s)!");
-			send();
+			send('a');
 		}
 	}
 	
@@ -230,18 +234,18 @@ public class ServerClientHandler implements Runnable, Closeable {
 		Command command_type = Command.getCommand(command);
 		if (command_type == null) {
 			status("Unrecognized command! Type \"commands\" for a list over commands.");
-			send();
+			send('a');
 			return;
 		}
 		
 		if (arguments.size() != command_type.getArguments().length) {
 			status("Command syntax is wrong! Type \"help command\" or \"man command\" for information about the command.");
-			send();
+			send('a');
 			return;
 		}
 		
 		status(command_type.run(this, arguments));
-		send();
+		send('a');
 	}
 	
 	private boolean login() throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
@@ -294,7 +298,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 		else {
 			try {
 				status("Wrong password or username!");
-				send();
+				send('s');
 			} catch (IOException e) {
 			}
 		}

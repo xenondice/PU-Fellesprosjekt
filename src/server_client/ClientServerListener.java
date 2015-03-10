@@ -21,6 +21,8 @@ public class ClientServerListener implements Runnable {
 			try {
 				if (server_input.ready()) {
 					
+					char status = (char) server_input.read();
+					
 					if (!Client.ready()) {
 						console_output.write(System.lineSeparator());
 						console_output.write(System.lineSeparator());
@@ -38,6 +40,13 @@ public class ClientServerListener implements Runnable {
 					if (!Client.ready()) {
 						console_output.write(System.lineSeparator());
 						console_output.flush();
+					}
+					
+					if (status == 's') {
+						Client.disconnect();
+						Client.markEnd();
+						client_thread.interrupt();
+						return;
 					}
 					
 					Client.markEnd();
