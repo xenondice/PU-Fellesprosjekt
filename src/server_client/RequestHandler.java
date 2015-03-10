@@ -109,7 +109,6 @@ public class RequestHandler{
 				System.out.println("New user verified as " + existing_user.getUsername());
 				return existing_user; //TODO: Make better login
 			}
-			System.out.println("New user failed login");
 			throw new WrongPasswordException();
 		} catch (UserDoesNotExistException | WrongPasswordException e) {
 			System.out.println("New user failed login");
@@ -133,48 +132,56 @@ public class RequestHandler{
 		return dbm.editUser(updated_user);
 	}
 
-	public synchronized static boolean makeAdmin(User requestor, User new_admin, CalendarEntry entry) throws HasNotTheRightsException, EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException {
+	public synchronized static boolean makeAdmin(User requestor, String username, int entry_id) throws HasNotTheRightsException, EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException {
 		validate(requestor);
-		if (!dbm.isAdmin(requestor.getUsername(), entry.getEntryID()))
+		if (!dbm.isAdmin(requestor.getUsername(), entry_id))
 			throw new HasNotTheRightsException();
-		return dbm.makeAdmin(requestor.getUsername(), new_admin.getUsername(), entry.getEntryID());
+		return dbm.makeAdmin(requestor.getUsername(), username, entry_id);
 	}
 	
 	/* ===============
 	 * CalendarEntry functions
-	 *================*/ 
+	 *================*/
 	
 	public synchronized static boolean createEntry(User requestor, CalendarEntry entry) throws UserDoesNotExistException, SessionExpiredException {
 		validate(requestor);
-		return dbm.addEntry(e, requestor.getUsername());
+		return dbm.addEntry(entry, requestor.getUsername());
 	}
 	
-	public synchronized static boolean deleteEntry(User requestor, CalendarEntry entry) throws SessionExpiredException, EntryDoesNotExistException, UserDoesNotExistException {
+	public synchronized static boolean deleteEntry(User requestor, int entry_id) throws SessionExpiredException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException {
 		validate(requestor);
-		return dbm.deleteEntry(requestor.getUsername(), e.getEntryID());
+		if (!dbm.isAdmin(requestor.getUsername(), entry_id))
+			throw new HasNotTheRightsException();
+		return dbm.deleteEntry(requestor.getUsername(), entry_id);
 	}
 	
 	public synchronized static boolean editEntry(User requestor, CalendarEntry entry) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException, SessionExpiredException {
 		validate(requestor);
-		return dbm.editEntry(e, requestor.getUsername());
+		if (!dbm.isAllowedToEdit(requestor.getUsername(), entry.getEntryID()))
+			throw new HasNotTheRightsException();
+		return dbm.editEntry(entry, requestor.getUsername());
 	}
 	
-	public synchronized static boolean kickUserFromEntry(User requestor, CalendarEntry entry) throws EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException {
+	public synchronized static boolean kickUserFromEntry(User requestor, String username, int entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException, HasNotTheRightsException {
 		validate(requestor);
-		return dbm.hideEvent(requestor.getUsername(), calendarEntry.getEntryID());
+		if (!dbm.isAdmin(requestor.getUsername(), entry_id))
+			throw new HasNotTheRightsException();
+		return dbm.hideEvent(username, entry_id);
 	}
 	
-	public synchronized static boolean kickGroupFromEntry(User requestor, Group group, CalendarEntry entry) throws GroupDoesNotExistException, UserInGroupDoesNotExistsException, EntryDoesNotExistException, SessionExpiredException {
+	public synchronized static boolean kickGroupFromEntry(User requestor, String groupname, int entry_id) throws GroupDoesNotExistException, UserInGroupDoesNotExistsException, EntryDoesNotExistException, SessionExpiredException, UserDoesNotExistException, HasNotTheRightsException {
 		validate(requestor);
-		return dbm.hideEventGroup(group.getName(), calendarEntry.getEntryID());
+		if (!dbm.isAdmin(requestor.getUsername(), entry_id))
+			throw new HasNotTheRightsException();
+		return dbm.hideEventGroup(groupname, entry_id);
 	}	
 	
-	public synchronized static boolean inviteUserToEntry(User requestor, User user, CalendarEntry entry) throws EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException, SessionExpiredException {
+	public synchronized static boolean inviteUserToEntry(User requestor, String username, int entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException, SessionExpiredException {
 		validate(requestor);
 		dbm.inviteUser(admin.getUsername(), user.getUsername(), calendarEntry.getEntryID());
 	}
 	
-	public synchronized static boolean inviteGroupToEntry(User requestor, Group group, CalendarEntry entry) throws GroupDoesNotExistException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException, SessionExpiredException {
+	public synchronized static boolean inviteGroupToEntry(User requestor, String groupname, int entry_id) throws GroupDoesNotExistException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException, SessionExpiredException {
 		validate(requestor);
 		dbm.inviteGroup(admin.getUsername(), group.getName(), calendarEntry.getEntryID());
 	}
@@ -187,11 +194,11 @@ public class RequestHandler{
 		dbm.addGroup(group);
 	}
 	
-	public synchronized static boolean addUserToGroup(User requestor, User user, Group group) throws UserDoesNotExistException, GroupDoesNotExistException, SessionExpiredException {
+	public synchronized static boolean addUserToGroup(User requestor, String username, String groupname) throws UserDoesNotExistException, GroupDoesNotExistException, SessionExpiredException {
 		dbm.addUserToGroup(user.getUsername(), group.getName());
 	}
 	
-	public synchronized static boolean removeUserFromGroup(User requestor, User user, Group group) throws GroupDoesNotExistException, SessionExpiredException {
+	public synchronized static boolean removeUserFromGroup(User requestor, String username, String groupname) throws GroupDoesNotExistException, SessionExpiredException {
 		dbm.removeUserFromGroup(user.getUsername(), group.getName());
 	}
 	
@@ -204,7 +211,7 @@ public class RequestHandler{
 		dbm.createCalendar(user.getUsername());
 	}
 	
-	public synchronized static boolean invitationAnswer(User requestor, CalendarEntry entry, boolean answer) throws EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException {
+	public synchronized static boolean invitationAnswer(User requestor, int entry_id, boolean answer) throws EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException {
 		if (answer == true){
 			dbm.going(u.getUsername(), e.getEntryID());
 		}else{
