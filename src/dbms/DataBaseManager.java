@@ -20,11 +20,13 @@ import java.util.Set;
 import org.apache.ibatis.jdbc.ScriptRunner;
 
 import room_booking.Room;
+import room_booking.RoomBuilder;
 import user.Group;
 import user.GroupBuilder;
 import user.User;
 import user.UserBuilder;
 import calendar.Alarm;
+import calendar.AlarmBuilder;
 import calendar.Calendar;
 import calendar.CalendarBuilder;
 import calendar.CalendarEntry;
@@ -32,6 +34,7 @@ import calendar.CalendarEntryBuilder;
 import calendar.Invitation;
 import calendar.InvitationBuilder;
 import calendar.Notification;
+import calendar.NotificationBuilder;
 
 import com.mysql.jdbc.exceptions.NotYetImplementedException;
 
@@ -44,6 +47,9 @@ import exceptions.HasNotTheRightsException;
 import exceptions.InvitationAlreadyExistsException;
 import exceptions.InvitationDoesNotExistException;
 import exceptions.NotAllowedException;
+import exceptions.NotificationDoesNotExistException;
+import exceptions.RoomAlreadyExistsException;
+import exceptions.RoomDoesNotExistException;
 import exceptions.UserDoesNotExistException;
 import exceptions.UserInGroupDoesNotExistsException;
 import exceptions.UsernameAlreadyExistsException;
@@ -173,6 +179,20 @@ public class DataBaseManager implements Closeable {
 		}
 	}
 	
+	private boolean doesNotificationExist(long notification_id){
+		PreparedStatement findNotiction_stmt;
+		try {
+			findNotiction_stmt = connection.prepareStatement("SELECT * FROM Notification WHERE notificationID = ?;");
+			findNotiction_stmt.setLong(1, notification_id);
+			ResultSet rset = findNotiction_stmt.executeQuery();
+			return rset.next();
+		
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
 	/**
 	 * 
 	 * @param groupname
@@ -183,6 +203,25 @@ public class DataBaseManager implements Closeable {
 		try {
 			findGroup_stmt = connection.prepareStatement("SELECT * FROM Gruppe WHERE groupname = ?;");
 			findGroup_stmt.setString(1, groupname);
+			ResultSet rset = findGroup_stmt.executeQuery();
+			return rset.next();
+		
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	/**
+	 * 
+	 * @param room_id
+	 * @return true iff the room exists in the DB
+	 */
+	private boolean doesRoomExist(String room_id){
+		PreparedStatement findGroup_stmt;
+		try {
+			findGroup_stmt = connection.prepareStatement("SELECT * FROM Room WHERE roomID = ?;");
+			findGroup_stmt.setString(1, room_id);
 			ResultSet rset = findGroup_stmt.executeQuery();
 			return rset.next();
 		
@@ -328,6 +367,15 @@ public class DataBaseManager implements Closeable {
 	
 	/**
 	 * 
+	 * @param room_id
+	 * @throws RoomDoesNotExistException
+	 */
+	private void checkIfRoomExists(String room_id) throws RoomDoesNotExistException{
+		if(! doesRoomExist(room_id)){throw new RoomDoesNotExistException(room_id);}
+	}
+	
+	/**
+	 * 
 	 * @param username
 	 * @param entry_id
 	 * @throws EntryDoesNotExistException
@@ -385,6 +433,11 @@ public class DataBaseManager implements Closeable {
 		checkUserAndEntry(username, entry_id);
 		if(! doesInvitationExist(username, entry_id)){throw new InvitationDoesNotExistException(username, entry_id);}
 	}
+	
+	private void checkIfNotificationExists(long notification_id) throws NotificationDoesNotExistException{
+		if(! doesNotificationExist(notification_id)){throw new NotificationDoesNotExistException(notification_id);}
+	}
+
 	
 	/**
 	 * @see DataBaseManager#checkUserAndEntry(String, long)
@@ -460,30 +513,34 @@ public class DataBaseManager implements Closeable {
 	}
 	
 	private boolean addIntoNotification(Notification n) {
-//		String addRoom = "INSERT INTO Room VALUES (?, ?)";
-//		try {
-//			PreparedStatement stm = connection.prepareStatement(addRoom);
-//			stm.setString(1, r.getRoom_id());
-//			stm.setInt(2, r.getSize());
-//			stm.execute();
-//			stm.close();
-//			return true;
-//			
-//		} catch (SQLException e) {
-//			e.printStackTrace();
-//			return false;
-//		}
-		return false;
+		String addNotification = "INSERT INTO Notification (description, isOpened, time, username, entryID) VALUES (?, ?, ?, ? ,?, ?)";
+		try {
+			PreparedStatement addNotction_stm = connection.prepareStatement(addNotification);
+			int i = 0;
+			addNotction_stm.setString(++i, n.getDescription());
+			addNotction_stm.setBoolean(++i, n.isOpened());
+			addNotction_stm.setLong(++i, n.getTime());
+			addNotction_stm.setString(++i, n.getUsername());
+			addNotction_stm.setLong(++i, n.getEntry_id());
+			addNotction_stm.execute();
+			addNotction_stm.close();
+			return true;
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 	
-	private boolean addIntoRoom(Room r) {
-		// TODO make checkIfRoomExists method
+	private boolean addIntoRoom(Room r) throws RoomAlreadyExistsException {
+		if(doesRoomExist(r.getRoom_id())){throw new RoomAlreadyExistsException(r.getRoom_id());}
 		
 		String addRoom = "INSERT INTO Room VALUES (?, ?)";
 		try {
 			PreparedStatement stm = connection.prepareStatement(addRoom);
-			stm.setString(1, r.getRoom_id());
-			stm.setInt(2, r.getSize());
+			int i = 0;
+			stm.setString(++i, r.getRoom_id());
+			stm.setInt(++i, r.getSize());
 			stm.execute();
 			stm.close();
 			return true;
@@ -820,8 +877,9 @@ public class DataBaseManager implements Closeable {
 	 * adds the Room to the DB
 	 * @param r
 	 * @return true if the action was successful. False otherwise.
+	 * @throws RoomAlreadyExistsException 
 	 */
-	public boolean addRoom(Room r){
+	public boolean addRoom(Room r) throws RoomAlreadyExistsException{
 		return this.addIntoRoom(r);
 	}
 
@@ -872,23 +930,120 @@ public class DataBaseManager implements Closeable {
 	// Get Methods
 	
 	
-	public Alarm getAlarm(String username, long entry_id){
-		// TODO
-		throw new NotYetImplementedException();
+	public Alarm getAlarm(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, AlarmDoesNotExistException{
+		checkIfAlarmExists(username, entry_id);
+		
+		PreparedStatement getAlarm_stm;
+		try {
+			getAlarm_stm = connection.prepareStatement("SELECT * FROM Alarm WHERE username=? and entryID = ?; ");
+	
+			int i = 0;
+			getAlarm_stm.setString(++i, username);
+			getAlarm_stm.setLong(++i, entry_id);
+			
+			ResultSet rset = getAlarm_stm.executeQuery();
+			
+			if (rset.next()) {
+				AlarmBuilder ab = new AlarmBuilder();
+				ab.setAlarmTime(rset.getLong("alarmTime"));
+				ab.setUsername(username);
+				ab.setEntry_id(entry_id);
+				
+				return ab.build();
+			} else{
+				throw new AlarmDoesNotExistException();
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
-	public boolean isMemberOf(String groupname, String username){
-		// TODO
-		throw new NotYetImplementedException();
+	public boolean isMemberOf(String groupname, String username) throws UserDoesNotExistException, GroupDoesNotExistException{
+		checkIfUserExists(username);
+		checkIfGroupExists(groupname);
+		
+		PreparedStatement isMember_stm;
+		try {
+			isMember_stm = connection.prepareStatement("SELECT * FROM MemberOf WHERE username=? and groupname = ?; ");
+	
+			int i = 0;
+			isMember_stm.setString(++i, username);
+			isMember_stm.setString(++i, groupname);
+			
+			ResultSet rset = isMember_stm.executeQuery();
+			
+			return rset.next();
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 	
-	public HashSet<Notification> getNotificationsForUser(String username){
-		// TODO
-		throw new NotYetImplementedException();
+	/**
+	 * 
+	 * @param username
+	 * @return a HashSet with all notifications for the specified user
+	 * @throws UserDoesNotExistException 
+	 */
+	public HashSet<Notification> getNotificationsForUser(String username) throws UserDoesNotExistException{
+		checkIfUserExists(username);
+		
+		
+		PreparedStatement getNotifications_stm;
+		try {
+			getNotifications_stm = connection.prepareStatement("SELECT * FROM Notification WHERE username=?; ");
+	
+			int i = 0;
+			getNotifications_stm.setString(++i, username);
+			
+			ResultSet rset = getNotifications_stm.executeQuery();
+			
+			HashSet<Notification> notifics = new HashSet<>();
+			while(rset.next()){
+				NotificationBuilder nb = new NotificationBuilder();
+				nb.setDescription(rset.getString("description"));
+				nb.setEntry_id(rset.getLong("entryID"));
+				nb.setNotifiationID(rset.getLong("notificationID"));
+				nb.setOpened(rset.getBoolean("isOpened"));
+				nb.setTime(rset.getLong("time"));
+				nb.setUsername(username);
+				notifics.add(nb.build());
+			}
+			
+			return notifics;
+			
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 	
-	public Room getRoom(String room_id){
-		// TODO
-		throw new NotYetImplementedException();
+	public Room getRoom(String room_id) throws RoomDoesNotExistException{
+		PreparedStatement getAlarm_stm;
+		try {
+			getAlarm_stm = connection.prepareStatement("SELECT * FROM Room WHERE roomID = ?; ");
+	
+			int i = 0;
+			getAlarm_stm.setString(++i, room_id);
+			
+			ResultSet rset = getAlarm_stm.executeQuery();
+			
+			if (rset.next()) {
+				RoomBuilder rb = new RoomBuilder();
+				rb.setRoom_id(room_id);
+				rb.setSize(rset.getInt("size"));
+				
+				
+				return rb.build();
+			} else{
+				throw new RoomDoesNotExistException(room_id);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 	
 	
@@ -909,8 +1064,10 @@ public class DataBaseManager implements Closeable {
 		PreparedStatement stm;
 		try {
 			stm = connection.prepareStatement("SELECT * FROM Invitation WHERE username=? and entryID = ?; ");
-	
-			stm.setLong(1, entry_id);
+			int i = 0;
+			stm.setString(++i, username);
+			stm.setLong(++i, entry_id);
+			
 			ResultSet rs = stm.executeQuery();
 			
 			if (rs.next()) {
@@ -1037,15 +1194,90 @@ public class DataBaseManager implements Closeable {
 	//----------------------------------------------------------------------------------------------
 	// Edit Table Methods
 
-	
-	public boolean editAlarm(Alarm a){
-		// TODO
-		throw new NotYetImplementedException();
+	/**
+	 * takes the user and entry form the given alarm <i>a</i> and finds the alarm in the DB</br>
+	 * then replaces the alarmTime in the database.</br>
+	 * calls the editAlarm(String username, long entry_id, long newAlarmTime) method.
+	 * @param a
+	 * @return
+	 * @throws UserDoesNotExistException 
+	 * @throws EntryDoesNotExistException 
+	 * @see DataBaseManager#editAlarm(String, long, long)
+	 */
+	public boolean editAlarm(Alarm a) throws EntryDoesNotExistException, UserDoesNotExistException{
+		return this.editAlarm(a.getUsername(), a.getEntry_id(), a.getAlarmTime());
 	}
 	
-	public boolean editNotification(Notification n){
-		// TODO
-		throw new NotYetImplementedException();
+	/**
+	 * changes the alarmTime for the alarm for the user-entry pair.
+	 * If the alarm does not exist, it creates an new one.
+	 * @param username
+	 * @param entry_id
+	 * @param newAlarmTime
+	 * @return
+	 * @throws UserDoesNotExistException 
+	 * @throws EntryDoesNotExistException 
+	 */
+	public boolean editAlarm(String username, long entry_id, long newAlarmTime) throws EntryDoesNotExistException, UserDoesNotExistException {
+
+		try {
+			boolean bool = addIntoAlarm(new Alarm(newAlarmTime, username, entry_id));
+			return bool;
+		} catch (AlarmAlreadyExistsException alarmExists) {
+			// The alarm does already exist, so edit it:
+			String edit_alarm =   "UPDATE Alarm " 
+								+ "SET alarmTime = ? "
+								+ "WHERE username = ? AND entryID = ?; ";
+
+			try {
+				PreparedStatement editAlarm_stmt = connection.prepareStatement(edit_alarm);
+				int i = 0;
+				editAlarm_stmt.setLong(++i, newAlarmTime);
+				editAlarm_stmt.setString(++i, username);
+				editAlarm_stmt.setLong(++i, entry_id);
+				editAlarm_stmt.executeUpdate();
+
+				editAlarm_stmt.close();
+				return true;
+
+			} catch (SQLException sqlEx) {
+				sqlEx.printStackTrace();
+				return false;
+			}
+		}
+	}
+	
+	/**
+	 * replaces the notification in the DB with the same notificationID as the given notification <i>n</>.</br>
+	 * Note that the ID, the user and the entry of the notification can not be changed.</br>
+	 * 
+	 * @param n
+	 * @return
+	 * @throws NotificationDoesNotExistException if the notification does not exist in the DB. 
+	 */
+	public boolean editNotification(Notification n) throws NotificationDoesNotExistException{
+		checkIfNotificationExists(n.getNotificationID());
+		
+		String edit_entry = "UPDATE notification "
+				+ "SET description = ?, isOpened = ?, time = ? "
+				+ "WHERE notificationID = ?; ";
+		
+		try {
+			PreparedStatement editUser_stmt = connection.prepareStatement(edit_entry);
+			int i = 0;
+			
+			editUser_stmt.setString(++i, n.getDescription());
+			editUser_stmt.setBoolean(++i, n.isOpened());
+			editUser_stmt.setLong(++i, n.getTime());
+			
+			editUser_stmt.executeUpdate();
+			editUser_stmt.close();
+			return true;
+			
+		}catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 	
 	/**
@@ -1120,13 +1352,9 @@ public class DataBaseManager implements Closeable {
 		}
 	}
 
-	public boolean editNotification(String username, int entry_id, String description, boolean isOpened, long timestamp){
-		// TODO
-		throw new NotYetImplementedException();
-	}
-
-	public boolean editRoom(Room r){
-		// TODO check if room exists
+	public boolean editRoom(Room r) throws RoomDoesNotExistException{
+		checkIfRoomExists(r.getRoom_id());
+		
 		String editRoom = "UPDATE Room "
 				+ "SET roomID = ?, size = ? "
 				+ "WHERE roomID = ?; ";
@@ -1509,11 +1737,14 @@ public class DataBaseManager implements Closeable {
 	}
 	
 	public static void main(String args[]){
+		
+		
+		// drops the database and add it again. also inserts standard data
 		DataBaseManager dbm = new DataBaseManager();
 		try {
 			dbm.addSQL("addtables.sql");
+			dbm.addSQL("insertintotables.sql");
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
