@@ -3,7 +3,7 @@ package calendar;
 import interfaces.Builder;
 
 public class NotificationBuilder implements Builder<Notification> {
-	
+	private long notifiationID;
 	private String description = null;
 	private boolean isOpened = false;
 	private long time = -1;
@@ -21,6 +21,7 @@ public class NotificationBuilder implements Builder<Notification> {
 	 * @param n
 	 */
 	public NotificationBuilder(Notification n) {
+		setNotifiationID(n.getNotificationID());
 		setDescription(n.getDescription());
 		setOpened(n.isOpened());
 		setTime(n.getTime());
@@ -30,9 +31,12 @@ public class NotificationBuilder implements Builder<Notification> {
 
 	@Override
 	public Notification build() {
-		return new Notification(description, isOpened, time, username, entry_id);
+		return new Notification(notifiationID, description, isOpened, time, username, entry_id);
 	}
 	
+	public long getNotifiationID() {
+		return notifiationID;
+	}
 	public String getDescription() {
 		return description;
 	}
@@ -49,7 +53,9 @@ public class NotificationBuilder implements Builder<Notification> {
 		return isOpened;
 	}
 	
-	
+	public void setNotifiationID(long notifiationID) {
+		this.notifiationID = notifiationID;
+	}
 	public void setDescription(String description) {
 		this.description = description;
 	}

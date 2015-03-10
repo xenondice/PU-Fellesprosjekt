@@ -126,6 +126,10 @@ public class DataBaseManager implements Closeable {
 		}
 	}
 	
+	private boolean doesAlarmExist(String username, long entry_id){
+		
+	}
+	
 	/**
 	 * Checks if the invitation for the user and entryID exists
 	 * @param username
@@ -1276,5 +1280,15 @@ public class DataBaseManager implements Closeable {
 		InputStreamReader reader = new InputStreamReader(new FileInputStream(filename));
 		runner.runScript(reader);
 		reader.close();
+	}
+	
+	public static void main(String args[]){
+		DataBaseManager dbm = new DataBaseManager();
+		try {
+			dbm.addSQL("addtables.sql");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

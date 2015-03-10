@@ -15,7 +15,7 @@ public class CalendarEntry {
 	private final  String location; 
 	private final  String description; 
 	private final  String roomID; 
-	private final  String creator;
+	private final  String creator; // username of the creator of the entry
 	
 	public CalendarEntry(int entryID, long startTime, long endTime, String location,
 			String description, String roomID, String creator){
@@ -73,7 +73,6 @@ public class CalendarEntry {
 	public long getStartTime() {
 		return startTime;
 	}
-
 	public String getCreator(){
 		return creator;
 	}
