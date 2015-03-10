@@ -237,9 +237,17 @@ public class DataBaseManager implements Closeable {
 	 * @param entry_id
 	 * @return true iff the user has adminrights to the entry. </br>
 	 * false if an error occurs or the user has not the admin rights.
+	 * @throws UserDoesNotExistException 
+	 * @throws EntryDoesNotExistException 
 	 */
-	private boolean isAdmin(String username, long entry_id){
-	
+	private boolean isAdmin(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
+		
+		
+		if (isCreator(username, entry_id)){
+			return true;
+		}
+		
+		
 		try {
 			PreparedStatement stm = connection.prepareStatement(""
 					+ "SELECT * "
@@ -1529,8 +1537,13 @@ public class DataBaseManager implements Closeable {
 	 * Does nothing if no entry with the given id exists.
 	 * @param entry_id
 	 * @return true iff the action was successful. Otherwise false.
+	 * @throws HasNotTheRightsException 
+	 * @throws UserDoesNotExistException 
+	 * @throws EntryDoesNotExistException 
 	 */
-	public boolean deleteEntry(int entry_id){
+	public boolean deleteEntry(String username, int entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException{
+		checkIfisAdmin(username, entry_id);
+		
 		try {
 			PreparedStatement stm = connection.prepareStatement("DELETE FROM CalendarEntry WHERE entryID = ?");
 			stm.setLong(1, entry_id);
