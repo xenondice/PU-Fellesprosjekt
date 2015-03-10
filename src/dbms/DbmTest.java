@@ -40,7 +40,6 @@ public class DbmTest {
 	@Test
 	public void testAddUser() {
 		
-		fail("Not yet implemented");
 		
 		
 	}

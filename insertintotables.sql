@@ -1,40 +1,36 @@
 INSERT INTO Room (roomID, size)
-VALUES ("K5-208", 8)
-;
+VALUES ("K5-208", 8);
 
-INSERT INTO Entry (EventID, startTime, endTime, location, description, roomID)
-VALUES (1,'2015-03-03 10:33:17', '2015-03-03 13:33:17', "Gloeshaugen", "Database fellesprosjekt", "K5-208")
-;
+INSERT INTO User (username, name, password, salt, email)
+VALUES ("lukasap", "Magnus Moan", "Kombinert", "", "mamo@stud.ntnu.no");
+
+INSERT INTO CalendarEntry (startTime, endTime, location, description, roomID, creator)
+VALUES ('2015-03-03 10:33:17', '2015-03-03 13:33:17', "Gloeshaugen", "Database fellesprosjekt", "K5-208", "lukasap");
+
+INSERT INTO Alarm (alarmTime, username, entryID)
+VALUES ('2015-05-05 10:30:00','lukasap', 1);
 
 
 INSERT INTO User (username, name, password, salt, email)
-VALUES ("xXx69xXx", "Albert Aaberg", "Skybert", "", "albert@stud.ntnu.no")
-;
+VALUES ("xXx69xXx", "Albert Aaberg", "Skybert", "", "albert@stud.ntnu.no");
 
 INSERT INTO User (username, name, password, salt, email)
-VALUES ("MaMo", "Magnus Moan", "Kombinert", "", "mamo@stud.ntnu.no")
-;
+VALUES ("MaMo", "Magnus Moan", "Kombinert", "", "mamo@stud.ntnu.no");
 
 INSERT INTO Invitation (username, entryID)
-VALUES ("MaMo", 1)
-;
+VALUES ("MaMo", 1);
 
 INSERT INTO Notification (description, username, entryID)
-VALUES ("Invitasjon til fellesprosjekt", "MaMo", 1)
-;
+VALUES ("Invitasjon til fellesprosjekt", "MaMo", 1);
 
 INSERT INTO IsAdmin (entryID, username)
-VALUES (1, "xXx69xXx")
-;
+VALUES (1, "xXx69xXx");
 
 INSERT INTO Gruppe (groupname)
-VALUES ("gruppe1")
-;
+VALUES ("gruppe1");
 
 INSERT INTO MemberOf (groupname, username)
-VALUES ("gruppe1", "xXx69xXx")
-;
+VALUES ("gruppe1", "xXx69xXx");
 
 INSERT INTO MemberOf (groupname, username)
-VALUES ("gruppe1", "MaMo")
-;
+VALUES ("gruppe1", "MaMo");
