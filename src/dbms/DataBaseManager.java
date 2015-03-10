@@ -111,6 +111,9 @@ public class DataBaseManager implements Closeable {
 	 * @return true iff the username exists in the DB
 	 */
 	private boolean doesUserExist(String username){
+		if(username == null){
+			return false;
+		}
 		PreparedStatement findUser_stmt;
 		try {
 			findUser_stmt = connection.prepareStatement("SELECT * FROM User WHERE username = ?;");
@@ -814,7 +817,7 @@ public class DataBaseManager implements Closeable {
 		
 		ResultSet rsetID = get_id_stmt.executeQuery(get_id);
 		rsetID.next();
-		long entry_id = rsetID.getLong("entryID");
+		long entry_id = rsetID.getLong("MAX(entryID)");
 		get_id_stmt.close();
 		return entry_id;
 		
@@ -852,8 +855,7 @@ public class DataBaseManager implements Closeable {
 	 * @return true if the action was successful. False otherwise.
 	 * @param e the entry
 	 * @param u the user creating the entry
-	 * @throws UserDoesNotExistException 
-	 * @throws InvitationDoesNotExistException 
+	 * @throws UserDoesNotExistException
 	 */
 	public boolean addEntry(CalendarEntry e, String username) throws UserDoesNotExistException{
 		
@@ -1341,7 +1343,7 @@ public class DataBaseManager implements Closeable {
 			editEntry_stmt.setString(++i, newEntry.getLocation());
 			editEntry_stmt.setString(++i, newEntry.getDescription());
 			editEntry_stmt.setString(++i, newEntry.getRoomID());
-			editEntry_stmt.setInt(++i, newEntry.getEntryID());
+			editEntry_stmt.setLong(++i, newEntry.getEntryID());
 			
 			editEntry_stmt.executeUpdate();
 			editEntry_stmt.close();

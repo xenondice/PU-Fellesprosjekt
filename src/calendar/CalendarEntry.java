@@ -9,7 +9,7 @@ import java.util.Date;
 */
 public class CalendarEntry {
 	
-	private final  int entryID;
+	private final  long entryID;
 	private final  long startTime; 
 	private final  long endTime; 
 	private final  String location; 
@@ -17,7 +17,7 @@ public class CalendarEntry {
 	private final  String roomID; 
 	private final  String creator; // username of the creator of the entry
 	
-	public CalendarEntry(int entryID, long startTime, long endTime, String location,
+	public CalendarEntry(long entryID, long startTime, long endTime, String location,
 			String description, String roomID, String creator){
 		this.entryID = entryID; 
 		this.startTime = startTime; 
@@ -61,7 +61,7 @@ public class CalendarEntry {
 	public long getEndTime() {
 		return endTime;
 	}
-	public int getEntryID() {
+	public long getEntryID() {
 		return entryID;
 	}
 	public String getLocation() {
