@@ -69,11 +69,12 @@ public class CreateUserWiz extends Command {
 		User user = user_builder.build();
 		
 		try {
-			RequestHandler.createUser(user);
+			if (RequestHandler.createUser(user))
+				return "User successfully created!";
+			else
+				return "User couldn't be created!";
 		} catch (UsernameAlreadyExistsException e) {
 			return "Username already taken!";
 		}
-		
-		return "User successfully created!";
 	}
 }
