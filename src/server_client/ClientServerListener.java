@@ -42,7 +42,7 @@ public class ClientServerListener implements Runnable {
 						console_output.flush();
 					}
 					
-					if (status == 's') {
+					if (status == Client.STATUS_DISCONNECTED) {
 						Client.disconnect();
 						Client.markEnd();
 						client_thread.interrupt();

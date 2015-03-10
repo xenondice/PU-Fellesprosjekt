@@ -27,7 +27,10 @@ public class Client {
 	public static final long WAIT_BEFORE_TIMEOUT = 15000;
 	private static boolean can_write = true;
 	private static boolean can_recieve_input = true;
-	private static boolean connected = true;
+	private static boolean connected = false;
+	
+	public static final char STATUS_OK = 'a';
+	public static final char STATUS_DISCONNECTED = 's';
 	
 	private static Socket server_connection;
 	private static BufferedWriter server_output;
@@ -157,7 +160,7 @@ public class Client {
 	
 	private static void sendRequest(String request) throws TimeoutException, IOException {
 		can_write = false;
-		server_output.write(request + System.lineSeparator());
+		server_output.write(STATUS_OK + request + System.lineSeparator());
 		server_output.flush();
 		
 		waitForEnd();
@@ -178,7 +181,9 @@ public class Client {
 		can_write = true;
 	}
 	
-	public static void disconnect() {
+	public static void disconnect() throws IOException {
+		server_output.write(STATUS_DISCONNECTED);
+		server_output.flush();
 		connected = false;
 	}
 	
@@ -216,10 +221,9 @@ public class Client {
 		try {
 			can_write = false;
 			waitForEnd();
+			connected = true;
 		} catch (TimeoutException e) {
 			message("Login not promted!");
-			disconnect();
-			return;
 		}
 		
 		while (connected) {
@@ -229,6 +233,7 @@ public class Client {
 			if (request.equals("exit")) {
 				if (askYesOrNo("Are you sure you want to exit?")) {
 					message("Exiting...");
+					disconnect();
 					break;
 				}
 				continue;
@@ -249,7 +254,6 @@ public class Client {
 	}
 	
 	private static void dispose() throws IOException {
-		disconnect();
 		server_connection.close();
 		server_listener_thread.interrupt();
 	}

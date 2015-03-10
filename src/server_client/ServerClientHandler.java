@@ -140,6 +140,12 @@ public class ServerClientHandler implements Runnable, Closeable {
 		while (true) {
 			if (client_input.ready()) {
 				time_inactive = 0;
+				
+				char status = (char) client_input.read();
+				if (status == RequestHandler.STATUS_DISCONNECTED) {
+					throw new InterruptedException();
+				}
+				
 				List<String> formatted = formatRequest(client_input.readLine());
 				if (formatted.size() > 0) {
 					if (formatted.get(0).equals("cancel")) throw new ForcedReturnException();
@@ -197,7 +203,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 	public List<String> ask(String question, int number_of_arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		
 		explain(question);
-		send('a');
+		send(RequestHandler.STATUS_OK);
 		
 		while (true) {
 			List<String> response = expectInput();
@@ -205,7 +211,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 			if (response.size() == number_of_arguments) return response;
 			
 			explain("Please provide " + number_of_arguments + " argument(s)!");
-			send('a');
+			send(RequestHandler.STATUS_OK);
 		}
 	}
 	
@@ -234,18 +240,18 @@ public class ServerClientHandler implements Runnable, Closeable {
 		Command command_type = Command.getCommand(command);
 		if (command_type == null) {
 			status("Unrecognized command! Type \"commands\" for a list over commands.");
-			send('a');
+			send(RequestHandler.STATUS_OK);
 			return;
 		}
 		
 		if (arguments.size() != command_type.getArguments().length) {
 			status("Command syntax is wrong! Type \"help command\" or \"man command\" for information about the command.");
-			send('a');
+			send(RequestHandler.STATUS_OK);
 			return;
 		}
 		
 		status(command_type.run(this, arguments));
-		send('a');
+		send(RequestHandler.STATUS_OK);
 	}
 	
 	private boolean login() throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
@@ -278,8 +284,10 @@ public class ServerClientHandler implements Runnable, Closeable {
 		
 		try {
 			logged_in = login();
-			if (logged_in)
+			if (logged_in) {
 				status("Successfully logged in!");
+				send(RequestHandler.STATUS_OK);
+			}
 		} catch (IOException | TimeoutException | InterruptedException | ForcedReturnException e2) {
 			logged_in = false;
 		}
@@ -298,7 +306,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 		else {
 			try {
 				status("Wrong password or username!");
-				send('s');
+				send(RequestHandler.STATUS_DISCONNECTED);
 			} catch (IOException e) {
 			}
 		}
