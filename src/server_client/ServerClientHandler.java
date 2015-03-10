@@ -26,6 +26,12 @@ public class ServerClientHandler implements Runnable, Closeable {
 	private User user;
 	private String temp_message;
 	
+	public static enum ArgumentType {
+		number,
+		long_number,
+		text,
+	}
+	
 	/*public static final String[][][] commands = { // Once login is done, store user creditals and change eg. calendar to show your calendar only
 		{
 			{"user", "Commands connected to users"},
@@ -228,9 +234,41 @@ public class ServerClientHandler implements Runnable, Closeable {
 			response = ask("Please answer with yes[y] or no[n]!", 1);
 		}
 	}
-	
-	public List<Object> wizard(List<String> argument_types) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
-		return null; //TODO: Make wizard and forced methods that return if any argument is wrong
+	//TODO: Make wizard and forced methods that return if any argument is wrong
+	public List<Object> wizard(List<ArgumentType> argument_types, List<String> description, String intro_message) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+		
+		if (argument_types.size() != description.size())
+			throw new ForcedReturnException("Internal error!");
+		
+		if (!intro_message.isEmpty()) status(intro_message);
+		
+		List<Object> results = new ArrayList<>();
+		
+		for (int i = 0; i < argument_types.size(); i++) {
+			
+			String answer = ask(description.get(i) + " (" + (i+1) + "/" + argument_types.size() + ")",1).get(0);
+			
+			Object result;
+			
+			switch (argument_types.get(i)) {
+				case long_number:
+					result = verifyLong(answer);
+					break;
+				case number:
+					result = verifyInt(answer);
+					break;
+				case text:
+					result = answer;
+					break;
+				default:
+					result = null;
+					break;
+			}
+			
+			results.add(result);
+		}
+		
+		return results;
 	}
 	
 	private void handleRequest(List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
