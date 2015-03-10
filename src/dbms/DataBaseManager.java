@@ -235,18 +235,16 @@ public class DataBaseManager implements Closeable {
 	 * 
 	 * @param username
 	 * @param entry_id
-	 * @return true iff the user has adminrights to the entry. </br>
+	 * @return true iff the user has adminrights to the entry and/or is the creator. </br>
 	 * false if an error occurs or the user has not the admin rights.
 	 * @throws UserDoesNotExistException 
 	 * @throws EntryDoesNotExistException 
 	 */
-	private boolean isAdmin(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
-		
+	public boolean isAdmin(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
 		
 		if (isCreator(username, entry_id)){
 			return true;
 		}
-		
 		
 		try {
 			PreparedStatement stm = connection.prepareStatement(""
@@ -455,7 +453,7 @@ public class DataBaseManager implements Closeable {
 	 * @throws UserDoesNotExistException
 	 * @throws HasNotTheRightsException if the admin has not the admin rights for the entry.
 	 */
-	private void checkIfisAdmin(String admin, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException{
+	public void checkIfisAdmin(String admin, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException{
 		checkUserAndEntry(admin, entry_id);
 		if(! isAdmin(admin, entry_id)){throw new HasNotTheRightsException(admin, entry_id);}
 	}
