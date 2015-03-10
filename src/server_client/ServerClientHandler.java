@@ -148,7 +148,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 				
 				List<String> formatted = formatRequest(client_input.readLine());
 				if (formatted.size() > 0) {
-					if (formatted.get(0).equals("cancel")) throw new ForcedReturnException();
+					if (formatted.get(0).equals("cancel")) throw new ForcedReturnException("Cancelled by user!");
 					return formatted;
 				}
 			}
