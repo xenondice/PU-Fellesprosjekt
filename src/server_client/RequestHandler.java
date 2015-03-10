@@ -118,6 +118,10 @@ public class RequestHandler{
 	}
 	
 	private synchronized static void validate(User requestor) throws SessionExpiredException {
+		if (requestor == null) {
+			System.out.println("Request from unverified user denied");
+			throw new SessionExpiredException();
+		}
 		System.out.println("Request from user " + requestor.getUsername() + " validated");
 		//TODO: Make validation function
 	}
