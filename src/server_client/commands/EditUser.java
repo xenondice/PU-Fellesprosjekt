@@ -5,23 +5,25 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import exceptions.ForcedReturnException;
-import exceptions.UsernameAlreadyExistsException;
+import exceptions.HasNotTheRightsException;
+import exceptions.SessionExpiredException;
+import exceptions.UserDoesNotExistException;
 import server_client.Command;
 import server_client.RequestHandler;
 import server_client.ServerClientHandler;
 import user.User;
 import user.UserBuilder;
 
-public class CreateUser extends Command {
+public class EditUser extends Command {
 	
 	@Override
 	public String getCommand() {
-		return "create-user";
+		return "edit-user";
 	}
 
 	@Override
 	public String getDescription() {
-		return "Create a new user.";
+		return "Edit an existing user.";
 	}
 
 	@Override
@@ -55,12 +57,16 @@ public class CreateUser extends Command {
 		User user = user_builder.build();
 		
 		try {
-			if (RequestHandler.createUser(user))
-				return "User successfully created!";
-			else
-				return "User couldn't be created!";
-		} catch (UsernameAlreadyExistsException e) {
-			return "Username already taken!";
+			if (RequestHandler.editUser(handler.getUser(), user)) {
+				return "User successfully edited!";
+			} else {
+				return "User could not be edited!";
+			}
+		} catch (UserDoesNotExistException | HasNotTheRightsException e) {
+			return "Could not edit user!";
+		} catch (SessionExpiredException e) {
+			return "Session expired!";
 		}
+		
 	}
 }

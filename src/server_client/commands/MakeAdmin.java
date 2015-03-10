@@ -5,23 +5,25 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import exceptions.ForcedReturnException;
-import exceptions.UsernameAlreadyExistsException;
+import exceptions.HasNotTheRightsException;
+import exceptions.SessionExpiredException;
+import exceptions.UserDoesNotExistException;
 import server_client.Command;
 import server_client.RequestHandler;
 import server_client.ServerClientHandler;
 import user.User;
 import user.UserBuilder;
 
-public class CreateUser extends Command {
+public class MakeAdmin extends Command {
 	
 	@Override
 	public String getCommand() {
-		return "create-user";
+		return "make-admin";
 	}
 
 	@Override
 	public String getDescription() {
-		return "Create a new user.";
+		return "Make another user admin of a calendar event.";
 	}
 
 	@Override
@@ -33,9 +35,7 @@ public class CreateUser extends Command {
 	public String[] getArguments() {
 		return new String[]{
 			"username",
-			"password",
-			"name",
-			"email"
+			"entryID",
 		};
 	}
 
@@ -47,20 +47,14 @@ public class CreateUser extends Command {
 	@Override
 	public String run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		
-		UserBuilder user_builder = new UserBuilder();
-		user_builder.setUsername(arguments.get(0));
-		user_builder.setPassword(arguments.get(1));
-		user_builder.setName(arguments.get(2));
-		user_builder.setEmail(arguments.get(3));
-		User user = user_builder.build();
-		
 		try {
-			if (RequestHandler.createUser(user))
-				return "User successfully created!";
-			else
-				return "User couldn't be created!";
-		} catch (UsernameAlreadyExistsException e) {
-			return "Username already taken!";
+			if (RequestHandler.makeAdmin(handler.getUser(), arguments.get(0), Integer.parseInt(arguments.get(1))))
+				return "User " + arguments.get(0) + " now admin!";
+			else return "Could not make "  + arguments.get(0) + " admin!";
+		} catch (Exception e) {
+			return "Could not make user admin!";
 		}
+		
+		
 	}
 }

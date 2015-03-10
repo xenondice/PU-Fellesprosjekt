@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import exceptions.ForcedReturnException;
-import exceptions.UsernameAlreadyExistsException;
+import exceptions.HasNotTheRightsException;
+import exceptions.SessionExpiredException;
+import exceptions.UserDoesNotExistException;
 import server_client.Command;
 import server_client.RequestHandler;
 import server_client.ServerClientHandler;
@@ -14,22 +16,22 @@ import server_client.ServerClientHandler.ArgumentType;
 import user.User;
 import user.UserBuilder;
 
-public class CreateUserWiz extends Command {
+public class EditUserWiz extends Command {
 
 	@Override
 	public String getCommand() {
-		return "create-user-wiz";
+		return "edit-user-wiz";
 	}
 
 	@Override
 	public String getDescription() {
-		return "Create a new user using a wizard.";
+		return "Edit an existing user using a wizard.";
 	}
 
 	@Override
 	public String getManual() {
 		return ""
-				+ "Easier way of creating a user.\n"
+				+ "Easier way of editing a user.\n"
 				+ "Walks you through each of the required arguments and asks again if an argument is wrong.";
 	}
 
@@ -51,13 +53,13 @@ public class CreateUserWiz extends Command {
 		String intro_message = "";
 		
 		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in wanted username.");
+		descriptions.add("Type in your username.");
 		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in password.");
+		descriptions.add("Type in new password to edit. Else: type in old password");
 		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in full name in quotes.");
+		descriptions.add("Type in new full name in quotes to edit. Else: type in old name");
 		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in email-address.");
+		descriptions.add("Type in new email-address to edit. Else: type in old email-address");
 		
 		List<Object> result = handler.wizard(argument_types, descriptions, intro_message);
 		
@@ -69,12 +71,15 @@ public class CreateUserWiz extends Command {
 		User user = user_builder.build();
 		
 		try {
-			if (RequestHandler.createUser(user))
-				return "User successfully created!";
-			else
-				return "User couldn't be created!";
-		} catch (UsernameAlreadyExistsException e) {
-			return "Username already taken!";
+			if (RequestHandler.editUser(handler.getUser(), user)) {
+				return "User successfully edited!";
+			} else {
+				return "User could not be edited!";
+			}
+		} catch (UserDoesNotExistException | HasNotTheRightsException e) {
+			return "Could not edit user!";
+		} catch (SessionExpiredException e) {
+			return "Session expired!";
 		}
 	}
 }
