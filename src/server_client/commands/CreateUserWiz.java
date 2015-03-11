@@ -66,6 +66,7 @@ public class CreateUserWiz extends Command {
 		user_builder.setPassword((String) result.get(1));
 		user_builder.setName((String) result.get(2));
 		user_builder.setEmail((String) result.get(3));
+		user_builder.setSalt("");
 		User user = user_builder.build();
 		
 		try {

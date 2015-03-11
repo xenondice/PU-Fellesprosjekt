@@ -103,10 +103,10 @@ public class RequestHandler{
 	 * User functions
 	 *================*/ 
 	
-	public static User logIn(User user) throws UserDoesNotExistException, WrongPasswordException {
+	public static User logIn(String username, String password) throws UserDoesNotExistException, WrongPasswordException {
 		try {
-			User existing_user = dbm.getUser(user.getUsername());
-			if (user.getPassword().equals(existing_user.getPassword())) {
+			User existing_user = dbm.getUser(username);
+			if (password.equals(existing_user.getPassword())) {
 				System.out.println("New user verified as " + existing_user.getUsername());
 				return existing_user; //TODO: Make better login
 			}

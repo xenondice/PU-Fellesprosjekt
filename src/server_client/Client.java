@@ -65,6 +65,7 @@ public class Client {
 			error("Couldn't connect to server!", true);
 		}
 		
+		connected = true;
 		message("Successfully connected!");
 		message();
 		
@@ -218,12 +219,11 @@ public class Client {
 	
 	private static void run() throws IOException {
 		
+		// Waiting for optional welcome message
 		try {
 			can_write = false;
 			waitForEnd();
-			connected = true;
 		} catch (TimeoutException e) {
-			message("Login not promted!");
 		}
 		
 		while (connected) {

@@ -41,7 +41,12 @@ public class CreateUser extends Command {
 
 	@Override
 	public String[] getExamples() {
-		return new String[0];
+		return new String[]{
+				"To create a simple user named bernt\nwith password 123 and no extra information, do as following:\n"
+				+ "create-user bernt 123 \"\" \"\"",
+				"To create a password or name containing spaces use quotes:\n"
+				+ "create-user test \"Hello world\" 'Full Name' email@address"
+		};
 	}
 
 	@Override
@@ -52,6 +57,7 @@ public class CreateUser extends Command {
 		user_builder.setPassword(arguments.get(1));
 		user_builder.setName(arguments.get(2));
 		user_builder.setEmail(arguments.get(3));
+		user_builder.setSalt("");
 		User user = user_builder.build();
 		
 		try {
