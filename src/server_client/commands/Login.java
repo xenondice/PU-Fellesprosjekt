@@ -5,19 +5,23 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import exceptions.ForcedReturnException;
+import exceptions.UserDoesNotExistException;
+import exceptions.WrongPasswordException;
 import server_client.Command;
+import server_client.RequestHandler;
 import server_client.ServerClientHandler;
+import user.User;
 
-public class Help extends Command {
+public class Login extends Command {
 
 	@Override
 	public String getCommand() {
-		return "help";
+		return "login";
 	}
 
 	@Override
 	public String getDescription() {
-		return "Show a short description of a command.";
+		return "Login with an existing user.";
 	}
 
 	@Override
@@ -28,7 +32,8 @@ public class Help extends Command {
 	@Override
 	public String[] getArguments() {
 		return new String[]{
-			"command"	
+			"username",
+			"password"
 		};
 	}
 
@@ -40,17 +45,14 @@ public class Help extends Command {
 	@Override
 	public String run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		
-		Command command = Command.getCommand(arguments.get(0));
-		if (command == null)
-			return "Not a command!";
-		
-		handler.status(command.getDescription());
-		
-		String message = "Syntax: " + command.getCommand();
-		for (String argument : command.getArguments())
-			message += " " + argument;
-		
-		return message;
+		try {
+			User user = RequestHandler.logIn(arguments.get(0), arguments.get(1));
+			if (user != null) {
+				handler.setUser(user);
+				return "Successfully logged in!";
+			}
+		} catch (UserDoesNotExistException | WrongPasswordException e) {
+		}
+		return "Invalid password and/or username!";
 	}
-
 }

@@ -14,10 +14,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import user.User;
-import user.UserBuilder;
 import exceptions.ForcedReturnException;
-import exceptions.UserDoesNotExistException;
-import exceptions.WrongPasswordException;
 
 public class ServerClientHandler implements Runnable, Closeable {
 	private BufferedReader client_input;
@@ -292,60 +289,35 @@ public class ServerClientHandler implements Runnable, Closeable {
 		send(RequestHandler.STATUS_OK);
 	}
 	
-	private boolean login() throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
-		
-		String username = ask("Enter username.", 1).get(0);
-		String password = ask("Enter password.",1).get(0);
-		
-		UserBuilder user_builder = new UserBuilder();
-		user_builder.setUsername(username);
-		user_builder.setPassword(password);
-		User user = user_builder.build();
-		
-		try {
-			this.user = RequestHandler.logIn(user);
-		} catch (UserDoesNotExistException | WrongPasswordException e) {
-			return false;
-		}
-		
-		return true;
-	}
-	
 	public User getUser() {
 		return user;
+	}
+	
+	public void setUser(User user) {
+		this.user = user;
 	}
 
 	@Override
 	public void run() {
 		
-		boolean logged_in = false;
-		
 		try {
-			logged_in = login(); //TODO: Make this a function on it's own so that a user can make requests, but has a null user, so no requests are verified
-			if (logged_in) {
-				status("Successfully logged in!");
-				send(RequestHandler.STATUS_OK);
-			}
-		} catch (IOException | TimeoutException | InterruptedException | ForcedReturnException e2) {
-			logged_in = false;
+			explain("Welcome to the calendar system!");
+			explain("You are currently logged in as a guest.");
+			explain("This means you only have access to create-user, create-user-wiz and login.");
+			explain("You will have to login before you can make any further requests!");
+			space();
+			send(RequestHandler.STATUS_OK);
+		} catch (IOException e) {
 		}
-		
-		if (logged_in)
-			while (true) {
-				try {
-					handleRequest(expectInput());
-				} catch (ForcedReturnException e) {
-					try {status(e.getMessage());} catch (IOException e1) {e.printStackTrace();};
-					continue;
-				} catch (IOException | TimeoutException | InterruptedException e) {
-					break;
-				}
-			}
-		else {
+			
+		while (true) {
 			try {
-				status("Wrong password or username!");
-				send(RequestHandler.STATUS_DISCONNECTED);
-			} catch (IOException e) {
+				handleRequest(expectInput());
+			} catch (ForcedReturnException e) {
+				try {status(e.getMessage());} catch (IOException e1) {e.printStackTrace();};
+				continue;
+			} catch (IOException | TimeoutException | InterruptedException e) {
+				break;
 			}
 		}
 		
