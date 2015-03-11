@@ -3,11 +3,13 @@ package tests;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.net.NetworkInterface;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashSet;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -83,7 +85,7 @@ public class DBMTests {
 	}
 	
 	@Test
-	@Ignore
+	
 	public void testAddUser() {
 		// remove user if it is there
 		User testU = new User("testU", "as", "sdfsad", "asdf", "fsda");
@@ -137,7 +139,7 @@ public class DBMTests {
 	}
 
 	@Test
-	@Ignore
+	
 	public void testAddRoom() {
 		// remove room if it is there
 		Room testRoom = new Room("X1", 42);
@@ -192,7 +194,7 @@ public class DBMTests {
 	}
 
 	@Test
-	@Ignore
+	
 	public void testAddAlarm(){
 		// remove alarm if it is there
 		Alarm testAlarm = new Alarm(12000, u.getUsername(), e.getEntryID());
@@ -244,7 +246,7 @@ public class DBMTests {
 	}
 
 	@Test
-	@Ignore
+	
 	public void testAddInvitation() {
 		
 		// remove inv if it is there
@@ -284,15 +286,6 @@ public class DBMTests {
 			fail("wrong exception");
 			e.printStackTrace();
 		}
-		
-		// check what happens with roomid = null
-		try {
-			assertTrue(dbm.addInvitation(new Invitation(false, false, null, -1)) == false);
-
-		} catch (Exception e) {
-			fail("exception thrown");
-			e.printStackTrace();
-		}
 	}
 	
 	private boolean isInvitationThere(Invitation inv){
@@ -321,7 +314,7 @@ public class DBMTests {
 	}
 
 	@Test
-	@Ignore
+	
 	public void testAddEntry() {
 		// get latest entryID
 		long lastID = getlastEntryID();
@@ -332,6 +325,7 @@ public class DBMTests {
 		try {
 			dbm.addEntry(testEntry, u.getUsername());
 			assertTrue(getlastEntryID() == lastID+1);
+			assertTrue(dbm.isAdmin(u.getUsername(), getlastEntryID()));
 		} catch (Exception e) {
 			fail("exception thrown");
 			e.printStackTrace();
@@ -355,7 +349,7 @@ public class DBMTests {
 	}
 
 	@Test
-	@Ignore
+	
 	public void testAddGroup() {
 		// remove group if it is there
 		String gname = "group1";
@@ -429,7 +423,7 @@ public class DBMTests {
 	}
 
 	@Test
-	@Ignore
+	
 	public void testAddUserToGroup() {
 		User[] userArray = {u};
 		User[] emptyArray = {};
@@ -476,16 +470,27 @@ public class DBMTests {
 			return false;
 		}
 	}
+	
+	private boolean isEntryThere(long id){
+		try {
+			return connection.createStatement().executeQuery("SELECT * FROM CalendarEntry WHERE entryID = '"+id+"';").next();
+		
+		} catch (SQLException e) {
+			
+			e.printStackTrace();
+			return false;
+		}
+	}
 
 	@Test
-	@Ignore
+	
 	public void testAddNotification() {
 		
-		Notification n = new Notification(1, "nndn", false, -1, "lukasap", 1);
+		Notification n = new Notification(1, "nndnasfghjhtrd", false, 1000, "lukasap", 1);
 
 		// check adding a entry correctly
 		try {
-			dbm.addNotification(n);
+			assertTrue(dbm.addNotification(n));
 			assertTrue(isNotificationThere(n));
 		} catch (Exception e) {
 			fail("exception thrown");
@@ -512,7 +517,7 @@ public class DBMTests {
 	}
 	
 	@Test
-	@Ignore
+	
 	public void testIsAllowedToSee_Going() {
 		User u1 = new User("u1", "u1", "u1", "u1", "u1");
 		User u2 = new User("admin", "admin", "admin", "admin", "admin");
@@ -540,7 +545,7 @@ public class DBMTests {
 	}
 
 	@Test
-	@Ignore
+	
 	public void testIsAllowedToEdit_testMakeAdmin() {
 		User u1 = new User("u1", "u1", "u1", "u1", "u1");
 		User u2 = new User("admin", "admin", "admin", "admin", "admin");
@@ -569,6 +574,7 @@ public class DBMTests {
 	}
 
 	@Test
+	
 	public void testAdd_GetAlarm() {
 		Alarm al = new Alarm(10000, "lukasap", 1);
 		
@@ -595,7 +601,7 @@ public class DBMTests {
 	}
 
 	@Test
-	@Ignore
+	
 	public void testIsMemberOf() {
 		User u1 = new User("u1", "u1", "u1", "u1", "u1");
 		User u2 = new User("admin", "admin", "admin", "admin", "admin");
@@ -625,7 +631,7 @@ public class DBMTests {
 			assertTrue(dbm.isMemberOf(gr.getName(), u1.getName()));
 			assertTrue(dbm.isMemberOf(gr.getName(), u2.getName()));
 			assertTrue(dbm.isMemberOf(gr.getName(), u3.getName()) == false);
-		} catch (UserDoesNotExistException | GroupDoesNotExistException e) {
+		} catch (UserDoesNotExistException e) {
 			e.printStackTrace();
 			fail("exception thrown");
 		}
@@ -635,11 +641,11 @@ public class DBMTests {
 	@Test
 	@Ignore
 	public void testGetNotificationsForUser() {
-		fail("Not yet implemented");
+		
 	}
 
 	@Test
-	@Ignore
+	
 	public void testGetRoom() {
 		Room rm = new Room("XBD", 12);
 		try {
@@ -659,6 +665,7 @@ public class DBMTests {
 	}
 
 	@Test
+	
 	public void testGetInvitation() {
 		Invitation inv = new Invitation(true, true, "lukasap", 1);
 		try {
@@ -685,6 +692,7 @@ public class DBMTests {
 	}
 
 	@Test
+	
 	public void testGetUser() {
 		User u1 = new User("u1", "asdf", "ssdf", "123", "asd@sf");
 		try {
@@ -708,6 +716,7 @@ public class DBMTests {
 	}
 
 	@Test
+	
 	public void testGetEntry() {
 		CalendarEntry e1  = new CalendarEntry(1, 10000, 100000, "asdlfk", "asdf", null, "lukasap");
 		try {
@@ -732,147 +741,405 @@ public class DBMTests {
 	}
 
 	@Test
-	@Ignore
+	
 	public void testGetGroup() {
-		fail("Not yet implemented");
+		// make some users and add them to DB
+		User u1 = new User("u1", "", "", "", "");
+		User u2 = new User("u2", "", "", "", "");
+		User u3 = new User("u3", "", "", "", "");
+		User[] userArray = { u1, u2, u3 };
+		for (User user : userArray) {
+			try {
+				dbm.addUser(user);
+			} catch (UsernameAlreadyExistsException e) {
+				e.printStackTrace();
+			}
+		}
+		String gname = "group1";
+		Group testGroup = new Group(userArray, gname);
+		
+		try {
+			dbm.addGroup(testGroup);
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("exception thrown");
+		}
+		
+		try {
+			Group gotGroup = dbm.getGroup(gname);
+			assertTrue(gotGroup != null);
+			assertTrue(gotGroup.getName().equals(testGroup.getName()));
+			for(User user : gotGroup.getUsers()){
+				assertTrue(isInGroup(gname, user.getUsername()));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("exception thrown");
+		}
 	}
 
 	@Test
-	@Ignore
-	public void testEditAlarmAlarm() {
-		fail("Not yet implemented");
+	
+	public void testEditAlarm() {
+		Alarm a1 = new Alarm(100000, "lukasap", 1);
+		Alarm a2 = new Alarm(1000, a1.getUsername(), a1.getEntry_id());
+		
+		try {
+			dbm.addAlarm(a1);
+			dbm.editAlarm(a2);
+			Alarm getEdited  = dbm.getAlarm(a1.getUsername(), a1.getEntry_id());
+			assertTrue(getEdited.getAlarmTime() == a2.getAlarmTime());
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("excption thrown");
+		}
 	}
 
 	@Test
-	@Ignore
-	public void testEditAlarmStringLongLong() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	@Ignore
+	
 	public void testEditNotification() {
-		fail("Not yet implemented");
+		Notification n1 = new Notification(1, "sadffs", false, 10000, "lukasap", 1);
+		Notification n1_edited = new Notification(1, "kjgidf", true, 50000, "lukasap", 1);
+		
+		try {
+			dbm.addNotification(n1);
+			dbm.editNotification(n1_edited);
+			HashSet<Notification> edited  = dbm.getNotificationsForUser("lukasap");
+			assertTrue(edited.contains(n1_edited));
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("excption thrown");
+		}
 	}
 
 	@Test
-	@Ignore
+	
 	public void testEditUser() {
-		fail("Not yet implemented");
+		User u1 = new User("u1", "lol", "asdf", "gh", "tzui");
+		User u_edit = new User("u1", "aklsd", "ert", "qw", "sdf");
+		
+			try {
+				dbm.addUser(u1);
+				dbm.editUser(u_edit);
+				User gotUser = dbm.getUser(u1.getUsername());
+				assertTrue(u_edit.equals(gotUser));
+			} catch (Exception e) {
+				e.printStackTrace();
+				fail("Exception thrown"+e.toString());
+			}
+		
 	}
 
 	@Test
-	@Ignore
+	
 	public void testEditEntry() {
-		fail("Not yet implemented");
+		CalendarEntry e1 = new CalendarEntry(2, 10000, 200000, "asdf", "sdfasf", null, "lukasap");
+		CalendarEntry e1_edit = new CalendarEntry(2, 20000, 300000, "asretr", "dfgh", null, "lukasap");
+		
+		try {
+			dbm.addEntry(e1, e1.getCreator());
+			long id = getlastEntryID();
+			dbm.editEntry(e1_edit, e1.getCreator());
+			CalendarEntry gotEntry = dbm.getEntry(id);
+			assertTrue(e1_edit.equals(gotEntry));
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail();
+		}
+		
 	}
 
 	@Test
-	@Ignore
+	
 	public void testEditRoom() {
-		fail("Not yet implemented");
+		Room r1 = new Room("XXX", 41);
+		Room r1_edit = new Room(r1.getRoom_id(), 42);
+		
+			try {
+				dbm.addRoom(r1);
+				dbm.editRoom(r1_edit);
+				Room gotRoom = dbm.getRoom(r1_edit.getRoom_id());
+				assertTrue(r1_edit.equals(gotRoom));
+			} catch (Exception e) {
+				e.printStackTrace();
+				fail("Exception thrown"+e.toString());
+			}
 	}
 
 	@Test
-	@Ignore
+	
 	public void testAllowToSee() {
-		fail("Not yet implemented");
+		User u1 = new User("kuno", "asd", "sdfasdf", "", "");
+		try {
+			dbm.addUser(u1);
+			dbm.addInvitation(new Invitation(false, false, u1.getUsername(), 1));
+			assertTrue(dbm.isAllowedToSee(u1.getUsername(), 1) == false);
+			dbm.allowToSee(u1.getUsername(), 1);
+			assertTrue(dbm.isAllowedToSee(u1.getUsername(), 1));
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail();
+		}
+		
 	}
 
 	@Test
-	@Ignore
+	
 	public void testAllowToSeeGroup() {
-		fail("Not yet implemented");
+		try {
+			// make some users and add them to DB
+			User u1 = new User("u1", "", "", "", "");
+			User u2 = new User("u2", "", "", "", "");
+			User u3 = new User("u3", "", "", "", "");
+			User[] userArray = { u1, u2, u3 };
+			for (User user : userArray) {
+				dbm.addUser(user);
+				dbm.addInvitation(new Invitation(false, false, user.getUsername(), 1));
+			}
+			String gname = "lols";
+			Group testGroup = new Group(userArray, gname);
+			dbm.addGroup(testGroup);
+			for (User user : userArray) {
+				assertTrue(dbm.isAllowedToSee(user.getUsername(), 1) == false);
+			}
+			assertTrue(dbm.allowToSeeGroup(gname, 1));
+			
+			for (User user : userArray) {
+				assertTrue(dbm.isAllowedToSee(user.getUsername(), 1));
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail();
+		}
+
 	}
 
 	@Test
-	@Ignore
+	
 	public void testHideEvent() {
-		fail("Not yet implemented");
+		User u1 = new User("kuno", "asd", "sdfasdf", "", "");
+		
+		try {
+			dbm.addUser(u1);
+			dbm.addInvitation(new Invitation(false, false, u1.getUsername(), 1));
+			assertTrue(dbm.isAllowedToSee(u1.getUsername(), 1) == false);
+			dbm.allowToSee(u1.getUsername(), 1);
+			assertTrue(dbm.isAllowedToSee(u1.getUsername(), 1));
+			dbm.hideEvent(u1.getUsername(), 1);
+			assertTrue(dbm.isAllowedToSee(u1.getUsername(), 1) == false);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail();
+		}
 	}
 
 	@Test
-	@Ignore
+	
 	public void testHideEventGroup() {
-		fail("Not yet implemented");
+		try {
+			// make some users and add them to DB
+			User u1 = new User("u1", "", "", "", "");
+			User u2 = new User("u2", "", "", "", "");
+			User u3 = new User("u3", "", "", "", "");
+			User[] userArray = { u1, u2, u3 };
+			for (User user : userArray) {
+				dbm.addUser(user);
+				dbm.addInvitation(new Invitation(false, false, user.getUsername(), 1));
+			}
+			String gname = "lols";
+			Group testGroup = new Group(userArray, gname);
+			dbm.addGroup(testGroup);
+			for (User user : userArray) {
+				assertTrue(dbm.isAllowedToSee(user.getUsername(), 1) == false);
+			}
+			assertTrue(dbm.allowToSeeGroup(gname, 1));
+			
+			for (User user : userArray) {
+				assertTrue(dbm.isAllowedToSee(user.getUsername(), 1));
+			}
+			
+			assertTrue(dbm.hideEventGroup(gname, 1));
+			
+			for (User user : userArray) {
+				assertTrue(dbm.isAllowedToSee(user.getUsername(), 1) == false);
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail();
+		}
 	}
 
 	@Test
-	@Ignore
-	public void testGoing() {
-		fail("Not yet implemented");
+	
+	public void testGoing_notGoing() {
+		User u1 = new User("kuno", "asd", "sdfasdf", "", "");
+		
+		try {
+			dbm.addUser(u1);
+			dbm.addInvitation(new Invitation(false, false, u1.getUsername(), 1));
+			assertTrue(dbm.isGoing(u1.getUsername(), 1) == false);
+			dbm.going(u1.getUsername(), 1);
+			assertTrue(dbm.isGoing(u1.getUsername(), 1));
+			dbm.notGoing(u1.getUsername(), 1);
+			assertTrue(dbm.isGoing(u1.getUsername(), 1) == false);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail();
+		}
 	}
 
-	@Test
-	@Ignore
-	public void testNotGoing() {
-		fail("Not yet implemented");
-	}
 
 	@Test
-	@Ignore
-	public void testDeleteAlarmAlarm() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	@Ignore
+	
 	public void testDeleteAlarmStringLong() {
-		fail("Not yet implemented");
+		Alarm al = new Alarm(100000, "lukasap", 1);
+		try {
+			dbm.addAlarm(al);
+			assertTrue(isAlarmThere(al));
+			dbm.deleteAlarm(al);
+			assertTrue(isAlarmThere(al)== false);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail();
+		}
+		
+			
 	}
 
 	@Test
-	@Ignore
+	
 	public void testRevokeAdmin() {
-		fail("Not yet implemented");
+		User u1 = new User("hsdf", "", "", "", "");
+		try {
+			dbm.addUser(u1);
+			assertTrue(dbm.isAdmin(u1.getUsername(), 1) == false);
+			dbm.makeAdmin(u1.getUsername(), 1);
+			assertTrue(dbm.isAdmin(u1.getUsername(), 1));
+			dbm.revokeAdmin(u1.getUsername(), 1);
+			assertTrue(dbm.isAdmin(u1.getUsername(), 1) == false);
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail();
+		}
+		
 	}
 
 	@Test
-	@Ignore
+	
 	public void testDeleteNotification() {
-		fail("Not yet implemented");
+		Notification n1 = new Notification(1, "sadffs", false, 10000, "lukasap", 1);
+		
+		try {
+			dbm.addNotification(n1);
+			assertTrue(isNotificationThere(n1));
+			dbm.deleteNotification(n1.getNotificationID());
+			assertTrue(isNotificationThere(n1) == false);
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("excption thrown");
+		}
 	}
 
 	@Test
-	@Ignore
+	
 	public void testDeleteEntry() {
-		fail("Not yet implemented");
+		CalendarEntry e1 = new CalendarEntry(2, 10000, 200000, "asdf", "sdfasf", null, "lukasap");
+		
+		try {
+			dbm.addEntry(e1, e1.getCreator());
+			long id = getlastEntryID();
+			assertTrue(isEntryThere(id));
+			dbm.deleteEntry("lukasap", id);
+			assertTrue(isEntryThere(id) == false);
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail();
+		}
 	}
 
 	@Test
-	@Ignore
+	
 	public void testRemoveUserFromGroup() {
-		fail("Not yet implemented");
+		try {
+			// make some users and add them to DB
+			User u1 = new User("u1", "", "", "", "");
+			User u2 = new User("u2", "", "", "", "");
+			User u3 = new User("u3", "", "", "", "");
+			User[] userArray = { u1, u2, u3 };
+			for (User user : userArray) {
+				dbm.addUser(user);
+				dbm.addInvitation(new Invitation(false, false, user.getUsername(), 1));
+			}
+			String gname = "lols";
+			Group testGroup = new Group(userArray, gname);
+			dbm.addGroup(testGroup);
+			for (User user : userArray) {
+				assertTrue(dbm.isMemberOf(gname, user.getUsername()));
+			}
+			assertTrue(dbm.removeUserFromGroup(u1.getUsername(), gname));
+			
+			assertTrue(dbm.isMemberOf(gname, u1.getUsername())== false);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail();
+		}
 	}
 
 	@Test
-	@Ignore
+	
 	public void testDeleteGroup() {
-		fail("Not yet implemented");
+		try {
+			// make some users and add them to DB
+			User u1 = new User("u1", "", "", "", "");
+			User u2 = new User("u2", "", "", "", "");
+			User u3 = new User("u3", "", "", "", "");
+			User[] userArray = { u1, u2, u3 };
+			for (User user : userArray) {
+				dbm.addUser(user);
+				dbm.addInvitation(new Invitation(false, false, user.getUsername(), 1));
+			}
+			String gname = "lols";
+			Group testGroup = new Group(userArray, gname);
+			dbm.addGroup(testGroup);
+			for (User user : userArray) {
+				assertTrue(dbm.isMemberOf(gname, user.getUsername()));
+			}
+			assertTrue(dbm.deleteGroup(gname));
+			
+			assertTrue(isGroupThere(gname) == false);
+			
+			for (User user : userArray) {
+				assertTrue(dbm.isMemberOf(gname, user.getUsername()) == false);
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail();
+		}
 	}
 
 	@Test
-	@Ignore
+	
 	public void testDeleteRoom() {
-		fail("Not yet implemented");
+		Room rm = new Room("XBD", 12);
+		try {
+			assertTrue(dbm.addRoom(rm));
+			
+			assertTrue(isRoomThere(rm));
+			assertTrue(dbm.deleteRoom(rm.getRoom_id()));
+			assertTrue(isRoomThere(rm) == false);
+			
+			
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("exception thrown");
+		}
 	}
-
-	@Test
-	@Ignore
-	public void testInviteUser() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	@Ignore
-	public void testInviteGroup() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	@Ignore
-	public void testCreateCalendar() {
-		fail("Not yet implemented");
-	}
-
 }

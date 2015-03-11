@@ -49,9 +49,9 @@ CREATE TABLE Invitation ( # To store the user-calendarEntry relation
 );
 
 CREATE TABLE Alarm(
-    alarmTime TIMESTAMP NOT NULL,
-    username    VARCHAR(30)    NOT NULL,
-    entryID        BIGINT        NOT NULL,
+    alarmTime 	TIMESTAMP 	NOT NULL,
+    username    VARCHAR(30)    	NOT NULL,
+    entryID     BIGINT        	NOT NULL,
 
 PRIMARY KEY(username, entryID),
 FOREIGN KEY(username) REFERENCES User(username)

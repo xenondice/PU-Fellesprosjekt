@@ -27,4 +27,38 @@ public class Room {
 		return new Room(room_id, size);
 	}
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((room_id == null) ? 0 : room_id.hashCode());
+		result = prime * result + size;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (!(obj instanceof Room)) {
+			return false;
+		}
+		Room other = (Room) obj;
+		if (room_id == null) {
+			if (other.room_id != null) {
+				return false;
+			}
+		} else if (!room_id.equals(other.room_id)) {
+			return false;
+		}
+		if (size != other.size) {
+			return false;
+		}
+		return true;
+	}
+
 }

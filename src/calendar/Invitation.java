@@ -26,6 +26,49 @@ public class Invitation {
 	public boolean isShowing() {
 		return isShowing;
 	}
-	
 
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (int) (entry_id ^ (entry_id >>> 32));
+		result = prime * result + (isGoing ? 1231 : 1237);
+		result = prime * result + (isShowing ? 1231 : 1237);
+		result = prime * result
+				+ ((username == null) ? 0 : username.hashCode());
+		return result;
+	}
+
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (!(obj instanceof Invitation)) {
+			return false;
+		}
+		Invitation other = (Invitation) obj;
+		if (entry_id != other.entry_id) {
+			return false;
+		}
+		if (isGoing != other.isGoing) {
+			return false;
+		}
+		if (isShowing != other.isShowing) {
+			return false;
+		}
+		if (username == null) {
+			if (other.username != null) {
+				return false;
+			}
+		} else if (!username.equals(other.username)) {
+			return false;
+		}
+		return true;
+	}
 }
