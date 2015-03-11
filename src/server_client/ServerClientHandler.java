@@ -234,7 +234,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 			response = ask("Please answer with yes[y] or no[n]!", 1);
 		}
 	}
-	//TODO: Make wizard and forced methods that return if any argument is wrong
+
 	public List<Object> wizard(List<ArgumentType> argument_types, List<String> description, String intro_message) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		
 		if (argument_types.size() != description.size())
@@ -321,7 +321,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 		boolean logged_in = false;
 		
 		try {
-			logged_in = login();
+			logged_in = login(); //TODO: Make this a function on it's own so that a user can make requests, but has a null user, so no requests are verified
 			if (logged_in) {
 				status("Successfully logged in!");
 				send(RequestHandler.STATUS_OK);

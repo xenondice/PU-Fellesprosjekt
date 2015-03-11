@@ -342,7 +342,7 @@ public class DataBaseManager implements Closeable {
 	 * @throws UserDoesNotExistException 
 	 * @throws EntryDoesNotExistException 
 	 */
-	public boolean isAllowedToEdit(String username, int entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
+	public boolean isAllowedToEdit(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
 		return isAdmin(username, entry_id);
 	}
 
