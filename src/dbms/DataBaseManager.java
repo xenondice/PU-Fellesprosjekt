@@ -114,6 +114,7 @@ public class DataBaseManager implements Closeable {
 		if(username == null){
 			return false;
 		}
+		
 		PreparedStatement findUser_stmt;
 		try {
 			findUser_stmt = connection.prepareStatement("SELECT * FROM User WHERE username = ?;");

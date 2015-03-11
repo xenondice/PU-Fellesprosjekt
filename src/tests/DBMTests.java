@@ -20,13 +20,16 @@ import calendar.Alarm;
 import calendar.CalendarEntry;
 import calendar.Invitation;
 import room_booking.Room;
+import user.Group;
 import user.User;
 import dbms.DataBaseManager;
 import exceptions.AlarmAlreadyExistsException;
 import exceptions.EntryDoesNotExistException;
+import exceptions.GroupAlreadyExistsException;
 import exceptions.InvitationAlreadyExistsException;
 import exceptions.RoomAlreadyExistsException;
 import exceptions.UserDoesNotExistException;
+import exceptions.UserInGroupDoesNotExistsException;
 import exceptions.UsernameAlreadyExistsException;
 
 public class DBMTests {
@@ -128,7 +131,6 @@ public class DBMTests {
 	}
 
 	@Test
-	@Ignore
 	public void testAddRoom() {
 		// remove room if it is there
 		Room testRoom = new Room("X1", 42);
@@ -323,7 +325,6 @@ public class DBMTests {
 	}
 
 	@Test
-	@Ignore
 	public void testAddEntry() {
 		// get latest entryID
 		long lastID = getlastEntryID();
@@ -347,26 +348,123 @@ public class DBMTests {
 			assertTrue(true);
 		}
 		
-		// check what happens with username = null
+		// check what happens with username = null (should throw UserDoesNotExistException)
 		try {
 			assertTrue(dbm.addEntry(testEntry, null) == false);
 			
+		} catch (UserDoesNotExistException e) {
+			assertTrue(true);
+		}
+	}
+
+	@Test
+	public void testAddGroup() {
+		// remove group if it is there
+		String gname = "group1";
+		try {
+			PreparedStatement stmt = connection.prepareStatement("DELETE From Gruppe where groupname = ? ;");
+			stmt.setString(1, gname);
+			stmt.executeUpdate();
+			
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+			fail("WTF?");
+		}
+		// make some users and add them to DB
+		User u1 = new User("u1", "", "", "", "");
+		User u2 = new User("u2", "", "", "", "");
+		User u3 = new User("u3", "", "", "", "");
+		User[] userArray = { u1, u2, u3 };
+		for(User user : userArray){
+			try {
+				dbm.addUser(user);
+			} catch (UsernameAlreadyExistsException e) {
+				e.printStackTrace();
+			}
+		}
+
+		Group testGroup = new Group(userArray, gname);
+
+		// check adding an Group correctly
+		try {
+			assertTrue(isGroupThere(testGroup.getName()) == false);
+			dbm.addGroup(testGroup);
+			assertTrue(isGroupThere(testGroup.getName()));
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("exception thrown");
+		}
+
+		// check if throws the exception correctly
+		// group already exists
+		try {
+			assert (isGroupThere(testGroup.getName()));
+			dbm.addGroup(testGroup);
+
+		} catch (GroupAlreadyExistsException e) {
+			assertTrue(true);
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("wrong exception");
+		}
+
+		// check what happens with wrong inputs
+		try {
+			assertTrue(dbm.addGroup(new Group(null, null)) == false);
+
 		} catch (Exception e) {
 			fail("exception thrown");
 			e.printStackTrace();
 		}
 	}
-
-	@Test
-	@Ignore
-	public void testAddGroup() {
-		fail("Not yet implemented");
+	
+	private boolean isGroupThere(String groupname){
+		try {
+			return connection.createStatement().executeQuery("SELECT * FROM Gruppe WHERE groupname = '"+groupname+"';").next();
+		
+		} catch (SQLException e) {
+			
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	@Test
-	@Ignore
 	public void testAddUserToGroup() {
-		fail("Not yet implemented");
+		User[] userArray = {u};
+		User[] emptyArray = {};
+		String groupname = "grname1";
+		try {
+			assertTrue(isInGroup(groupname, u.getUsername()) == false);
+			dbm.addGroup(new Group(emptyArray, groupname));
+			dbm.addUserToGroup(u.getUsername(), groupname);
+			assertTrue(isInGroup(groupname, u.getUsername()));
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("exception thrown");
+		}
+		
+		try {
+			assertTrue(isInGroup(groupname, u.getUsername()));
+			assertTrue(dbm.addGroup(new Group(userArray, null)) == false);
+			dbm.addGroup(new Group(userArray, "grname1"));
+		} catch (GroupAlreadyExistsException e1) {
+			assertTrue(true);
+		} catch (Exception e2){
+			fail("wrong exception thrown");
+		}
+	}
+	
+	private boolean isInGroup(String groupname, String username){
+		try {
+			return connection.createStatement().executeQuery("SELECT * FROM MemberOf WHERE groupname = '"+groupname+"' and username = '"+username+"';").next();
+		
+		} catch (SQLException e) {
+			
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	@Test
