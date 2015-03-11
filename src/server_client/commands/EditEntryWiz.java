@@ -13,22 +13,22 @@ import server_client.RequestHandler;
 import server_client.ServerClientHandler;
 import server_client.ServerClientHandler.ArgumentType;
 
-public class CreateEntryWiz extends Command {
+public class EditEntryWiz extends Command {
 
 	@Override
 	public String getCommand() {
-		return "create-entry-wiz";
+		return "edit-entry-wiz";
 	}
 
 	@Override
 	public String getDescription() {
-		return "Create a new calendar entry using a wizard.";
+		return "Edit an existing calendar entry using a wizard.";
 	}
 
 	@Override
 	public String getManual() {
 		return ""
-				+ "Easier way of creating a calendar entry.\n"
+				+ "Easier way of editing an existing calendar entry.\n"
 				+ "Walks you through each of the required arguments and asks again if an argument is wrong.";
 	}
 
@@ -54,6 +54,8 @@ public class CreateEntryWiz extends Command {
 		argument_types.add(ArgumentType.text);
 		descriptions.add("Type in end time.");
 		argument_types.add(ArgumentType.text);
+		descriptions.add("Type in eventID.");
+		argument_types.add(ArgumentType.text);
 		descriptions.add("Type in location.");
 		argument_types.add(ArgumentType.text);
 		descriptions.add("Type in roomID.");
@@ -65,19 +67,20 @@ public class CreateEntryWiz extends Command {
 		CalendarEntryBuilder entry_builder = new CalendarEntryBuilder();
 		entry_builder.setDescription((String) result.get(0));
 		entry_builder.setEndTime((Integer) (result.get(1)));
-		entry_builder.setLocation((String) result.get(2));
-		entry_builder.setRoomID((String) result.get(3));
+		entry_builder.setEventID((Integer) result.get(2));
+		entry_builder.setLocation((String) result.get(3));
+		entry_builder.setRoomID((String) result.get(4));
 		entry_builder.setCreator(handler.getUser().getUsername());
-		entry_builder.setStartTime((Integer) (result.get(4)));
+		entry_builder.setStartTime((Integer) (result.get(5)));
 		CalendarEntry calendarEntry = entry_builder.build();
 		
 		try {
 			if (RequestHandler.createEntry(handler.getUser(), calendarEntry))
-				return "Calendar entry successfully created!";
+				return "Calendar entry successfully edited!";
 			else
-				return "Calendar entry couldn't be created!";
+				return "Calendar entry couldn't be edited!";
 		} catch (Exception e) {
-			return "Could not create calendar entry!";
+			return "Could not edit calendar entry!";
 		}
 	}
 }
