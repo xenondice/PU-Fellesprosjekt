@@ -12,6 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -253,7 +254,7 @@ public class DataBaseManager implements Closeable {
 		try {
 			PreparedStatement stm = connection.prepareStatement(""
 					+ "SELECT * "
-					+ "FROM isAdmin "
+					+ "FROM IsAdmin "
 					+ "WHERE username=? "
 						+ "AND entryID = ?;");
 	
@@ -303,7 +304,7 @@ public class DataBaseManager implements Closeable {
 	 * @throws UserDoesNotExistException 
 	 * @throws EntryDoesNotExistException 
 	 */
-	public boolean isAllowedToSee(String username, int entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
+	public boolean isAllowedToSee(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
 		
 		checkUserAndEntry(username, entry_id);
 		
@@ -520,14 +521,18 @@ public class DataBaseManager implements Closeable {
 		}
 	}
 	
-	private boolean addIntoNotification(Notification n) {
-		String addNotification = "INSERT INTO Notification (description, isOpened, time, username, entryID) VALUES (?, ?, ?, ? ,?, ?)";
+	private boolean addIntoNotification(Notification n) throws EntryDoesNotExistException, UserDoesNotExistException {
+		
+		// TODO Fix time issue
+		
+		checkUserAndEntry(n.getUsername(), n.getEntry_id());
+		String addNotification = "INSERT INTO Notification (description, isOpened, username, entryID) VALUES (?, ?, ? ,?)";
 		try {
 			PreparedStatement addNotction_stm = connection.prepareStatement(addNotification);
 			int i = 0;
 			addNotction_stm.setString(++i, n.getDescription());
 			addNotction_stm.setBoolean(++i, n.isOpened());
-			addNotction_stm.setLong(++i, n.getTime());
+//			addNotction_stm.setTime(++i, n.getTime());
 			addNotction_stm.setString(++i, n.getUsername());
 			addNotction_stm.setLong(++i, n.getEntry_id());
 			addNotction_stm.execute();
@@ -604,8 +609,8 @@ public class DataBaseManager implements Closeable {
 			
 			int i = 0;
 	
-			addEntry_stmt.setTimestamp(++i,new java.sql.Timestamp(e.getStartTime()));
-			addEntry_stmt.setTimestamp(++i,new java.sql.Timestamp(e.getEndTime()));
+			addEntry_stmt.setTimestamp(++i,new Timestamp(e.getStartTime()));
+			addEntry_stmt.setTimestamp(++i,new Timestamp(e.getEndTime()));
 			addEntry_stmt.setString(++i, e.getLocation());
 			addEntry_stmt.setString(++i, e.getDescription());
 			addEntry_stmt.setString(++i, e.getRoomID());
@@ -681,12 +686,14 @@ public class DataBaseManager implements Closeable {
 			try {
 			PreparedStatement addAlarm_stmt = connection.prepareStatement(add_alarm);
 			int i = 0;
-			addAlarm_stmt.setLong(++i, a.getAlarmTime());
+			Timestamp  tstmp = new Timestamp(a.getAlarmTime());
+			addAlarm_stmt.setTimestamp(++i, tstmp);
 			addAlarm_stmt.setString(++i, a.getUsername());
 			addAlarm_stmt.setLong(++i, a.getEntry_id());
 			
 			addAlarm_stmt.executeUpdate();
 			addAlarm_stmt.close();
+			
 			return true;
 			} catch (SQLException e) {
 				e.printStackTrace();
@@ -862,6 +869,8 @@ public class DataBaseManager implements Closeable {
 		
 		checkIfUserExists(username);
 		
+		// TODO username and e.creator must be the same. Resolve it :P
+		
 		if(addIntoEntry(e)){
 			long entryID = getLastEntryID();
 			try {
@@ -911,7 +920,7 @@ public class DataBaseManager implements Closeable {
 	 * @throws UserDoesNotExistException 
 	 * @throws EntryDoesNotExistException 
 	 */
-	public boolean makeAdmin(String admin, String username, int entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
+	public boolean makeAdmin(String username, int entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
 		return addIntoIsAdmin(username, entry_id);
 	}
 
@@ -927,7 +936,7 @@ public class DataBaseManager implements Closeable {
 		return this.addIntoMemberOf(groupname, username);
 	}
 	
-	public boolean addNotification(Notification n){
+	public boolean addNotification(Notification n) throws EntryDoesNotExistException, UserDoesNotExistException{
 		return this.addIntoNotification(n);
 	}
 	
@@ -950,7 +959,8 @@ public class DataBaseManager implements Closeable {
 			
 			if (rset.next()) {
 				AlarmBuilder ab = new AlarmBuilder();
-				ab.setAlarmTime(rset.getLong("alarmTime"));
+				Timestamp timestmp = rset.getTimestamp("alarmTime");
+				ab.setAlarmTime(timestmp.getTime());
 				ab.setUsername(username);
 				ab.setEntry_id(entry_id);
 				
@@ -960,7 +970,7 @@ public class DataBaseManager implements Closeable {
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			return null;
+			return new AlarmBuilder().build();
 		}
 	}
 	public boolean isMemberOf(String groupname, String username) throws UserDoesNotExistException, GroupDoesNotExistException{
@@ -1132,7 +1142,7 @@ public class DataBaseManager implements Closeable {
 	 * @return the CalendarEntry instance from the DB with the specified id.
 	 * @throws EntryDoesNotExistException if the entry does not exist.
 	 */
-	public CalendarEntry getEntry(int entry_id) throws EntryDoesNotExistException {
+	public CalendarEntry getEntry(long entry_id) throws EntryDoesNotExistException {
 		
 		checkIfEntryExists(entry_id);
 	
@@ -1141,15 +1151,20 @@ public class DataBaseManager implements Closeable {
 			stm = connection.prepareStatement("SELECT * FROM CalendarEntry WHERE entryID=?");
 	
 			stm.setLong(1, entry_id);
-			ResultSet rs = stm.executeQuery();
-			if (rs.next()) {
+			ResultSet rset = stm.executeQuery();
+			if (rset.next()) {
 				CalendarEntryBuilder ub = new CalendarEntryBuilder();
+				
 				ub.setEventID(entry_id);
-				ub.setDescription(rs.getString("description"));
-				ub.setEndTime(rs.getLong("endTime"));
-				ub.setStartTime(rs.getLong("startTime"));
-				ub.setRoomID(rs.getString("roomID"));
-				ub.setLocation(rs.getString("location"));
+				ub.setDescription(rset.getString("description"));
+				
+				Timestamp sstmp = rset.getTimestamp("startTime");
+				Timestamp estmp = rset.getTimestamp("endTime");
+				ub.setEndTime(estmp.getTime());
+				ub.setStartTime(sstmp.getTime());
+				ub.setRoomID(rset.getString("roomID"));
+				ub.setLocation(rset.getString("location"));
+				ub.setCreator(rset.getString("creator"));
 				return ub.build();
 			} else{
 				throw new EntryDoesNotExistException(); // just to be safe.

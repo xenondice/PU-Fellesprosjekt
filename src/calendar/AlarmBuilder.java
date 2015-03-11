@@ -40,6 +40,6 @@ public class AlarmBuilder implements Builder<Alarm> {
 	
 	
 	public Alarm build(){
-		return null;
+		return new Alarm(alarmTime, username, entry_id);
 	}
 }

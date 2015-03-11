@@ -60,12 +60,12 @@ FOREIGN KEY(username) REFERENCES User(username)
         ON UPDATE CASCADE ON DELETE CASCADE
 );
 
-CREATE TRIGGER update_alarmTime
-AFTER UPDATE ON CalendarEntry
-FOR EACH ROW
-	UPDATE Alarm AS A 
-	SET A.alarmTime = NEW.startTime - (OLD.startTime - A.alarmTime)
-	WHERE A.entryID = NEW.entryID ;
+#CREATE TRIGGER update_alarmTime
+#AFTER UPDATE ON CalendarEntry
+#FOR EACH ROW
+#	UPDATE Alarm AS A 
+#	SET A.alarmTime = NEW.startTime - (OLD.startTime - A.alarmTime)
+#	WHERE A.entryID = NEW.entryID ;
 
 
 
@@ -73,7 +73,7 @@ CREATE TABLE Notification (
     notificationID BIGINT NOT NULL     AUTO_INCREMENT,
     description    VARCHAR(100)    NOT NULL,
     isOpened    BOOLEAN        DEFAULT FALSE,
-    time        TIMESTAMP    NOT NULL, # Time of creation
+    time        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP, # Time of creation
     username    VARCHAR(30)    NOT NULL,
     entryID        BIGINT        NOT NULL,
     PRIMARY KEY(notificationID),
@@ -106,4 +106,12 @@ CREATE TABLE MemberOf (
         ON UPDATE CASCADE ON DELETE CASCADE,
     FOREIGN KEY (username) REFERENCES User(username)
         ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE RoomReservation (
+	roomID        	VARCHAR(10)    	NOT NULL,
+	startTime	TIMESTAMP 	NOT NULL,
+	endTime		TIMESTAMP 	NOT NULL, 
+	PRIMARY KEY (roomID, startTime, endTime),
+	FOREIGN KEY (roomID) REFERENCES Room(roomID) ON UPDATE CASCADE ON DELETE CASCADE
 );

@@ -19,15 +19,20 @@ import org.junit.Test;
 import calendar.Alarm;
 import calendar.CalendarEntry;
 import calendar.Invitation;
+import calendar.Notification;
 import room_booking.Room;
 import user.Group;
 import user.User;
 import dbms.DataBaseManager;
 import exceptions.AlarmAlreadyExistsException;
+import exceptions.AlarmDoesNotExistException;
 import exceptions.EntryDoesNotExistException;
 import exceptions.GroupAlreadyExistsException;
+import exceptions.GroupDoesNotExistException;
 import exceptions.InvitationAlreadyExistsException;
+import exceptions.InvitationDoesNotExistException;
 import exceptions.RoomAlreadyExistsException;
+import exceptions.RoomDoesNotExistException;
 import exceptions.UserDoesNotExistException;
 import exceptions.UserInGroupDoesNotExistsException;
 import exceptions.UsernameAlreadyExistsException;
@@ -78,6 +83,7 @@ public class DBMTests {
 	}
 	
 	@Test
+	@Ignore
 	public void testAddUser() {
 		// remove user if it is there
 		User testU = new User("testU", "as", "sdfsad", "asdf", "fsda");
@@ -131,6 +137,7 @@ public class DBMTests {
 	}
 
 	@Test
+	@Ignore
 	public void testAddRoom() {
 		// remove room if it is there
 		Room testRoom = new Room("X1", 42);
@@ -225,17 +232,6 @@ public class DBMTests {
 			fail("wrong exception");
 			e.printStackTrace();
 		}
-		
-		// check what happens with wrong inputs (should fail silentry and return false)
-		try {
-			assertTrue(dbm.addAlarm(new Alarm(100, null, -1)) == false);
-			assertTrue(dbm.addAlarm(new Alarm(100, "lukasap", -1)) == false);
-			// more testcases...
-
-		} catch (Exception e) {
-			fail("exception thrown");
-			e.printStackTrace();
-		}
 	}
 	
 	private boolean isAlarmThere(Alarm a){
@@ -325,6 +321,7 @@ public class DBMTests {
 	}
 
 	@Test
+	@Ignore
 	public void testAddEntry() {
 		// get latest entryID
 		long lastID = getlastEntryID();
@@ -358,6 +355,7 @@ public class DBMTests {
 	}
 
 	@Test
+	@Ignore
 	public void testAddGroup() {
 		// remove group if it is there
 		String gname = "group1";
@@ -431,6 +429,7 @@ public class DBMTests {
 	}
 
 	@Test
+	@Ignore
 	public void testAddUserToGroup() {
 		User[] userArray = {u};
 		User[] emptyArray = {};
@@ -466,41 +465,171 @@ public class DBMTests {
 			return false;
 		}
 	}
+	
+	private boolean isNotificationThere(Notification n){
+		try {
+			return connection.createStatement().executeQuery("SELECT * FROM Notification WHERE description = '"+n.getDescription()+"';").next();
+		
+		} catch (SQLException e) {
+			
+			e.printStackTrace();
+			return false;
+		}
+	}
 
 	@Test
 	@Ignore
 	public void testAddNotification() {
-		fail("Not yet implemented");
+		
+		Notification n = new Notification(1, "nndn", false, -1, "lukasap", 1);
+
+		// check adding a entry correctly
+		try {
+			dbm.addNotification(n);
+			assertTrue(isNotificationThere(n));
+		} catch (Exception e) {
+			fail("exception thrown");
+			e.printStackTrace();
+		}
+
+		try {
+			dbm.addNotification(new Notification(10, "awd", false, 12930, "", 1)); // userDoesnotexist
+		} catch (UserDoesNotExistException e) {
+			assertTrue(true);
+		}  catch (Exception e){
+			e.printStackTrace();
+			fail();
+		}
+
+		try {
+			dbm.addNotification(new Notification(10, "awd", false, 12930, "lukasap", 1000000)); // EntryDoesnotexist
+		} catch (EntryDoesNotExistException e) {
+			assertTrue(true);
+		}  catch (Exception e){
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	@Test
+	@Ignore
+	public void testIsAllowedToSee_Going() {
+		User u1 = new User("u1", "u1", "u1", "u1", "u1");
+		User u2 = new User("admin", "admin", "admin", "admin", "admin");
+		long entryID = 0;
+		try {
+			dbm.addUser(u1);
+			dbm.addUser(u2);
+			dbm.addEntry(new CalendarEntry(1, 1000000, 200000, "hl", "aksdf", null, u2.getUsername()), u2.getUsername());
+			entryID = getlastEntryID();
+		} catch (UsernameAlreadyExistsException | UserDoesNotExistException e1) {
+			
+			e1.printStackTrace();
+			fail("WTF");
+		}
+		
+		try {
+			assertTrue(dbm.isAllowedToSee(u1.getUsername(), entryID)== false);
+			assertTrue(dbm.isAllowedToSee(u2.getUsername(), entryID));
+			dbm.going(u1.getUsername(), 2);
+			
+		} catch (EntryDoesNotExistException | UserDoesNotExistException e) {
+			e.printStackTrace();
+			fail("exception thrown");
+		}
 	}
 
 	@Test
 	@Ignore
-	public void testMakeAdmin() {
-		fail("Not yet implemented");
+	public void testIsAllowedToEdit_testMakeAdmin() {
+		User u1 = new User("u1", "u1", "u1", "u1", "u1");
+		User u2 = new User("admin", "admin", "admin", "admin", "admin");
+		
+		try {
+			dbm.addUser(u1);
+			dbm.addUser(u2);
+		} catch (UsernameAlreadyExistsException e1) {
+			
+			e1.printStackTrace();
+			fail("WTF");
+		}
+		
+		try {
+			assertTrue(dbm.isAllowedToEdit(u2.getUsername(), 1)== false);
+			dbm.makeAdmin(u2.getUsername(), 1);
+			assertTrue(dbm.isAllowedToEdit(u2.getUsername(), 1));
+			assertTrue(dbm.isAllowedToEdit(u1.getUsername(), 1) == false);
+			
+		} catch (EntryDoesNotExistException | UserDoesNotExistException e) {
+			e.printStackTrace();
+			fail("exception thrown");
+		}
+
+		
 	}
 
 	@Test
-	@Ignore
-	public void testIsAllowedToSee() {
-		assertTrue(false);
-	}
-
-	@Test
-	@Ignore
-	public void testIsAllowedToEdit() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	@Ignore
-	public void testGetAlarm() {
-		fail("Not yet implemented");
+	public void testAdd_GetAlarm() {
+		Alarm al = new Alarm(10000, "lukasap", 1);
+		
+		// add
+		try {
+			assertTrue(dbm.addAlarm(al));
+			
+		} catch (EntryDoesNotExistException | UserDoesNotExistException
+				| AlarmAlreadyExistsException e) {
+			e.printStackTrace();
+			fail("exception thrown");
+			
+		}
+		// get
+		try {
+			Alarm gotAL = dbm.getAlarm("lukasap", 1);
+			assertTrue(gotAL != null);
+			assertTrue(al.getAlarmTime() == gotAL.getAlarmTime());
+		} catch (EntryDoesNotExistException | UserDoesNotExistException
+				| AlarmDoesNotExistException e) {
+			e.printStackTrace();
+			fail("exception thrown");
+		}
 	}
 
 	@Test
 	@Ignore
 	public void testIsMemberOf() {
-		fail("Not yet implemented");
+		User u1 = new User("u1", "u1", "u1", "u1", "u1");
+		User u2 = new User("admin", "admin", "admin", "admin", "admin");
+		User u3 = new User("u3", "u3", "u3", "u3", "u3");
+		
+		try {
+			dbm.addUser(u1);
+			dbm.addUser(u2);
+			dbm.addUser(u3);
+		} catch (UsernameAlreadyExistsException e1) {
+			e1.printStackTrace();
+			fail("WTF");
+		}
+		
+		User[] users = {u1, u2};
+		
+		Group gr = new Group(users, "newGroup");
+		try {
+			dbm.addGroup(gr);
+		} catch (UserDoesNotExistException | GroupAlreadyExistsException
+				| UserInGroupDoesNotExistsException e) {
+			e.printStackTrace();
+			fail("exception thrown");
+		}
+		
+		try {
+			assertTrue(dbm.isMemberOf(gr.getName(), u1.getName()));
+			assertTrue(dbm.isMemberOf(gr.getName(), u2.getName()));
+			assertTrue(dbm.isMemberOf(gr.getName(), u3.getName()) == false);
+		} catch (UserDoesNotExistException | GroupDoesNotExistException e) {
+			e.printStackTrace();
+			fail("exception thrown");
+		}
+		
 	}
 
 	@Test
@@ -512,25 +641,94 @@ public class DBMTests {
 	@Test
 	@Ignore
 	public void testGetRoom() {
-		fail("Not yet implemented");
+		Room rm = new Room("XBD", 12);
+		try {
+			dbm.addRoom(rm);
+		} catch (RoomAlreadyExistsException e) {
+			e.printStackTrace();
+			fail("exception thrown");
+		}
+		
+		try {
+			Room gotRm = dbm.getRoom(rm.getRoom_id());
+			assertTrue(gotRm.getRoom_id() == rm.getRoom_id() && gotRm.getSize() == rm.getSize());
+		} catch (RoomDoesNotExistException e) {
+			e.printStackTrace();
+			fail("exception thrown");
+		}
 	}
 
 	@Test
-	@Ignore
 	public void testGetInvitation() {
-		fail("Not yet implemented");
+		Invitation inv = new Invitation(true, true, "lukasap", 1);
+		try {
+			dbm.addInvitation(inv);
+		} catch (EntryDoesNotExistException | UserDoesNotExistException
+				| InvitationAlreadyExistsException e) {
+			e.printStackTrace();
+			fail("exception thrown");
+		}
+		Invitation gotInv;
+		try {
+			gotInv = dbm.getInvitation("lukasap", 1);
+			assertTrue(inv.getEntry_id() == gotInv.getEntry_id());
+			assertTrue(inv.getUsername().equals(gotInv.getUsername()));
+			assertTrue(inv.isGoing() == gotInv.isGoing());
+			assertTrue(inv.isShowing() == gotInv.isShowing());
+		} catch (EntryDoesNotExistException | UserDoesNotExistException
+				| InvitationDoesNotExistException e) {
+			e.printStackTrace();
+			fail("exception thrown");
+		}
+		
+		
 	}
 
 	@Test
-	@Ignore
 	public void testGetUser() {
-		fail("Not yet implemented");
+		User u1 = new User("u1", "asdf", "ssdf", "123", "asd@sf");
+		try {
+			dbm.addUser(u1);
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("exception thrown");
+		}
+		User gotUser;
+		try {
+			gotUser = dbm.getUser(u1.getUsername());
+			assertTrue(gotUser.getEmail().equals(u1.getEmail()));
+			assertTrue(gotUser.getUsername().equals(u1.getUsername()));
+			assertTrue(gotUser.getName().equals(u1.getName()));
+			assertTrue(gotUser.getPassword().equals(u1.getPassword()));
+			assertTrue(gotUser.getSalt().equals(u1.getSalt()));
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("exception thrown");
+		}
 	}
 
 	@Test
-	@Ignore
 	public void testGetEntry() {
-		fail("Not yet implemented");
+		CalendarEntry e1  = new CalendarEntry(1, 10000, 100000, "asdlfk", "asdf", null, "lukasap");
+		try {
+			dbm.addEntry(e1, "lukasap");
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("exception thrown");
+		}
+		CalendarEntry gotEntry;
+		try {
+			gotEntry = dbm.getEntry(getlastEntryID());
+			assertTrue(gotEntry != null);
+			assertTrue(gotEntry.getDescription().equals(e1.getDescription()));
+			assertTrue(gotEntry.getCreator().equals(e1.getCreator()));
+			assertTrue(gotEntry.getStartTime() == (e1.getStartTime()));
+			assertTrue(gotEntry.getEndTime() == (e1.getEndTime()));
+			assertTrue(gotEntry.getLocation().equals(e1.getLocation()));
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("exception thrown");
+		}
 	}
 
 	@Test
