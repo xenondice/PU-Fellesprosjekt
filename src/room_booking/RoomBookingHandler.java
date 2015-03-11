@@ -1,26 +1,39 @@
 package room_booking;
 
+import dbms.DataBaseManager;
+
 public class RoomBookingHandler {
 
-	public static void bookRoom(Room room){
-	//TODO
+	private static DataBaseManager dbm = new DataBaseManager();
+	
+	public static void bookRoom(Room room, long startTime, long endTime){
+	//TODO  make RoomIsBookedException?
+		if(checkIfFree(room, startTime, endTime)){
+			RoomReservation rr = new RoomReservation(room, startTime, endTime);
+		}else{
+			throw new IllegalArgumentException("Room is not available");
+		}
 	}
 	
-	private boolean isInbetween(long start1, long end1, long start2, long end2){
+	private boolean isInbetween(long checkStart, long checkEnd, long inputStart, long inputEnd){
 	
-		if (start2 >= start1 && end1 <= end2){
+		if (inputStart >= checkStart && checkEnd <= inputEnd){
 			return true;
-		}else if (start2 >= start1 && end1 >= end2){
+		}else if (inputStart >= checkStart && checkEnd >= inputEnd){
 			return true;
-		}else if (start2 <= start1 && end1 <= end2){
+		}else if (inputStart <= checkStart && checkEnd <= inputEnd){
 			return true;
 		}
 		return false;
 	}
 	
 	public static boolean checkIfFree(Room room, long startTime, long endTime){
+		// sjekke om det finnes RoomReservation rr;
 		
-		//TODO
+		if(isInBetween( startTime,rr.getStartTime,  endTime, rr.getEndTime())){
+			
+		}
+		
 		return true;
 	}
 	
