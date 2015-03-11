@@ -44,7 +44,7 @@ public class Help extends Command {
 		if (command == null)
 			return "Not a command!";
 		
-		handler.status(command.getDescription());
+		handler.explain(command.getDescription());
 		
 		String message = "Syntax: " + command.getCommand();
 		for (String argument : command.getArguments())
