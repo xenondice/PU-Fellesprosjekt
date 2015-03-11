@@ -6,18 +6,19 @@ import java.util.concurrent.TimeoutException;
 
 import exceptions.ForcedReturnException;
 import server_client.Command;
+import server_client.RequestHandler;
 import server_client.ServerClientHandler;
 
-public class Help extends Command {
-
+public class DeleteEntry extends Command {
+	
 	@Override
 	public String getCommand() {
-		return "help";
+		return "delete-entry";
 	}
 
 	@Override
 	public String getDescription() {
-		return "Show a short description of a command.";
+		return "Delete an existing entry.";
 	}
 
 	@Override
@@ -28,7 +29,7 @@ public class Help extends Command {
 	@Override
 	public String[] getArguments() {
 		return new String[]{
-			"command"	
+			"entryID"
 		};
 	}
 
@@ -40,17 +41,13 @@ public class Help extends Command {
 	@Override
 	public String run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		
-		Command command = Command.getCommand(arguments.get(0));
-		if (command == null)
-			return "Not a command!";
-		
-		handler.explain(command.getDescription());
-		
-		String message = "Syntax: " + command.getCommand();
-		for (String argument : command.getArguments())
-			message += " " + argument;
-		
-		return message;
+		try {
+			if (RequestHandler.deleteEntry(handler.getUser(), Integer.parseInt(arguments.get(0))))
+				return "Calendar entry successfully deleted!";
+			else
+				return "Calendar entry couldn't be deleted!";
+		} catch (Exception e) {
+			return "Could not delete calendar entry!";
+		}
 	}
-
 }

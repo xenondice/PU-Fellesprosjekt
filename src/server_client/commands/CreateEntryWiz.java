@@ -5,31 +5,30 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
+import calendar.CalendarEntry;
+import calendar.CalendarEntryBuilder;
 import exceptions.ForcedReturnException;
-import exceptions.UsernameAlreadyExistsException;
 import server_client.Command;
 import server_client.RequestHandler;
 import server_client.ServerClientHandler;
 import server_client.ServerClientHandler.ArgumentType;
-import user.User;
-import user.UserBuilder;
 
-public class CreateUserWiz extends Command {
+public class CreateEntryWiz extends Command {
 
 	@Override
 	public String getCommand() {
-		return "create-user-wiz";
+		return "create-entry-wiz";
 	}
 
 	@Override
 	public String getDescription() {
-		return "Create a new user using a wizard.";
+		return "Create a new calendar entry using a wizard.";
 	}
 
 	@Override
 	public String getManual() {
 		return ""
-				+ "Easier way of creating a user.\n"
+				+ "Easier way of creating a calendar entry.\n"
 				+ "Walks you through each of the required arguments and asks again if an argument is wrong.";
 	}
 
@@ -51,31 +50,35 @@ public class CreateUserWiz extends Command {
 		String intro_message = "";
 		
 		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in wanted username.");
+		descriptions.add("Type in wanted description.");
+		argument_types.add(ArgumentType.long_number);
+		descriptions.add("Type in end time.");
 		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in password.");
+		descriptions.add("Type in location.");
 		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in full name in quotes.");
-		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in email-address.");
+		descriptions.add("Type in roomID.");
+		argument_types.add(ArgumentType.long_number);
+		descriptions.add("Type in start time.");
 		
 		List<Object> result = handler.wizard(argument_types, descriptions, intro_message);
 		
-		UserBuilder user_builder = new UserBuilder();
-		user_builder.setUsername((String) result.get(0));
-		user_builder.setPassword((String) result.get(1));
-		user_builder.setName((String) result.get(2));
-		user_builder.setEmail((String) result.get(3));
-		user_builder.setSalt("");
-		User user = user_builder.build();
+		
+		CalendarEntryBuilder entry_builder = new CalendarEntryBuilder();
+		entry_builder.setDescription((String) result.get(0));
+		entry_builder.setEndTime((long) (result.get(1)));
+		entry_builder.setLocation((String) result.get(2));
+		entry_builder.setRoomID((String) result.get(3));
+		entry_builder.setCreator(handler.getUser().getUsername());
+		entry_builder.setStartTime((long) (result.get(4)));
+		CalendarEntry calendarEntry = entry_builder.build();
 		
 		try {
-			if (RequestHandler.createUser(user))
-				return "User successfully created!";
+			if (RequestHandler.createEntry(handler.getUser(), calendarEntry))
+				return "Calendar entry successfully created!";
 			else
-				return "User couldn't be created!";
-		} catch (UsernameAlreadyExistsException e) {
-			return "Username already taken!";
+				return "Calendar entry couldn't be created!";
+		} catch (Exception e) {
+			return "Could not create calendar entry!";
 		}
 	}
 }

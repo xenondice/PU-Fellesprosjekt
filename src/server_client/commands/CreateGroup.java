@@ -5,19 +5,24 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import exceptions.ForcedReturnException;
+import exceptions.GroupAlreadyExistsException;
 import server_client.Command;
+import server_client.RequestHandler;
 import server_client.ServerClientHandler;
+import user.Group;
+import user.GroupBuilder;
 
-public class Help extends Command {
 
+public class CreateGroup extends Command {
+	
 	@Override
 	public String getCommand() {
-		return "help";
+		return "create-group";
 	}
 
 	@Override
 	public String getDescription() {
-		return "Show a short description of a command.";
+		return "Create a new group.";
 	}
 
 	@Override
@@ -28,7 +33,7 @@ public class Help extends Command {
 	@Override
 	public String[] getArguments() {
 		return new String[]{
-			"command"	
+			"name"
 		};
 	}
 
@@ -40,17 +45,18 @@ public class Help extends Command {
 	@Override
 	public String run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		
-		Command command = Command.getCommand(arguments.get(0));
-		if (command == null)
-			return "Not a command!";
+		GroupBuilder group_builder = new GroupBuilder();
+		group_builder.setName(arguments.get(0));
+		Group group = group_builder.build();
 		
-		handler.explain(command.getDescription());
-		
-		String message = "Syntax: " + command.getCommand();
-		for (String argument : command.getArguments())
-			message += " " + argument;
-		
-		return message;
+		try {
+			if (RequestHandler.createGroup(handler.getUser(), group))
+				return "Group successfully created!";
+			else
+				return "Group couldn't be created!";
+		} catch (Exception e) {
+			return "Group couldn't be created!";
+		}
 	}
-
 }
+

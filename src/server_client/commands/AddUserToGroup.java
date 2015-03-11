@@ -6,18 +6,19 @@ import java.util.concurrent.TimeoutException;
 
 import exceptions.ForcedReturnException;
 import server_client.Command;
+import server_client.RequestHandler;
 import server_client.ServerClientHandler;
 
-public class Help extends Command {
-
+public class AddUserToGroup extends Command {
+	
 	@Override
 	public String getCommand() {
-		return "help";
+		return "add-user-to-group";
 	}
 
 	@Override
 	public String getDescription() {
-		return "Show a short description of a command.";
+		return "Add a user to your group.";
 	}
 
 	@Override
@@ -28,7 +29,8 @@ public class Help extends Command {
 	@Override
 	public String[] getArguments() {
 		return new String[]{
-			"command"	
+			"name",
+			"username"
 		};
 	}
 
@@ -40,17 +42,13 @@ public class Help extends Command {
 	@Override
 	public String run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		
-		Command command = Command.getCommand(arguments.get(0));
-		if (command == null)
-			return "Not a command!";
-		
-		handler.explain(command.getDescription());
-		
-		String message = "Syntax: " + command.getCommand();
-		for (String argument : command.getArguments())
-			message += " " + argument;
-		
-		return message;
+		try {
+			if (RequestHandler.addUserToGroup(handler.getUser(), arguments.get(1), arguments.get(0)))
+				return "User successfully added to group!";
+			else
+				return "User couldn't be added!";
+		} catch (Exception e) {
+			return "User couldn't be added to group!";
+		}
 	}
-
 }
