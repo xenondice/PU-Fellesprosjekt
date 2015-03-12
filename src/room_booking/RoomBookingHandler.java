@@ -11,7 +11,7 @@ public class RoomBookingHandler {
 	//TODO  make RoomIsAllreadyBookedException?
 		if(checkIfFree(room, startTime, endTime)){
 			RoomReservation rr = new RoomReservation(room, startTime, endTime);
-			dbm.addReservation(rr);
+			dbm.addRoomReservation(rr);
 		}else{
 			throw new IllegalArgumentException("Room is not available");
 		}
@@ -45,7 +45,7 @@ public class RoomBookingHandler {
 			HashSet<RoomReservation> rr = dbm.getReservationsForRoom(room);
 			for(RoomReservation res : rr){
 				if ( isInbetween(startTime, res.getStartTime(),  endTime, res.getEndTime())){
-					dbm.removeReservation(res);
+					dbm.deleteRoomReservation(res);
 				}
 			}
 		}
