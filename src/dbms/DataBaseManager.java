@@ -1698,40 +1698,40 @@ public class DataBaseManager implements Closeable {
 	//----------------------------------------------------------------------------------------------
 	// Functionalities
 	
-	/**
-	 * Invites the user to the given event. The admin is the one inviting.
-	 * @param admin
-	 * @param username
-	 * @param entry_id
-	 * @return
-	 */
-	public boolean inviteUser(String admin, String username, int entry_id){
-		// TODO 
-		
-		throw new NotYetImplementedException();
-	}
-	
-
-	
-	/**
-	 * Invites all users in the group to the given event. The admin is the one inviting.
-	 * @param admin
-	 * @param groupname
-	 * @param entry_id
-	 * @return 
-	 * @throws GroupDoesNotExistException
-	 * @throws UserDoesNotExistException 
-	 * @throws EntryDoesNotExistException 
-	 */
-	public boolean inviteGroup(String admin, String groupname, int entry_id) throws GroupDoesNotExistException, EntryDoesNotExistException, UserDoesNotExistException{
-		checkIfGroupExists(groupname);
-		checkUserAndEntry(admin, entry_id);
-		
-		for(User u : getGroup(groupname).getUsers()){
-			inviteUser(admin, u.getUsername(), entry_id);
-		}
-		return true;
-	}
+//	/**
+//	 * Invites the user to the given event. The admin is the one inviting.
+//	 * @param admin
+//	 * @param username
+//	 * @param entry_id
+//	 * @return
+//	 */
+//	public boolean inviteUser(String admin, String username, int entry_id){
+//		// TODO 
+//		
+//		throw new NotYetImplementedException();
+//	}
+//	
+//
+//	
+//	/**
+//	 * Invites all users in the group to the given event. The admin is the one inviting.
+//	 * @param admin
+//	 * @param groupname
+//	 * @param entry_id
+//	 * @return 
+//	 * @throws GroupDoesNotExistException
+//	 * @throws UserDoesNotExistException 
+//	 * @throws EntryDoesNotExistException 
+//	 */
+//	public boolean inviteGroup(String admin, String groupname, int entry_id) throws GroupDoesNotExistException, EntryDoesNotExistException, UserDoesNotExistException{
+//		checkIfGroupExists(groupname);
+//		checkUserAndEntry(admin, entry_id);
+//		
+//		for(User u : getGroup(groupname).getUsers()){
+//			inviteUser(admin, u.getUsername(), entry_id);
+//		}
+//		return true;
+//	}
 	
 	/**
 	 * Creates a Calendar with all the entries the user is allowed to see.
