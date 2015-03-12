@@ -17,7 +17,7 @@ public class RoomBookingHandler {
 		}
 	}
 	
-	private boolean isInbetween(long checkStart, long checkEnd, long inputStart, long inputEnd){
+	private boolean isInbetween(long checkStart, long inputStart, long checkEnd, long inputEnd){
 	
 		if (inputStart >= checkStart && checkEnd <= inputEnd){
 			return true;
