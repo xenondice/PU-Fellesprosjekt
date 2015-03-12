@@ -7,10 +7,10 @@ public class RoomBookingHandler {
 
 	private static DataBaseManager dbm = new DataBaseManager();
 	
-	public void bookRoom(Room room, long startTime, long endTime){
+	public void bookRoom(Room room, long startTime, long endTime, long entryID){
 	//TODO  make RoomIsAllreadyBookedException?
 		if(checkIfFree(room, startTime, endTime)){
-			RoomReservation rr = new RoomReservation(room, startTime, endTime);
+			RoomReservation rr = new RoomReservation(room, startTime, endTime, entryID);
 			dbm.addRoomReservation(rr);
 		}else{
 			throw new IllegalArgumentException("Room is not available");
@@ -38,6 +38,7 @@ public class RoomBookingHandler {
 		}
 		return true;
 	}
+	
 	
 	public void releaseRoom(Room room, long startTime, long endTime){
 		//TODO

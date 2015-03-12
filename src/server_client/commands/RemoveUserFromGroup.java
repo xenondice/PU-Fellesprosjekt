@@ -9,20 +9,21 @@ import exceptions.GroupDoesNotExistException;
 import exceptions.HasNotTheRightsException;
 import exceptions.SessionExpiredException;
 import exceptions.UserDoesNotExistException;
+import exceptions.UsernameAlreadyExistsException;
 import server_client.Command;
 import server_client.RequestHandler;
 import server_client.ServerClientHandler;
 
-public class AddUserToGroup extends Command {
+public class RemoveUserFromGroup extends Command {
 	
 	@Override
 	public String getCommand() {
-		return "add-user-to-group";
+		return "remove-user-from-group";
 	}
 
 	@Override
 	public String getDescription() {
-		return "Add a user to a group.";
+		return "Remove a user from a group.";
 	}
 
 	@Override
@@ -33,8 +34,8 @@ public class AddUserToGroup extends Command {
 	@Override
 	public String[] getArguments() {
 		return new String[]{
-			"name",
-			"username"
+			"username",
+			"name"
 		};
 	}
 
@@ -48,17 +49,17 @@ public class AddUserToGroup extends Command {
 		
 		try {
 			if (RequestHandler.removeUserFromGroup(handler.getUser(), arguments.get(0), arguments.get(1)))
-				return "User successfully added to group!";
+				return "User successfully removed from group!";
 			else
-				return "User couldn't be added!";
+				return "User couldn't be removed!";
 		} catch (GroupDoesNotExistException e) {
-			return "User couldn't be added - Group does not exist!";
+			return "User couldn't be removed - Group does not exist!";
 		} catch (UserDoesNotExistException e) {
-			return "User couldn't be added - User does not exist!";
+			return "User couldn't be removed - User does not exist!";
 		} catch (HasNotTheRightsException e) {
-			return "User couldn't be added - User does not have the rights to add!";
+			return "User couldn't be removed - User does not have the rights to remove!";
 		} catch (SessionExpiredException e) {
-			return "User couldn't be added - Session expired!";
+			return "User couldn't be removed - Session expired!";
 		}
 	}
 }
