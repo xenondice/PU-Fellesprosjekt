@@ -155,7 +155,7 @@ public class RequestHandler{
 		validate(requestor);
 		if (!dbm.isAdmin(requestor.getUsername(), entry_id))
 			throw new HasNotTheRightsException();
-		return dbm.makeAdmin(requestor.getUsername(), username, entry_id);
+		return dbm.makeAdmin(username, entry_id);
 	}
 	
 	/* ===============
@@ -164,7 +164,7 @@ public class RequestHandler{
 	
 	public synchronized static boolean createEntry(User requestor, CalendarEntry entry) throws UserDoesNotExistException, SessionExpiredException {
 		validate(requestor);
-		boolean result = dbm.addEntry(entry, requestor.getUsername());
+		boolean result = dbm.addEntry(entry);
 		if (result) sendToInvitedIfLoggedIn("You have just been invited to a newly created entry! Type \"inbox\" to see.", entry.getEntryID());
 		return result;
 	}
@@ -208,14 +208,14 @@ public class RequestHandler{
 		validate(requestor);
 		if (!dbm.isAllowedToEdit(requestor.getUsername(), entry_id))
 			throw new HasNotTheRightsException();
-		return dbm.inviteUser(requestor.getUsername(), username, entry_id); //TODO: Add send notification
+		return dbm.inviteUser(requestor.getUsername(), username, entry_id); //TODO: Add send notification, make invitation
 	}
 	
 	public synchronized static boolean inviteGroupToEntry(User requestor, String groupname, int entry_id) throws GroupDoesNotExistException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException, SessionExpiredException {
 		validate(requestor);
 		if (!dbm.isAllowedToEdit(requestor.getUsername(), entry_id))
 			throw new HasNotTheRightsException();
-		return dbm.inviteGroup(requestor.getUsername(), groupname, entry_id); //TODO: Add send notification
+		return dbm.inviteGroup(requestor.getUsername(), groupname, entry_id); //TODO: Add send notification, make invitation
 	}
 	
 	/* ===============
