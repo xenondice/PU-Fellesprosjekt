@@ -32,6 +32,7 @@ public class RequestHandler{
 	public static final long WAIT_BEFORE_TIMOUT = 60000;
 	public static final char STATUS_OK = 'a';
 	public static final char STATUS_DISCONNECTED = 's';
+	public static final char STATUS_NOTIFICATION = 'n';
 	
 	public static void main(String[] args) {
 		init();
@@ -67,6 +68,10 @@ public class RequestHandler{
 		System.out.println("Server down");
 	}
 	
+	/* ===============
+	 * User functions
+	 *================*/ 
+	
 	private static void acceptClients() {
 		System.out.println("Accepting new clients");
 		try {
@@ -85,11 +90,11 @@ public class RequestHandler{
 		}
 	}
 	
-	public static boolean isLoggedIn(String username) {
+	public static ServerClientHandler getUserHandlerIfActive(String username) {
 		for (ServerClientHandler handler : currently_connected) {
-			if (handler.getUser() != null && handler.getUser().getUsername().equals(username)) return true;
+			if (handler.getUser() != null && handler.getUser().getUsername().equals(username)) return handler;
 		}
-		return false;
+		return null;
 	}
 	
 	public static void disconnectUser(ServerClientHandler client) {
@@ -99,9 +104,16 @@ public class RequestHandler{
 		currently_connected.remove(client);
 	}
 	
-	/* ===============
-	 * User functions
-	 *================*/ 
+	private static void sendToInvitedIfLoggedIn(String message, long entry_id) {
+		Set<User> users = dbm.getInvitedUsersForEntry(entry_id);
+		
+		for (User user : users) {
+			ServerClientHandler handler = getUserHandlerIfActive(user.getUsername());
+			if (handler != null) {
+				handler.sendNotification(message);
+			}
+		}
+	}
 	
 	public static User logIn(String username, String password) throws UserDoesNotExistException, WrongPasswordException {
 		try {
@@ -150,28 +162,34 @@ public class RequestHandler{
 	
 	public synchronized static boolean createEntry(User requestor, CalendarEntry entry) throws UserDoesNotExistException, SessionExpiredException {
 		validate(requestor);
-		return dbm.addEntry(entry, requestor.getUsername());
+		boolean result = dbm.addEntry(entry, requestor.getUsername());
+		if (result) sendToInvitedIfLoggedIn("You have just been invited to a newly created entry! Type \"inbox\" to see.", entry.getEntryID());
+		return result;
 	}
 	
 	public synchronized static boolean deleteEntry(User requestor, int entry_id) throws SessionExpiredException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException {
 		validate(requestor);
 		if (!dbm.isAdmin(requestor.getUsername(), entry_id))
 			throw new HasNotTheRightsException();
-		return dbm.deleteEntry(requestor.getUsername(), entry_id);
+		boolean result = dbm.deleteEntry(requestor.getUsername(), entry_id);
+		if (result) sendToInvitedIfLoggedIn("An entry you are invited to has just been deleted! Type \"inbox\" to see.", entry_id);
+		return result;
 	}
 	
 	public synchronized static boolean editEntry(User requestor, CalendarEntry entry) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException, SessionExpiredException {
 		validate(requestor);
 		if (!dbm.isAllowedToEdit(requestor.getUsername(), entry.getEntryID()))
 			throw new HasNotTheRightsException();
-		return dbm.editEntry(entry, requestor.getUsername());
+		boolean result = dbm.editEntry(entry, requestor.getUsername());
+		if (result) sendToInvitedIfLoggedIn("An entry you are invited to has just changed! Type \"inbox\" to see.", entry.getEntryID());
+		return result;
 	}
 	
 	public synchronized static boolean kickUserFromEntry(User requestor, String username, int entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException, HasNotTheRightsException {
 		validate(requestor);
 		if (!dbm.isAllowedToEdit(requestor.getUsername(), entry_id) || dbm.isAdmin(username, entry_id))
 			throw new HasNotTheRightsException();
-		return dbm.hideEvent(username, entry_id);
+		return dbm.hideEvent(username, entry_id); //TODO: Add send notification
 	}
 	
 	public synchronized static boolean kickGroupFromEntry(User requestor, String groupname, int entry_id) throws GroupDoesNotExistException, UserInGroupDoesNotExistsException, EntryDoesNotExistException, SessionExpiredException, UserDoesNotExistException, HasNotTheRightsException {
@@ -181,21 +199,21 @@ public class RequestHandler{
 				throw new HasNotTheRightsException();
 		if (!dbm.isAllowedToEdit(requestor.getUsername(), entry_id))
 			throw new HasNotTheRightsException();
-		return dbm.hideEventGroup(groupname, entry_id);
-	}	
+		return dbm.hideEventGroup(groupname, entry_id); //TODO: Add send notification
+	}
 	
 	public synchronized static boolean inviteUserToEntry(User requestor, String username, int entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException, SessionExpiredException {
 		validate(requestor);
 		if (!dbm.isAllowedToEdit(requestor.getUsername(), entry_id))
 			throw new HasNotTheRightsException();
-		return dbm.inviteUser(requestor.getUsername(), username, entry_id);
+		return dbm.inviteUser(requestor.getUsername(), username, entry_id); //TODO: Add send notification
 	}
 	
 	public synchronized static boolean inviteGroupToEntry(User requestor, String groupname, int entry_id) throws GroupDoesNotExistException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException, SessionExpiredException {
 		validate(requestor);
 		if (!dbm.isAllowedToEdit(requestor.getUsername(), entry_id))
 			throw new HasNotTheRightsException();
-		return dbm.inviteGroup(requestor.getUsername(), groupname, entry_id);
+		return dbm.inviteGroup(requestor.getUsername(), groupname, entry_id); //TODO: Add send notification
 	}
 	
 	/* ===============

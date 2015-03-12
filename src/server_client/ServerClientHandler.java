@@ -27,6 +27,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 		number,
 		long_number,
 		text,
+		logic,
 	}
 	
 	/*public static final String[][][] commands = { // Once login is done, store user creditals and change eg. calendar to show your calendar only
@@ -162,24 +163,29 @@ public class ServerClientHandler implements Runnable, Closeable {
 		}
 	}
 	
-	public void explain(String message) throws IOException {
+	public synchronized void explain(String message) throws IOException {
 		temp_message += message;
 		temp_message += System.lineSeparator();
 	}
 	
-	public void space() throws IOException {
+	public synchronized void space() throws IOException {
 		temp_message += System.lineSeparator();
 	}
 	
-	public void status(String message) throws IOException {
+	public synchronized void status(String message) throws IOException {
 		temp_message += message;
 		temp_message += System.lineSeparator();
 		temp_message += System.lineSeparator();
 	}
 	
-	private void send(char status) throws IOException {
-		client_output.write(status + temp_message);
+	public synchronized String getBuffer() {
+		String message = temp_message;
 		temp_message = "";
+		return message;
+	}
+	
+	private synchronized void send(char status, String message) throws IOException {
+		client_output.write(status + message);
 		client_output.flush();
 	}
 	
@@ -203,10 +209,21 @@ public class ServerClientHandler implements Runnable, Closeable {
 		}
 	}
 	
+	public boolean verifyYesOrNo(String response) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+		while (true) {
+			if (response.equals("yes") || response.equals("y"))
+				return true;
+			else if (response.equals("no") || response.equals("n"))
+				return false;
+			
+			response = ask("Please answer with yes[y] or no[n]!", 1).get(0);
+		}
+	}
+	
 	public List<String> ask(String question, int number_of_arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		
 		explain(question);
-		send(RequestHandler.STATUS_OK);
+		send(RequestHandler.STATUS_OK, getBuffer());
 		
 		while (true) {
 			List<String> response = expectInput();
@@ -214,21 +231,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 			if (response.size() == number_of_arguments) return response;
 			
 			explain("Please provide " + number_of_arguments + " argument(s)!");
-			send(RequestHandler.STATUS_OK);
-		}
-	}
-	
-	public boolean askYesOrNo(String question) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
-		
-		List<String> response = ask(question + " (answer with yes[y] or no[n])", 1);
-		
-		while (true) {
-			if (response.get(0).equals("yes") || response.get(0).equals("y"))
-				return true;
-			else if (response.get(0).equals("no") || response.get(0).equals("n"))
-				return false;
-			
-			response = ask("Please answer with yes[y] or no[n]!", 1);
+			send(RequestHandler.STATUS_OK, getBuffer());
 		}
 	}
 
@@ -257,6 +260,8 @@ public class ServerClientHandler implements Runnable, Closeable {
 				case text:
 					result = answer;
 					break;
+				case logic:
+					result = verifyYesOrNo(answer);
 				default:
 					result = null;
 					break;
@@ -275,22 +280,29 @@ public class ServerClientHandler implements Runnable, Closeable {
 		Command command_type = Command.getCommand(command);
 		if (command_type == null) {
 			status("Unrecognized command! Type \"commands\" for a list over commands.");
-			send(RequestHandler.STATUS_OK);
+			send(RequestHandler.STATUS_OK, getBuffer());
 			return;
 		}
 		
 		if (arguments.size() != command_type.getArguments().length) {
 			status("Command syntax is wrong! Type \"help command\" or \"man command\" for information about the command.");
-			send(RequestHandler.STATUS_OK);
+			send(RequestHandler.STATUS_OK, getBuffer());
 			return;
 		}
 		
 		status(command_type.run(this, arguments));
-		send(RequestHandler.STATUS_OK);
+		send(RequestHandler.STATUS_OK, getBuffer());
 	}
 	
 	public User getUser() {
 		return user;
+	}
+	
+	public synchronized void sendNotification(String message) {
+		try {
+			send(RequestHandler.STATUS_NOTIFICATION, message);
+		} catch (IOException e) {
+		}
 	}
 	
 	public void setUser(User user) {
@@ -306,7 +318,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 			explain("This means you only have access to create-user, create-user-wiz and login.");
 			explain("You will have to login before you can make any further requests!");
 			space();
-			send(RequestHandler.STATUS_OK);
+			send(RequestHandler.STATUS_OK, getBuffer());
 		} catch (IOException e) {
 		}
 			
@@ -314,7 +326,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 			try {
 				handleRequest(expectInput());
 			} catch (ForcedReturnException e) {
-				try {status(e.getMessage());} catch (IOException e1) {e.printStackTrace();};
+				try {status(e.getMessage()); send(RequestHandler.STATUS_OK, getBuffer());} catch (IOException e1) {e.printStackTrace();};
 				continue;
 			} catch (IOException | TimeoutException | InterruptedException e) {
 				break;

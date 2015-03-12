@@ -25,12 +25,12 @@ public class Client {
 	public static final int DEFAULT_SERVER_PORT = 80;
 	public static final long SERVER_LISTENER_CHECK_INTERVAL = 100;
 	public static final long WAIT_BEFORE_TIMEOUT = 15000;
+	public static final char STATUS_OK = 'a';
+	public static final char STATUS_DISCONNECTED = 's';
+	
 	private static boolean can_write = true;
 	private static boolean can_recieve_input = true;
 	private static boolean connected = false;
-	
-	public static final char STATUS_OK = 'a';
-	public static final char STATUS_DISCONNECTED = 's';
 	
 	private static Socket server_connection;
 	private static BufferedWriter server_output;
@@ -219,12 +219,24 @@ public class Client {
 	
 	private static void run() throws IOException {
 		
-		// Waiting for optional welcome message
 		try {
 			can_write = false;
 			waitForEnd();
 		} catch (TimeoutException e) {
-		}
+		} //TODO: Change system.in to console.io to hide passwords and handle messages from server properly
+		  //Make a date argument type in wizard to make it easier to write in dates
+		  //Make some arguments optional in wizard and accept blank line
+		  //Fix session expired to display the same message always, catch it in outer block
+		  //Make a input taker other than expect input that takes in a whole line with spaces as one argument for the wizard
+		  //make ask take in a list of ints that define the number of arguments it takes, like either 0 or 1 arg, update help and remove commands
+		  //fix broken commands, add view user, add view calendar, add notifications to welcome message, add show rooms/available rooms
+		  // Make the start new command (expect input) quit if something is wrong and throw forced exit
+		  // Make calendar gui. pretty
+		
+		//Add functions for room boking in RH (get rooms, create room, edit room, check available, reserve, cancel)
+		//Notification
+		//Get all rooms
+		//GUI for calendar
 		
 		while (connected) {
 			
