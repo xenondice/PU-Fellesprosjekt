@@ -5,6 +5,10 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import exceptions.ForcedReturnException;
+import exceptions.GroupDoesNotExistException;
+import exceptions.HasNotTheRightsException;
+import exceptions.SessionExpiredException;
+import exceptions.UserDoesNotExistException;
 import server_client.Command;
 import server_client.RequestHandler;
 import server_client.ServerClientHandler;
@@ -43,12 +47,18 @@ public class AddUserToGroup extends Command {
 	public String run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		
 		try {
-			if (RequestHandler.addUserToGroup(handler.getUser(), arguments.get(1), arguments.get(0)))
+			if (RequestHandler.removeUserFromGroup(handler.getUser(), arguments.get(0), arguments.get(1)))
 				return "User successfully added to group!";
 			else
 				return "User couldn't be added!";
-		} catch (Exception e) {
-			return "User couldn't be added!";
+		} catch (GroupDoesNotExistException e) {
+			return "User couldn't be added - Group does not exist!";
+		} catch (UserDoesNotExistException e) {
+			return "User couldn't be added - User does not exist!";
+		} catch (HasNotTheRightsException e) {
+			return "User couldn't be added - User does not have the rights to add!";
+		} catch (SessionExpiredException e) {
+			return "User couldn't be added - Session expired!";
 		}
 	}
 }

@@ -5,6 +5,10 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import exceptions.ForcedReturnException;
+import exceptions.GroupDoesNotExistException;
+import exceptions.HasNotTheRightsException;
+import exceptions.SessionExpiredException;
+import exceptions.UserDoesNotExistException;
 import exceptions.UsernameAlreadyExistsException;
 import server_client.Command;
 import server_client.RequestHandler;
@@ -48,8 +52,14 @@ public class RemoveUserFromGroup extends Command {
 				return "User successfully removed from group!";
 			else
 				return "User couldn't be removed!";
-		} catch (Exception e) {
-			return "User couldn't be removed!";
+		} catch (GroupDoesNotExistException e) {
+			return "User couldn't be removed - Group does not exist!";
+		} catch (UserDoesNotExistException e) {
+			return "User couldn't be removed - User does not exist!";
+		} catch (HasNotTheRightsException e) {
+			return "User couldn't be removed - User does not have the rights to remove!";
+		} catch (SessionExpiredException e) {
+			return "User couldn't be removed - Session expired!";
 		}
 	}
 }
