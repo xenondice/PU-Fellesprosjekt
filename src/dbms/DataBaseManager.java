@@ -22,6 +22,7 @@ import org.apache.ibatis.jdbc.ScriptRunner;
 
 import room_booking.Room;
 import room_booking.RoomBuilder;
+import room_booking.RoomReservation;
 import user.Group;
 import user.GroupBuilder;
 import user.User;
@@ -521,6 +522,13 @@ public class DataBaseManager implements Closeable {
 		}
 	}
 	
+	/**
+	 * Adds a new Notification to the DB
+	 * @param n
+	 * @return
+	 * @throws EntryDoesNotExistException
+	 * @throws UserDoesNotExistException
+	 */
 	private boolean addIntoNotification(Notification n) throws EntryDoesNotExistException, UserDoesNotExistException {
 		
 		checkUserAndEntry(n.getUsername(), n.getEntry_id());
@@ -858,23 +866,25 @@ public class DataBaseManager implements Closeable {
 	}
 
 	/**
-	 * Adds the given CalendarEntry as a new entry into the DB
-	 * To edit an existing entry use editEntry(CalendarEntry e) instead.
+	 * Adds the given CalendarEntry as a new entry into the DB</br>
+	 * To edit an existing entry use editEntry(CalendarEntry e) instead.</br>
 	 * @return true if the action was successful. False otherwise.
 	 * @param e the entry
 	 * @param u the user creating the entry
 	 * @throws UserDoesNotExistException
+	 * @see {@link DataBaseManager#editEntry(CalendarEntry, String)}
 	 */
-	public boolean addEntry(CalendarEntry e, String username) throws UserDoesNotExistException{
+	public boolean addEntry(CalendarEntry e) throws UserDoesNotExistException{
 		
-		checkIfUserExists(username);
+		checkIfUserExists(e.getCreator());
+		
 		
 		// TODO username and e.creator must be the same. Resolve it :P
 		
 		if(addIntoEntry(e)){
 			long entryID = getLastEntryID();
 			try {
-				return addIntoIsAdmin(username, entryID) && addIntoInvitation(new Invitation(true, true, username, entryID));
+				return addIntoIsAdmin(e.getCreator(), entryID) && addIntoInvitation(new Invitation(true, true, e.getCreator(), entryID));
 			} catch (EntryDoesNotExistException | InvitationAlreadyExistsException e1) {
 				// should never happen!
 				e1.printStackTrace();
@@ -932,6 +942,13 @@ public class DataBaseManager implements Closeable {
 		return this.addIntoMemberOf(groupname, username);
 	}
 	
+	/**
+	 * 
+	 * @param n
+	 * @return
+	 * @throws EntryDoesNotExistException
+	 * @throws UserDoesNotExistException
+	 */
 	public boolean addNotification(Notification n) throws EntryDoesNotExistException, UserDoesNotExistException{
 		return this.addIntoNotification(n);
 	}
@@ -1213,6 +1230,11 @@ public class DataBaseManager implements Closeable {
 			e.printStackTrace();
 			return null;
 		}
+	}
+	
+	public HashSet<RoomReservation> getReservationsForRoom(Room r){
+		// TODO
+		throw new NotYetImplementedException();
 	}
 	
 	/**
