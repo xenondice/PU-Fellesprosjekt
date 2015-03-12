@@ -736,6 +736,30 @@ public class DataBaseManager implements Closeable {
 		}
 	}
 	
+	/**
+	 * adds a new Resesrvation into RoomReservation Table
+	 * 
+	 * @param rr
+	 * @return true if the action was successful. False otherwise (for example if already the exact same reservation exists)
+	 */
+	private boolean addIntoRoomReservation(RoomReservation rr){
+		try{
+			String add_RoomRes = "INSERT INTO RoomReservation (roomID, startTime, endTime) VALUES (?, ?, ?);";
+			PreparedStatement addRoomRes_stmt = connection.prepareStatement(add_RoomRes);
+			int i = 0;
+			addRoomRes_stmt.setString(++i, rr.getRoom().getRoom_id());
+			addRoomRes_stmt.setTimestamp(++i, new Timestamp(rr.getStartTime()));
+			addRoomRes_stmt.setTimestamp(++i, new Timestamp(rr.getEndTime()));
+	
+			addRoomRes_stmt.executeUpdate();
+			addRoomRes_stmt.close();
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
 	//----------------------------------------------------------------------------------------------
 	// Set Flags Methods
 
@@ -850,9 +874,9 @@ public class DataBaseManager implements Closeable {
 		return this.addIntoAlarm(a);
 	}
 	
-	public boolean addReservation(RoomReservation rr){
-		// TODO
-		throw new NotYetImplementedException();
+	public boolean addRoomReservation(RoomReservation rr){
+		return this.addIntoRoomReservation(rr);
+		// TODO update changes
 	}
 	
 	public boolean addInvitation(Invitation inv) throws EntryDoesNotExistException, UserDoesNotExistException, InvitationAlreadyExistsException{
@@ -880,6 +904,9 @@ public class DataBaseManager implements Closeable {
 	 * @see {@link DataBaseManager#editEntry(CalendarEntry, String)}
 	 */
 	public boolean addEntry(CalendarEntry e) throws UserDoesNotExistException{
+		
+		// TODO update with alarm etc. 
+		// TODO should it handle the addIntoAdmin etc?
 		
 		checkIfUserExists(e.getCreator());
 		
@@ -986,6 +1013,210 @@ public class DataBaseManager implements Closeable {
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return new AlarmBuilder().build();
+		}
+	}
+	
+	
+	/**
+	 * 
+	 * @return all users in the DB
+	 */
+	public HashSet<User> getAllUsers(){
+		try {
+			PreparedStatement getUsers_stm = connection.prepareStatement("SELECT * FROM User; ");
+			
+			ResultSet rset = getUsers_stm.executeQuery();
+			
+			HashSet<User> users = new HashSet<>();
+			while(rset.next()){
+				UserBuilder ub = new UserBuilder();
+				ub.setUsername(rset.getString("username"));
+				ub.setName(rset.getString("name"));
+				ub.setEmail(rset.getString("email"));
+				ub.setPassword(rset.getString("password"));
+				ub.setSalt(rset.getString("salt"));			
+				
+				users.add(ub.build());
+			}
+			
+			return users;
+			
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public HashSet<String> getAllGroupnames(){
+		try {
+			PreparedStatement getGroupnames_stm = connection.prepareStatement("SELECT * FROM Group; ");
+			
+			ResultSet rset = getGroupnames_stm.executeQuery();
+			
+			HashSet<String> groupnames = new HashSet<>();
+			while(rset.next()){		
+				
+				groupnames.add(rset.getString("groupname"));
+			}
+			
+			return groupnames;
+			
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public HashSet<Room> getAllRooms(){
+		try {
+			PreparedStatement getRooms_stm = connection.prepareStatement("SELECT * FROM Room; ");
+			
+			ResultSet rset = getRooms_stm.executeQuery();
+			
+			HashSet<Room> rooms = new HashSet<>();
+			while(rset.next()){
+				RoomBuilder rb = new RoomBuilder();
+				rb.setRoom_id(rset.getString("roomID"));
+				rb.setSize(rset.getInt("size"));		
+				
+				rooms.add(rb.build());
+			}
+			
+			return rooms;
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public HashSet<Invitation> getAllInvitations(){
+		try {
+			PreparedStatement getInvis_stm = connection.prepareStatement("SELECT * FROM Invitation; ");
+			
+			ResultSet rset = getInvis_stm.executeQuery();
+			
+			HashSet<Invitation> invitations = new HashSet<>();
+			while(rset.next()){
+				InvitationBuilder ib = new InvitationBuilder();
+				ib.setEntry_id(rset.getLong("entryID"));
+				ib.setGoing(rset.getBoolean("isGoing"));
+				ib.setShowing(rset.getBoolean("isShowing"));
+				ib.setUsername(rset.getString("username"));
+				
+				invitations.add(ib.build());
+			}
+			
+			return invitations;
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public HashSet<Notification> getAllNotifications(){
+		PreparedStatement getNotifications_stm;
+		try {
+			getNotifications_stm = connection.prepareStatement("SELECT * FROM Notification; ");
+			
+			ResultSet rset = getNotifications_stm.executeQuery();
+			
+			HashSet<Notification> notifics = new HashSet<>();
+			while(rset.next()){
+				NotificationBuilder nb = new NotificationBuilder();
+				nb.setDescription(rset.getString("description"));
+				nb.setEntry_id(rset.getLong("entryID"));
+				nb.setNotifiationID(rset.getLong("notificationID"));
+				nb.setOpened(rset.getBoolean("isOpened"));
+				nb.setTime(rset.getTimestamp("time").getTime());
+				nb.setUsername(rset.getString("username"));
+				notifics.add(nb.build());
+			}
+			
+			return notifics;
+			
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public HashSet<RoomReservation> getAllRoomReservations(){
+		try {
+			PreparedStatement getRooms_stm = connection.prepareStatement("SELECT * FROM RoomReservation; ");
+			
+			ResultSet rset = getRooms_stm.executeQuery();
+			
+			HashSet<RoomReservation> reservs = new HashSet<>();
+			while(rset.next()){
+				RoomReservationBuilder rrb = new RoomReservationBuilder();
+				rrb.setEntry_id(rset.getLong("entryID"));
+				// TODO finish
+				
+				reservs.add(rrb.build());
+			}
+			
+			return reservs;
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public HashSet<CalendarEntry> getAllEntries(){
+		try {
+			PreparedStatement getEntries_stm = connection.prepareStatement("SELECT * FROM CalendarEntry; ");
+			
+			ResultSet rset = getEntries_stm.executeQuery();
+			
+			HashSet<CalendarEntry> entries = new HashSet<>();
+			while(rset.next()){
+				CalendarEntryBuilder eb = new CalendarEntryBuilder();
+				eb.setEventID(rset.getLong("entryID")); // TODO change to setEntryID()
+				eb.setCreator(rset.getString("creator"));
+				eb.setDescription(rset.getString("description"));
+				eb.setEndTime(rset.getTimestamp("endTime").getTime());
+				eb.setStartTime(rset.getTimestamp("startTime").getTime());
+				eb.setLocation(rset.getString("location"));
+				eb.setRoomID(rset.getString("roomID"));
+				
+				entries.add(eb.build());
+			}
+			
+			return entries;
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public HashSet<Alarm> getAllAlarms(){
+		try {
+			PreparedStatement getAlarms_stm = connection.prepareStatement("SELECT * FROM Alarm; ");
+			
+			ResultSet rset = getAlarms_stm.executeQuery();
+			
+			HashSet<Alarm> alarms = new HashSet<>();
+			while(rset.next()){
+				AlarmBuilder ab = new AlarmBuilder();
+				ab.setEntry_id(rset.getShort("entryID"));
+				ab.setAlarmTime(rset.getTimestamp("alarmTime").getTime());
+				ab.setUsername(rset.getString("username"));
+				
+				alarms.add(ab.build());
+			}
+			
+			return alarms;
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
 		}
 	}
 	
@@ -1240,12 +1471,12 @@ public class DataBaseManager implements Closeable {
 	 * @return HashSet of all reservations for a given room.
 	 */
 	public HashSet<RoomReservation> getReservationsForRoom(Room r){
-		PreparedStatement stm;
+		PreparedStatement getRes_stm;
 		try {
-			stm = connection.prepareStatement("SELECT * FROM RoomReservation WHERE roomID=?");
+			getRes_stm = connection.prepareStatement("SELECT * FROM RoomReservation WHERE roomID=?");
 	
-			stm.setString(1, r.getRoom_id());
-			ResultSet rs = stm.executeQuery();
+			getRes_stm.setString(1, r.getRoom_id());
+			ResultSet rs = getRes_stm.executeQuery();
 			
 			HashSet<RoomReservation> reservations = new HashSet<>();
 			while(rs.next()){
@@ -1267,8 +1498,31 @@ public class DataBaseManager implements Closeable {
 	 * @return a hash set of all Users that can see the entry (are invited and did not refuse the invitation)
 	 */
 	public HashSet<User> getInvitedUsersForEntry(long entry_id){
-		// TODO
-		throw new NotYetImplementedException();
+		PreparedStatement stm;
+		try {
+			stm = connection.prepareStatement("SELECT * FROM Invitation WHERE entryID=?");
+	
+			stm.setLong(1, entry_id);
+			ResultSet rs = stm.executeQuery();
+			
+			HashSet<User> users = new HashSet<>();
+			while(rs.next()){
+				String username = rs.getString("username");
+				
+				users.add(getUser(username));
+			}
+			
+			return users;
+			
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		} catch (UserDoesNotExistException e) {
+			// should never happen
+			e.printStackTrace();
+			return null;
+		}
 	}
 	
 	/**
@@ -1440,9 +1694,11 @@ public class DataBaseManager implements Closeable {
 	 * @throws UserDoesNotExistException 
 	 */
 	public boolean editEntry(CalendarEntry newEntry, String username) throws EntryDoesNotExistException, UserDoesNotExistException{
-				
+		
+		// TODO update with alarm etc...
 		// checks
 		checkUserAndEntry(username, newEntry.getEntryID());
+		checkIfUserExists(newEntry.getCreator());
 		
 		String edit_entry = "UPDATE CalendarEntry "
 				+ "SET startTime = ?, endTime = ?, location = ?, description = ?, roomID = ? "
@@ -1674,6 +1930,27 @@ public class DataBaseManager implements Closeable {
 	}
 	
 	/**
+	 * removes the RoomReservation from the Database. Does nothing if it does not exist.
+	 * 
+	 * @param rr
+	 * @return true iff the action was successful. false otherwise.
+	 */
+	public boolean deleteRoomReservation(RoomReservation rr){
+		try {
+			PreparedStatement stm = connection.prepareStatement("DELETE FROM RoomReservation WHERE roomID = ? and startTime = ? and endTime = ?;");
+			int i = 0;
+			stm.setString(++i, rr.getRoom().getRoom_id());
+			stm.setTimestamp(++i, new Timestamp(rr.getStartTime()));
+			stm.setTimestamp(++i, new Timestamp(rr.getEndTime()));
+			stm.executeUpdate();
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	/**
 	 * adds the user with the username to the Group with the groupname.
 	 * Does nothing if the user is not in the group or if he does not exists.
 	 * @param username
@@ -1683,8 +1960,6 @@ public class DataBaseManager implements Closeable {
 	 */
 	public boolean removeUserFromGroup(String username, String groupname) throws GroupDoesNotExistException{
 		checkIfGroupExists(groupname);
-		
-		// TODO check if the user exists? It does not matter if he exists or not in this method.
 		
 		PreparedStatement removeUser_stm;
 		try {
@@ -1750,44 +2025,6 @@ public class DataBaseManager implements Closeable {
 			return false;
 		}
 	}
-	
-	//----------------------------------------------------------------------------------------------
-	// Functionalities
-	
-//	/**
-//	 * Invites the user to the given event. The admin is the one inviting.
-//	 * @param admin
-//	 * @param username
-//	 * @param entry_id
-//	 * @return
-//	 */
-//	public boolean inviteUser(String admin, String username, int entry_id){
-//		// TODO 
-//		
-//		throw new NotYetImplementedException();
-//	}
-//	
-//
-//	
-//	/**
-//	 * Invites all users in the group to the given event. The admin is the one inviting.
-//	 * @param admin
-//	 * @param groupname
-//	 * @param entry_id
-//	 * @return 
-//	 * @throws GroupDoesNotExistException
-//	 * @throws UserDoesNotExistException 
-//	 * @throws EntryDoesNotExistException 
-//	 */
-//	public boolean inviteGroup(String admin, String groupname, int entry_id) throws GroupDoesNotExistException, EntryDoesNotExistException, UserDoesNotExistException{
-//		checkIfGroupExists(groupname);
-//		checkUserAndEntry(admin, entry_id);
-//		
-//		for(User u : getGroup(groupname).getUsers()){
-//			inviteUser(admin, u.getUsername(), entry_id);
-//		}
-//		return true;
-//	}
 	
 	/**
 	 * Creates a Calendar with all the entries the user is allowed to see.

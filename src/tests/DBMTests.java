@@ -323,7 +323,7 @@ public class DBMTests {
 		
 		// check adding a entry correctly
 		try {
-			dbm.addEntry(testEntry, u.getUsername());
+			dbm.addEntry(testEntry);
 			assertTrue(getlastEntryID() == lastID+1);
 			assertTrue(dbm.isAdmin(u.getUsername(), getlastEntryID()));
 		} catch (Exception e) {
@@ -333,7 +333,7 @@ public class DBMTests {
 		
 		// check if throws the exception correctly
 		try {
-			dbm.addEntry(testEntry, "asjkdhfkasdhf"); // username does not exist
+			dbm.addEntry(testEntry); // username does not exist
 			
 		} catch (UserDoesNotExistException e) {
 			assertTrue(true);
@@ -341,7 +341,7 @@ public class DBMTests {
 		
 		// check what happens with username = null (should throw UserDoesNotExistException)
 		try {
-			assertTrue(dbm.addEntry(testEntry, null) == false);
+			assertTrue(dbm.addEntry(new CalendarEntry(1, 1000, 100000, "tree", "happy tree friends", null, null)) == false);
 			
 		} catch (UserDoesNotExistException e) {
 			assertTrue(true);
@@ -525,7 +525,7 @@ public class DBMTests {
 		try {
 			dbm.addUser(u1);
 			dbm.addUser(u2);
-			dbm.addEntry(new CalendarEntry(1, 1000000, 200000, "hl", "aksdf", null, u2.getUsername()), u2.getUsername());
+			dbm.addEntry(new CalendarEntry(1, 1000000, 200000, "hl", "aksdf", null, u2.getUsername()));
 			entryID = getlastEntryID();
 		} catch (UsernameAlreadyExistsException | UserDoesNotExistException e1) {
 			
@@ -720,7 +720,7 @@ public class DBMTests {
 	public void testGetEntry() {
 		CalendarEntry e1  = new CalendarEntry(1, 10000, 100000, "asdlfk", "asdf", null, "lukasap");
 		try {
-			dbm.addEntry(e1, "lukasap");
+			dbm.addEntry(e1);
 		} catch (Exception e) {
 			e.printStackTrace();
 			fail("exception thrown");
@@ -837,7 +837,7 @@ public class DBMTests {
 		CalendarEntry e1_edit = new CalendarEntry(2, 20000, 300000, "asretr", "dfgh", null, "lukasap");
 		
 		try {
-			dbm.addEntry(e1, e1.getCreator());
+			dbm.addEntry(e1);
 			long id = getlastEntryID();
 			dbm.editEntry(e1_edit, e1.getCreator());
 			CalendarEntry gotEntry = dbm.getEntry(id);
@@ -1051,7 +1051,7 @@ public class DBMTests {
 		CalendarEntry e1 = new CalendarEntry(2, 10000, 200000, "asdf", "sdfasf", null, "lukasap");
 		
 		try {
-			dbm.addEntry(e1, e1.getCreator());
+			dbm.addEntry(e1);
 			long id = getlastEntryID();
 			assertTrue(isEntryThere(id));
 			dbm.deleteEntry("lukasap", id);
