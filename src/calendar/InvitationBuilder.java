@@ -51,8 +51,7 @@ public class InvitationBuilder implements Builder<Invitation> {
 
 	@Override
 	public Invitation build() {
-		// TODO Auto-generated method stub
-		return null;
+		return new Invitation(isGoing, isShowing, username, entry_id);
 	}
 
 }

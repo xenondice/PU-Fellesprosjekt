@@ -49,11 +49,11 @@ public class CreateEntry extends Command {
 		
 		CalendarEntryBuilder entry_builder = new CalendarEntryBuilder();
 		entry_builder.setDescription(arguments.get(0));
-		entry_builder.setEndTime(Integer.parseInt(arguments.get(1)));
+		entry_builder.setEndTime(Long.parseLong(arguments.get(1)));
 		entry_builder.setLocation(arguments.get(2));
 		entry_builder.setRoomID(arguments.get(3));
 		entry_builder.setCreator(handler.getUser().getUsername());
-		entry_builder.setStartTime(Integer.parseInt(arguments.get(4)));
+		entry_builder.setStartTime(Long.parseLong(arguments.get(4)));
 		CalendarEntry calendarEntry = entry_builder.build();
 		
 		try {

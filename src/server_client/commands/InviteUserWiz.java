@@ -11,22 +11,22 @@ import server_client.RequestHandler;
 import server_client.ServerClientHandler;
 import server_client.ServerClientHandler.ArgumentType;
 
-public class DeleteEntryWiz extends Command {
+public class InviteUserWiz extends Command {
 
 	@Override
 	public String getCommand() {
-		return "delete-entry-wiz";
+		return "invite-user-wiz";
 	}
 
 	@Override
 	public String getDescription() {
-		return "Delete an existing calendar entry using a wizard.";
+		return "Invite a user to a calendar entry using a wizard.";
 	}
 
 	@Override
 	public String getManual() {
 		return ""
-				+ "Easier way of deleting an existing calendar entry.\n"
+				+ "Easier way of inviting a user to a calendar entry.\n"
 				+ "Walks you through each of the required arguments and asks again if an argument is wrong.";
 	}
 
@@ -48,17 +48,20 @@ public class DeleteEntryWiz extends Command {
 		String intro_message = "";
 		
 		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in eventID of the event you wish to delete.");
+		descriptions.add("Type in the username of the user you would like to invite.");
+		argument_types.add(ArgumentType.number);
+		descriptions.add("Type in the entryID of the calendar entry you wish to invite to.");
 		
 		List<Object> result = handler.wizard(argument_types, descriptions, intro_message);
 		
+		
 		try {
-			if (RequestHandler.deleteEntry(handler.getUser(), (Integer) result.get(0)))
-				return "Calendar entry successfully deleted!";
+			if (RequestHandler.inviteUserToEntry(handler.getUser(), (String) result.get(0), (int) result.get(1)))
+				return "User successfully invited to calendar entry!";
 			else
-				return "Calendar entry couldn't be deleted!";
+				return "User couldn't be invited to calendar entry!";
 		} catch (Exception e) {
-			return "Could not delete calendar entry!";
+			return "User couldn't be invited to calendar entry!!";
 		}
 	}
 }

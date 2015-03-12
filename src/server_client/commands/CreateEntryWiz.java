@@ -51,24 +51,25 @@ public class CreateEntryWiz extends Command {
 		
 		argument_types.add(ArgumentType.text);
 		descriptions.add("Type in wanted description.");
-		argument_types.add(ArgumentType.text);
+		argument_types.add(ArgumentType.long_number);
 		descriptions.add("Type in end time.");
 		argument_types.add(ArgumentType.text);
 		descriptions.add("Type in location.");
 		argument_types.add(ArgumentType.text);
 		descriptions.add("Type in roomID.");
-		argument_types.add(ArgumentType.text);
+		argument_types.add(ArgumentType.long_number);
 		descriptions.add("Type in start time.");
 		
 		List<Object> result = handler.wizard(argument_types, descriptions, intro_message);
 		
+		
 		CalendarEntryBuilder entry_builder = new CalendarEntryBuilder();
 		entry_builder.setDescription((String) result.get(0));
-		entry_builder.setEndTime((Integer) (result.get(1)));
+		entry_builder.setEndTime((long) (result.get(1)));
 		entry_builder.setLocation((String) result.get(2));
 		entry_builder.setRoomID((String) result.get(3));
 		entry_builder.setCreator(handler.getUser().getUsername());
-		entry_builder.setStartTime((Integer) (result.get(4)));
+		entry_builder.setStartTime((long) (result.get(4)));
 		CalendarEntry calendarEntry = entry_builder.build();
 		
 		try {

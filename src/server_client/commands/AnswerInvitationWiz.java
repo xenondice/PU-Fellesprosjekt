@@ -5,28 +5,30 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
+import calendar.CalendarEntry;
+import calendar.CalendarEntryBuilder;
 import exceptions.ForcedReturnException;
 import server_client.Command;
 import server_client.RequestHandler;
 import server_client.ServerClientHandler;
 import server_client.ServerClientHandler.ArgumentType;
 
-public class DeleteEntryWiz extends Command {
+public class AnswerInvitationWiz extends Command {
 
 	@Override
 	public String getCommand() {
-		return "delete-entry-wiz";
+		return "answer-invitation-wiz";
 	}
 
 	@Override
 	public String getDescription() {
-		return "Delete an existing calendar entry using a wizard.";
+		return "Answer an invitation using a wizard.";
 	}
 
 	@Override
 	public String getManual() {
 		return ""
-				+ "Easier way of deleting an existing calendar entry.\n"
+				+ "Easier way of answering an invitation.\n"
 				+ "Walks you through each of the required arguments and asks again if an argument is wrong.";
 	}
 
@@ -47,18 +49,20 @@ public class DeleteEntryWiz extends Command {
 		
 		String intro_message = "";
 		
-		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in eventID of the event you wish to delete.");
+		argument_types.add(ArgumentType.number);
+		descriptions.add("Type in entryID of the calendar entry you wish to answer an invitation to.");
+		argument_types.add(ArgumentType.logic);
+		descriptions.add("Type in answer. 'True' or 'False'");
 		
 		List<Object> result = handler.wizard(argument_types, descriptions, intro_message);
 		
 		try {
-			if (RequestHandler.deleteEntry(handler.getUser(), (Integer) result.get(0)))
-				return "Calendar entry successfully deleted!";
+			if (RequestHandler.invitationAnswer(handler.getUser(), (int) result.get(0), (boolean) result.get(1)))
+				return "Invitation successfully answered!";
 			else
-				return "Calendar entry couldn't be deleted!";
+				return "Invitation couldn't be answered!";
 		} catch (Exception e) {
-			return "Could not delete calendar entry!";
+			return "Could not answer invitation!";
 		}
 	}
 }

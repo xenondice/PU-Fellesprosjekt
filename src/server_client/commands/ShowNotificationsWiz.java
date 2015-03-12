@@ -2,31 +2,33 @@ package server_client.commands;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
+import calendar.Notification;
 import exceptions.ForcedReturnException;
 import server_client.Command;
 import server_client.RequestHandler;
 import server_client.ServerClientHandler;
 import server_client.ServerClientHandler.ArgumentType;
 
-public class DeleteEntryWiz extends Command {
+public class ShowNotificationsWiz extends Command {
 
 	@Override
 	public String getCommand() {
-		return "delete-entry-wiz";
+		return "show-notifications-wiz";
 	}
 
 	@Override
 	public String getDescription() {
-		return "Delete an existing calendar entry using a wizard.";
+		return "Show notifications using a wizard.";
 	}
 
 	@Override
 	public String getManual() {
 		return ""
-				+ "Easier way of deleting an existing calendar entry.\n"
+				+ "Easier way of showing notifications.\n"
 				+ "Walks you through each of the required arguments and asks again if an argument is wrong.";
 	}
 
@@ -48,17 +50,20 @@ public class DeleteEntryWiz extends Command {
 		String intro_message = "";
 		
 		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in eventID of the event you wish to delete.");
+		descriptions.add("Type in username of the user you wish to see the notifications for.");
 		
 		List<Object> result = handler.wizard(argument_types, descriptions, intro_message);
 		
+		
 		try {
-			if (RequestHandler.deleteEntry(handler.getUser(), (Integer) result.get(0)))
-				return "Calendar entry successfully deleted!";
-			else
-				return "Calendar entry couldn't be deleted!";
+			HashSet<Notification> notifications = RequestHandler.getNotifications((String)result.get(0));
+			String s = "";
+			for (Notification notification : notifications) {
+				s += notification.toString() +"\n";
+			}
+			return s;
 		} catch (Exception e) {
-			return "Could not delete calendar entry!";
+			return "Notifications couldn't be found!";
 		}
 	}
 }

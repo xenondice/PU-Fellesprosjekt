@@ -11,22 +11,22 @@ import server_client.RequestHandler;
 import server_client.ServerClientHandler;
 import server_client.ServerClientHandler.ArgumentType;
 
-public class DeleteEntryWiz extends Command {
+public class KickUserWiz extends Command {
 
 	@Override
 	public String getCommand() {
-		return "delete-entry-wiz";
+		return "kick-user-wiz";
 	}
 
 	@Override
 	public String getDescription() {
-		return "Delete an existing calendar entry using a wizard.";
+		return "Kick a user from a calendar entry using a wizard.";
 	}
 
 	@Override
 	public String getManual() {
 		return ""
-				+ "Easier way of deleting an existing calendar entry.\n"
+				+ "Easier way of kicking a user from a calendar entry.\n"
 				+ "Walks you through each of the required arguments and asks again if an argument is wrong.";
 	}
 
@@ -48,17 +48,21 @@ public class DeleteEntryWiz extends Command {
 		String intro_message = "";
 		
 		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in eventID of the event you wish to delete.");
+		descriptions.add("Type in username of the user you wish to kick.");
+		argument_types.add(ArgumentType.number);
+		descriptions.add("Type in eventID of the event you wish to kick the user from.");
+
 		
 		List<Object> result = handler.wizard(argument_types, descriptions, intro_message);
 		
+		
 		try {
-			if (RequestHandler.deleteEntry(handler.getUser(), (Integer) result.get(0)))
-				return "Calendar entry successfully deleted!";
+			if (RequestHandler.kickUserFromEntry(handler.getUser(), (String) result.get(0), (Integer) result.get(1)))
+				return "User successfully kicked from calendar entry!";
 			else
-				return "Calendar entry couldn't be deleted!";
+				return "Could not kick user from calendar entry!";
 		} catch (Exception e) {
-			return "Could not delete calendar entry!";
+			return "Could not kick user from calendar entry!";
 		}
 	}
 }

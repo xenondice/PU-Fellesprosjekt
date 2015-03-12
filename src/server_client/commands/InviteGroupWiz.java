@@ -11,22 +11,22 @@ import server_client.RequestHandler;
 import server_client.ServerClientHandler;
 import server_client.ServerClientHandler.ArgumentType;
 
-public class DeleteEntryWiz extends Command {
+public class InviteGroupWiz extends Command {
 
 	@Override
 	public String getCommand() {
-		return "delete-entry-wiz";
+		return "invite-group-wiz";
 	}
 
 	@Override
 	public String getDescription() {
-		return "Delete an existing calendar entry using a wizard.";
+		return "Invite users in a group to a calendar entry using a wizard.";
 	}
 
 	@Override
 	public String getManual() {
 		return ""
-				+ "Easier way of deleting an existing calendar entry.\n"
+				+ "Easier way of inviting users in a group to a calendar entry.\n"
 				+ "Walks you through each of the required arguments and asks again if an argument is wrong.";
 	}
 
@@ -48,17 +48,20 @@ public class DeleteEntryWiz extends Command {
 		String intro_message = "";
 		
 		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in eventID of the event you wish to delete.");
+		descriptions.add("Type in the groupname of the group you would like to invite.");
+		argument_types.add(ArgumentType.number);
+		descriptions.add("Type in the entryID of the calendar entry you wish to invite to.");
 		
 		List<Object> result = handler.wizard(argument_types, descriptions, intro_message);
 		
+		
 		try {
-			if (RequestHandler.deleteEntry(handler.getUser(), (Integer) result.get(0)))
-				return "Calendar entry successfully deleted!";
+			if (RequestHandler.inviteGroupToEntry(handler.getUser(), (String) result.get(0), (int) result.get(1)))
+				return "Users in group successfully invited to calendar entry!";
 			else
-				return "Calendar entry couldn't be deleted!";
+				return "Users in group couldn't be invited to calendar entry!";
 		} catch (Exception e) {
-			return "Could not delete calendar entry!";
+			return "Users in group couldn't be invited to calendar entry!!";
 		}
 	}
 }

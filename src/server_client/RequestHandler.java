@@ -8,11 +8,13 @@ import java.util.Set;
 
 import calendar.Calendar;
 import calendar.CalendarEntry;
+import calendar.Notification;
 import dbms.DataBaseManager;
 import exceptions.EntryDoesNotExistException;
 import exceptions.GroupAlreadyExistsException;
 import exceptions.GroupDoesNotExistException;
 import exceptions.HasNotTheRightsException;
+import exceptions.InvitationDoesNotExistException;
 import exceptions.SessionExpiredException;
 import exceptions.UserDoesNotExistException;
 import exceptions.UserInGroupDoesNotExistsException;
@@ -144,7 +146,7 @@ public class RequestHandler{
 	
 	public synchronized static boolean editUser(User requestor, User updated_user) throws UserDoesNotExistException, SessionExpiredException, HasNotTheRightsException {
 		validate(requestor);
-		if (updated_user.getUsername() != requestor.getUsername())
+		if (! updated_user.getUsername().equals(requestor.getUsername()))
 			throw new HasNotTheRightsException();
 		return dbm.editUser(updated_user);
 	}
@@ -185,14 +187,14 @@ public class RequestHandler{
 		return result;
 	}
 	
-	public synchronized static boolean kickUserFromEntry(User requestor, String username, int entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException, HasNotTheRightsException {
+	public synchronized static boolean kickUserFromEntry(User requestor, String username, int entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException, HasNotTheRightsException, InvitationDoesNotExistException {
 		validate(requestor);
 		if (!dbm.isAllowedToEdit(requestor.getUsername(), entry_id) || dbm.isAdmin(username, entry_id))
 			throw new HasNotTheRightsException();
 		return dbm.hideEvent(username, entry_id); //TODO: Add send notification
 	}
 	
-	public synchronized static boolean kickGroupFromEntry(User requestor, String groupname, int entry_id) throws GroupDoesNotExistException, UserInGroupDoesNotExistsException, EntryDoesNotExistException, SessionExpiredException, UserDoesNotExistException, HasNotTheRightsException {
+	public synchronized static boolean kickGroupFromEntry(User requestor, String groupname, int entry_id) throws GroupDoesNotExistException, UserInGroupDoesNotExistsException, EntryDoesNotExistException, SessionExpiredException, UserDoesNotExistException, HasNotTheRightsException, InvitationDoesNotExistException {
 		validate(requestor);
 		for (User user : dbm.getGroup(groupname).getUsers())
 			if (dbm.isAdmin(user.getUsername(), entry_id))
@@ -255,5 +257,9 @@ public class RequestHandler{
 			return dbm.going(requestor.getUsername(), entry_id);
 		else
 			return dbm.notGoing(requestor.getUsername(), entry_id);
+	}
+	
+	public synchronized static HashSet<Notification> getNotifications(String username) throws UserDoesNotExistException {
+		return dbm.getNotificationsForUser(username);
 	}
 }
