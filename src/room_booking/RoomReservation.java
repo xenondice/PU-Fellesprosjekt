@@ -6,13 +6,13 @@ public class RoomReservation {
 	private final Room room;
 	private final long startTime; 
 	private final long endTime;
-	private final String username;
+	private final long entryID;
 	
-	public RoomReservation(Room room, long startTime, long endTime, String username){
+	public RoomReservation(Room room, long startTime, long endTime, long entryID){
 		this.room = room;
 		this.startTime = startTime;
 		this.endTime = endTime;
-		this.username = username;
+		this.entryID  = entryID;
 	}
 	
 	public Room getRoom(){
@@ -27,8 +27,8 @@ public class RoomReservation {
 		return endTime;
 	}
 	
-	public String getUsername(){
-		return username;
+	public long entryID(){
+		return entryID;
 	}
 	
 }
