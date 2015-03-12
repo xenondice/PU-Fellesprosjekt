@@ -1,14 +1,15 @@
 package room_booking;
 
 import java.util.HashSet;
+
 import dbms.DataBaseManager;
+import exceptions.RoomAlreadyBookedException;
 
 public class RoomBookingHandler {
 
 	private static DataBaseManager dbm = new DataBaseManager();
 	
-	public void bookRoom(Room room, long startTime, long endTime, long entryID){
-	//TODO  make RoomIsAllreadyBookedException?
+	public void bookRoom(Room room, long startTime, long endTime, long entryID) throws RoomAlreadyBookedException{
 		if(checkIfFree(room, startTime, endTime)){
 			RoomReservation rr = new RoomReservation(room, startTime, endTime, entryID);
 			dbm.addRoomReservation(rr);
@@ -17,7 +18,7 @@ public class RoomBookingHandler {
 		}
 	}
 	
-	private boolean isInbetween(long checkStart, long checkEnd, long inputStart, long inputEnd){
+	private boolean isInbetween(long checkStart, long inputStart, long checkEnd, long inputEnd){
 	
 		if (inputStart >= checkStart && checkEnd <= inputEnd){
 			return true;
@@ -29,9 +30,8 @@ public class RoomBookingHandler {
 		return false;
 	}
 	
+	// sjekke om det finnes RoomReservation rr;
 	public boolean checkIfFree(Room room, long startTime, long endTime){
-		// sjekke om det finnes RoomReservation rr;
-		
 		HashSet<RoomReservation> rr = dbm.getReservationsForRoom(room);
 		for(RoomReservation res : rr){
 			return isInbetween(startTime, res.getStartTime(),  endTime, res.getEndTime());
@@ -41,7 +41,6 @@ public class RoomBookingHandler {
 	
 	
 	public void releaseRoom(Room room, long startTime, long endTime){
-		//TODO
 		if (dbm.getReservationsForRoom(room) != null){
 			HashSet<RoomReservation> rr = dbm.getReservationsForRoom(room);
 			for(RoomReservation res : rr){
@@ -50,7 +49,5 @@ public class RoomBookingHandler {
 				}
 			}
 		}
-		//TODO
-		// throw an exception if the room doesn't have any reservation  ?
 	}
 }
