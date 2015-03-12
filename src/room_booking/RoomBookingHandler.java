@@ -1,7 +1,6 @@
 package room_booking;
 
 import java.util.HashSet;
-
 import dbms.DataBaseManager;
 
 public class RoomBookingHandler {
@@ -9,7 +8,7 @@ public class RoomBookingHandler {
 	private static DataBaseManager dbm = new DataBaseManager();
 	
 	public void bookRoom(Room room, long startTime, long endTime){
-	//TODO  make RoomIsBookedException?
+	//TODO  make RoomIsAllreadyBookedException?
 		if(checkIfFree(room, startTime, endTime)){
 			RoomReservation rr = new RoomReservation(room, startTime, endTime);
 			dbm.addReservation(rr);
@@ -46,11 +45,11 @@ public class RoomBookingHandler {
 			HashSet<RoomReservation> rr = dbm.getReservationsForRoom(room);
 			for(RoomReservation res : rr){
 				if ( isInbetween(startTime, res.getStartTime(),  endTime, res.getEndTime())){
-					dbm.removeReservation(room);
+					dbm.removeReservation(res);
 				}
 			}
 		}
 		//TODO
-		// throw an exception if the room doesn't have any reservation  
+		// throw an exception if the room doesn't have any reservation  ?
 	}
 }
