@@ -850,6 +850,11 @@ public class DataBaseManager implements Closeable {
 		return this.addIntoAlarm(a);
 	}
 	
+	public boolean addReservation(RoomReservation rr){
+		// TODO
+		throw new NotYetImplementedException();
+	}
+	
 	public boolean addInvitation(Invitation inv) throws EntryDoesNotExistException, UserDoesNotExistException, InvitationAlreadyExistsException{
 		return this.addIntoInvitation(inv);
 	}
@@ -877,9 +882,6 @@ public class DataBaseManager implements Closeable {
 	public boolean addEntry(CalendarEntry e) throws UserDoesNotExistException{
 		
 		checkIfUserExists(e.getCreator());
-		
-		
-		// TODO username and e.creator must be the same. Resolve it :P
 		
 		if(addIntoEntry(e)){
 			long entryID = getLastEntryID();
@@ -1232,7 +1234,39 @@ public class DataBaseManager implements Closeable {
 		}
 	}
 	
+	/**
+	 * 
+	 * @param r
+	 * @return HashSet of all reservations for a given room.
+	 */
 	public HashSet<RoomReservation> getReservationsForRoom(Room r){
+		PreparedStatement stm;
+		try {
+			stm = connection.prepareStatement("SELECT * FROM RoomReservation WHERE roomID=?");
+	
+			stm.setString(1, r.getRoom_id());
+			ResultSet rs = stm.executeQuery();
+			
+			HashSet<RoomReservation> reservations = new HashSet<>();
+			while(rs.next()){
+				reservations.add(new RoomReservation(r, rs.getTimestamp("startTime").getTime(), rs.getTimestamp("startTime").getTime()));
+			}
+			
+			return reservations;
+			
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	/**
+	 * 
+	 * @param entry_id
+	 * @return a hash set of all Users that can see the entry (are invited and did not refuse the invitation)
+	 */
+	public HashSet<User> getInvitedUsersForEntry(long entry_id){
 		// TODO
 		throw new NotYetImplementedException();
 	}
