@@ -164,7 +164,7 @@ public class RequestHandler{
 	
 	public synchronized static boolean createEntry(User requestor, CalendarEntry entry) throws UserDoesNotExistException, SessionExpiredException {
 		validate(requestor);
-		boolean result = dbm.addEntry(entry);
+		boolean result = dbm.addEntry(entry); //TODO: make sure CalendarEntryBuilder's field creator is set everywhere!!!
 		if (result) sendToInvitedIfLoggedIn("You have just been invited to a newly created entry! Type \"inbox\" to see.", entry.getEntryID());
 		return result;
 	}
