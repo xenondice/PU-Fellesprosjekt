@@ -1,21 +1,24 @@
 package room_booking;
 
+import java.util.HashSet;
+
 import dbms.DataBaseManager;
+import exceptions.RoomAlreadyBookedException;
 
 public class RoomBookingHandler {
 
 	private static DataBaseManager dbm = new DataBaseManager();
 	
-	public static void bookRoom(Room room, long startTime, long endTime){
-	//TODO  make RoomIsBookedException?
+	public void bookRoom(Room room, long startTime, long endTime, long entryID) throws RoomAlreadyBookedException{
 		if(checkIfFree(room, startTime, endTime)){
-			RoomReservation rr = new RoomReservation(room, startTime, endTime);
+			RoomReservation rr = new RoomReservation(room, startTime, endTime, entryID);
+			dbm.addRoomReservation(rr);
 		}else{
 			throw new IllegalArgumentException("Room is not available");
 		}
 	}
 	
-	private boolean isInbetween(long checkStart, long checkEnd, long inputStart, long inputEnd){
+	private boolean isInbetween(long checkStart, long inputStart, long checkEnd, long inputEnd){
 	
 		if (inputStart >= checkStart && checkEnd <= inputEnd){
 			return true;
@@ -27,17 +30,24 @@ public class RoomBookingHandler {
 		return false;
 	}
 	
-	public static boolean checkIfFree(Room room, long startTime, long endTime){
-		// sjekke om det finnes RoomReservation rr;
-		
-		if(isInBetween( startTime,rr.getStartTime,  endTime, rr.getEndTime())){
-			
+	// sjekke om det finnes RoomReservation rr;
+	public boolean checkIfFree(Room room, long startTime, long endTime){
+		HashSet<RoomReservation> rr = dbm.getReservationsForRoom(room);
+		for(RoomReservation res : rr){
+			return isInbetween(startTime, res.getStartTime(),  endTime, res.getEndTime());
 		}
-		
 		return true;
 	}
 	
-	public static void releaseRoom(Room room, long startTime, long endTime){
-		//TODO
+	
+	public void releaseRoom(Room room, long startTime, long endTime){
+		if (dbm.getReservationsForRoom(room) != null){
+			HashSet<RoomReservation> rr = dbm.getReservationsForRoom(room);
+			for(RoomReservation res : rr){
+				if ( isInbetween(startTime, res.getStartTime(),  endTime, res.getEndTime())){
+					dbm.deleteRoomReservation(res);
+				}
+			}
+		}
 	}
 }

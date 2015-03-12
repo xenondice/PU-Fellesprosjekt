@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import exceptions.ForcedReturnException;
+import exceptions.GroupDoesNotExistException;
 import exceptions.HasNotTheRightsException;
 import exceptions.SessionExpiredException;
 import exceptions.UserDoesNotExistException;
@@ -13,25 +14,23 @@ import server_client.Command;
 import server_client.RequestHandler;
 import server_client.ServerClientHandler;
 import server_client.ServerClientHandler.ArgumentType;
-import user.User;
-import user.UserBuilder;
 
-public class EditUserWiz extends Command {
+public class RemoveUserFromGroupWiz extends Command {
 
 	@Override
 	public String getCommand() {
-		return "edit-user-wiz";
+		return "remove-user-from-group-wiz";
 	}
 
 	@Override
 	public String getDescription() {
-		return "Edit an existing user using a wizard.";
+		return "Remove a user from a group using a wizard.";
 	}
 
 	@Override
 	public String getManual() {
 		return ""
-				+ "Easier way of editing a user.\n"
+				+ "Easier way of removing a user from a group.\n"
 				+ "Walks you through each of the required arguments and asks again if an argument is wrong.";
 	}
 
@@ -53,36 +52,26 @@ public class EditUserWiz extends Command {
 		String intro_message = "";
 		
 		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in your username.");
+		descriptions.add("Type in the name of the group you want to remove a user from");
 		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in new password to edit. Else: type in old password");
-		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in new full name in quotes to edit. Else: type in old name");
-		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in new email-address to edit. Else: type in old email-address");
-		
+		descriptions.add("Type in username of the user you want to remove");
+
 		List<Object> result = handler.wizard(argument_types, descriptions, intro_message);
 		
-		UserBuilder user_builder = new UserBuilder();
-		user_builder.setUsername((String) result.get(0));
-		user_builder.setPassword((String) result.get(1));
-		user_builder.setName((String) result.get(2));
-		user_builder.setEmail((String) result.get(3));
-		user_builder.setSalt("");
-		User user = user_builder.build();
-		
 		try {
-			if (RequestHandler.editUser(handler.getUser(), user)) {
-				return "User successfully edited!";
-			} else {
-				return "User could not be edited!";
-			}
+			if (RequestHandler.removeUserFromGroup(handler.getUser(), arguments.get(0), arguments.get(1)))
+				return "User successfully removed from group!";
+			else
+				return "User couldn't be removed!";
+		} catch (GroupDoesNotExistException e) {
+			return "User couldn't be removed - Group does not exist!";
 		} catch (UserDoesNotExistException e) {
-			return "User does not exist!";
+			return "User couldn't be removed - User does not exist!";
 		} catch (HasNotTheRightsException e) {
-			return "You do not have the rights!";
+			return "User couldn't be removed - User does not have the rights to remove!";
 		} catch (SessionExpiredException e) {
-			return "Session expired!";
+			return "User couldn't be removed - Session expired!";
 		}
 	}
 }
+

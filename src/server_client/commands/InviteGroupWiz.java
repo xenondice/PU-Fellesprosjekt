@@ -6,31 +6,27 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import exceptions.ForcedReturnException;
-import exceptions.GroupDoesNotExistException;
-import exceptions.HasNotTheRightsException;
-import exceptions.SessionExpiredException;
-import exceptions.UserDoesNotExistException;
 import server_client.Command;
 import server_client.RequestHandler;
 import server_client.ServerClientHandler;
 import server_client.ServerClientHandler.ArgumentType;
 
-public class AddUserToGroupWiz extends Command {
+public class InviteGroupWiz extends Command {
 
 	@Override
 	public String getCommand() {
-		return "add-user-to-group-wiz";
+		return "invite-group-wiz";
 	}
 
 	@Override
 	public String getDescription() {
-		return "Add a user to a group using a wizard.";
+		return "Invite users in a group to a calendar entry using a wizard.";
 	}
 
 	@Override
 	public String getManual() {
 		return ""
-				+ "Easier way of adding a user to a group.\n"
+				+ "Easier way of inviting users in a group to a calendar entry.\n"
 				+ "Walks you through each of the required arguments and asks again if an argument is wrong.";
 	}
 
@@ -52,26 +48,20 @@ public class AddUserToGroupWiz extends Command {
 		String intro_message = "";
 		
 		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in the name of the group you want to add a user to");
-		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in username of the user you want to add");
-
+		descriptions.add("Type in the groupname of the group you would like to invite.");
+		argument_types.add(ArgumentType.number);
+		descriptions.add("Type in the entryID of the calendar entry you wish to invite to.");
+		
 		List<Object> result = handler.wizard(argument_types, descriptions, intro_message);
 		
+		
 		try {
-			if (RequestHandler.removeUserFromGroup(handler.getUser(), arguments.get(0), arguments.get(1)))
-				return "User successfully added to group!";
+			if (RequestHandler.inviteGroupToEntry(handler.getUser(), (String) result.get(0), (int) result.get(1)))
+				return "Users in group successfully invited to calendar entry!";
 			else
-				return "User couldn't be added!";
-		} catch (GroupDoesNotExistException e) {
-			return "User couldn't be added - Group does not exist!";
-		} catch (UserDoesNotExistException e) {
-			return "User couldn't be added - User does not exist!";
-		} catch (HasNotTheRightsException e) {
-			return "User couldn't be added - User does not have the rights to add!";
-		} catch (SessionExpiredException e) {
-			return "User couldn't be added - Session expired!";
+				return "Users in group couldn't be invited to calendar entry!";
+		} catch (Exception e) {
+			return "Users in group couldn't be invited to calendar entry!!";
 		}
 	}
 }
-

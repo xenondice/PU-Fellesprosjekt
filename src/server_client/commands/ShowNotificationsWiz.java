@@ -2,35 +2,33 @@ package server_client.commands;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
+import calendar.Notification;
 import exceptions.ForcedReturnException;
-import exceptions.GroupDoesNotExistException;
-import exceptions.HasNotTheRightsException;
-import exceptions.SessionExpiredException;
-import exceptions.UserDoesNotExistException;
 import server_client.Command;
 import server_client.RequestHandler;
 import server_client.ServerClientHandler;
 import server_client.ServerClientHandler.ArgumentType;
 
-public class AddUserToGroupWiz extends Command {
+public class ShowNotificationsWiz extends Command {
 
 	@Override
 	public String getCommand() {
-		return "add-user-to-group-wiz";
+		return "show-notifications-wiz";
 	}
 
 	@Override
 	public String getDescription() {
-		return "Add a user to a group using a wizard.";
+		return "Show notifications using a wizard.";
 	}
 
 	@Override
 	public String getManual() {
 		return ""
-				+ "Easier way of adding a user to a group.\n"
+				+ "Easier way of showing notifications.\n"
 				+ "Walks you through each of the required arguments and asks again if an argument is wrong.";
 	}
 
@@ -52,26 +50,20 @@ public class AddUserToGroupWiz extends Command {
 		String intro_message = "";
 		
 		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in the name of the group you want to add a user to");
-		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in username of the user you want to add");
-
+		descriptions.add("Type in username of the user you wish to see the notifications for.");
+		
 		List<Object> result = handler.wizard(argument_types, descriptions, intro_message);
 		
+		
 		try {
-			if (RequestHandler.removeUserFromGroup(handler.getUser(), arguments.get(0), arguments.get(1)))
-				return "User successfully added to group!";
-			else
-				return "User couldn't be added!";
-		} catch (GroupDoesNotExistException e) {
-			return "User couldn't be added - Group does not exist!";
-		} catch (UserDoesNotExistException e) {
-			return "User couldn't be added - User does not exist!";
-		} catch (HasNotTheRightsException e) {
-			return "User couldn't be added - User does not have the rights to add!";
-		} catch (SessionExpiredException e) {
-			return "User couldn't be added - Session expired!";
+			HashSet<Notification> notifications = RequestHandler.getNotifications((String)result.get(0));
+			String s = "";
+			for (Notification notification : notifications) {
+				s += notification.toString() +"\n";
+			}
+			return s;
+		} catch (Exception e) {
+			return "Notifications couldn't be found!";
 		}
 	}
 }
-
