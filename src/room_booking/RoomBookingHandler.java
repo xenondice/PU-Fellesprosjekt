@@ -1,15 +1,17 @@
 package room_booking;
 
+import java.util.HashSet;
 import dbms.DataBaseManager;
 
 public class RoomBookingHandler {
 
 	private static DataBaseManager dbm = new DataBaseManager();
 	
-	public static void bookRoom(Room room, long startTime, long endTime){
-	//TODO  make RoomIsBookedException?
+	public void bookRoom(Room room, long startTime, long endTime){
+	//TODO  make RoomIsAllreadyBookedException?
 		if(checkIfFree(room, startTime, endTime)){
 			RoomReservation rr = new RoomReservation(room, startTime, endTime);
+			dbm.addRoomReservation(rr);
 		}else{
 			throw new IllegalArgumentException("Room is not available");
 		}
@@ -27,17 +29,27 @@ public class RoomBookingHandler {
 		return false;
 	}
 	
-	public static boolean checkIfFree(Room room, long startTime, long endTime){
+	public boolean checkIfFree(Room room, long startTime, long endTime){
 		// sjekke om det finnes RoomReservation rr;
 		
-		if(isInBetween( startTime,rr.getStartTime,  endTime, rr.getEndTime())){
-			
+		HashSet<RoomReservation> rr = dbm.getReservationsForRoom(room);
+		for(RoomReservation res : rr){
+			return isInbetween(startTime, res.getStartTime(),  endTime, res.getEndTime());
 		}
-		
 		return true;
 	}
 	
-	public static void releaseRoom(Room room, long startTime, long endTime){
+	public void releaseRoom(Room room, long startTime, long endTime){
 		//TODO
+		if (dbm.getReservationsForRoom(room) != null){
+			HashSet<RoomReservation> rr = dbm.getReservationsForRoom(room);
+			for(RoomReservation res : rr){
+				if ( isInbetween(startTime, res.getStartTime(),  endTime, res.getEndTime())){
+					dbm.deleteRoomReservation(res);
+				}
+			}
+		}
+		//TODO
+		// throw an exception if the room doesn't have any reservation  ?
 	}
 }

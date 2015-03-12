@@ -68,6 +68,7 @@ public class EditUserWiz extends Command {
 		user_builder.setPassword((String) result.get(1));
 		user_builder.setName((String) result.get(2));
 		user_builder.setEmail((String) result.get(3));
+		user_builder.setSalt("");
 		User user = user_builder.build();
 		
 		try {
@@ -76,8 +77,10 @@ public class EditUserWiz extends Command {
 			} else {
 				return "User could not be edited!";
 			}
-		} catch (UserDoesNotExistException | HasNotTheRightsException e) {
-			return "Could not edit user!";
+		} catch (UserDoesNotExistException e) {
+			return "User does not exist!";
+		} catch (HasNotTheRightsException e) {
+			return "You do not have the rights!";
 		} catch (SessionExpiredException e) {
 			return "Session expired!";
 		}

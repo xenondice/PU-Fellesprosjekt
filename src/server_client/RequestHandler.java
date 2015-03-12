@@ -132,7 +132,7 @@ public class RequestHandler{
 	
 	public synchronized static boolean editUser(User requestor, User updated_user) throws UserDoesNotExistException, SessionExpiredException, HasNotTheRightsException {
 		validate(requestor);
-		if (updated_user.getUsername() != requestor.getUsername())
+		if (! updated_user.getUsername().equals(requestor.getUsername()))
 			throw new HasNotTheRightsException();
 		return dbm.editUser(updated_user);
 	}
