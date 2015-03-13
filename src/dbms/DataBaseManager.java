@@ -648,9 +648,9 @@ public class DataBaseManager implements Closeable {
 	 * Only the CalendarEntry Table is changed. 
 	 * 
 	 * @param e
-	 * @return true if the action was successful, false otherwise
+	 * @return the entry_id of the added entry. Or -1 if the action was <u>not</u> succesful.
 	 */
-	private boolean addIntoEntry(CalendarEntry e) {
+	private synchronized long addIntoEntry(CalendarEntry e) {
 		
 		// TODO handle when roomId = null or "null" or ""
 		
@@ -675,10 +675,10 @@ public class DataBaseManager implements Closeable {
 	
 			addEntry_stmt.executeUpdate();
 			addEntry_stmt.close();
-			return true;
+			return getLastEntryID();
 		} catch (SQLException e1) {
 			e1.printStackTrace();
-			return false;
+			return -1;
 		}
 	}
 
@@ -960,31 +960,36 @@ public class DataBaseManager implements Closeable {
 	/**
 	 * Adds the given CalendarEntry as a new entry into the DB</br>
 	 * To edit an existing entry use editEntry(CalendarEntry e) instead.</br>
+	 * Note that only the CalendarEntry Table in the DB is changed.
 	 * @return true if the action was successful. False otherwise.
 	 * @param e the entry
-	 * @param u the user creating the entry
-	 * @throws UserDoesNotExistException
+	 * @throws UserDoesNotExistException if the creator does not exist in the DB
 	 * @see {@link DataBaseManager#editEntry(CalendarEntry, String)}
 	 */
-	public boolean addEntry(CalendarEntry e) throws UserDoesNotExistException{
+	public long addEntry(CalendarEntry e) throws UserDoesNotExistException{
+		
 		
 		// TODO update with alarm etc. 
 		// TODO should it handle the addIntoAdmin etc? -> only add into Entry. Request handler handels the is admin etc.
 		
 		checkIfUserExists(e.getCreator());
 		
-		if(addIntoEntry(e)){
-			long entryID = getLastEntryID();
-			try {
-				return addIntoIsAdmin(e.getCreator(), entryID) && addIntoInvitation(new Invitation(true, true, e.getCreator(), entryID));
-			} catch (EntryDoesNotExistException | InvitationAlreadyExistsException e1) {
-				// should never happen!
-				e1.printStackTrace();
-				return false;
-			} 
-		}else{
-			return false;
-		}
+		return addIntoEntry(e);
+		
+		//-----------
+		
+//		if(addIntoEntry(e)){
+//			long entryID = getLastEntryID();
+//			try {
+//				return addIntoIsAdmin(e.getCreator(), entryID) && addIntoInvitation(new Invitation(true, true, e.getCreator(), entryID));
+//			} catch (EntryDoesNotExistException | InvitationAlreadyExistsException e1) {
+//				// should never happen!
+//				e1.printStackTrace();
+//				return false;
+//			} 
+//		}else{
+//			return false;
+//		}
 	}
 
 	/**
@@ -1018,7 +1023,7 @@ public class DataBaseManager implements Closeable {
 	 * @throws UserDoesNotExistException 
 	 * @throws EntryDoesNotExistException 
 	 */
-	public boolean makeAdmin(String username, int entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
+	public boolean makeAdmin(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
 		return addIntoIsAdmin(username, entry_id);
 	}
 
@@ -1364,6 +1369,38 @@ public class DataBaseManager implements Closeable {
 		}
 	}
 	
+	public HashSet<Invitation> getInvitationsForUser(String username) throws UserDoesNotExistException{
+		checkIfUserExists(username);
+		
+		
+		PreparedStatement getInvis_stm;
+		try {
+			getInvis_stm = connection.prepareStatement("SELECT * FROM Invitations WHERE username=?; ");
+	
+			int i = 0;
+			getInvis_stm.setString(++i, username);
+			
+			ResultSet rset = getInvis_stm.executeQuery();
+			
+			HashSet<Invitation> invis = new HashSet<>();
+			while(rset.next()){
+				InvitationBuilder ib = new InvitationBuilder();
+				ib.setEntry_id(rset.getLong("entryID"));
+				ib.setGoing(rset.getBoolean("isGoing"));
+				ib.setGoing(rset.getBoolean("isShowing"));
+				ib.setUsername(rset.getString("username"));
+				invis.add(ib.build());
+			}
+			
+			return invis;
+			
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
 	public Room getRoom(String room_id) throws RoomDoesNotExistException{
 		if(room_id == null || room_id.equals("null")){
 			throw new IllegalArgumentException("room_id can not be null or 'null'");
@@ -1585,29 +1622,24 @@ public class DataBaseManager implements Closeable {
 	 * @param entry_id
 	 * @return a hash set of all Users that can see the entry (are invited and did not refuse the invitation)
 	 */
-	public HashSet<User> getInvitedUsersForEntry(long entry_id){
+	public HashSet<String> getInvitedUsersForEntry(long entry_id){
 		PreparedStatement stm;
 		try {
-			stm = connection.prepareStatement("SELECT * FROM Invitation WHERE entryID=?");
+			stm = connection.prepareStatement("SELECT * FROM Invitation WHERE entryID=? AND isShowing = true");
 	
 			stm.setLong(1, entry_id);
 			ResultSet rs = stm.executeQuery();
 			
-			HashSet<User> users = new HashSet<>();
+			HashSet<String> users = new HashSet<>();
 			while(rs.next()){
 				String username = rs.getString("username");
-				
-				users.add(getUser(username));
+				users.add(username);
 			}
 			
 			return users;
 			
 			
 		} catch (SQLException e) {
-			e.printStackTrace();
-			return null;
-		} catch (UserDoesNotExistException e) {
-			// should never happen
 			e.printStackTrace();
 			return null;
 		}
