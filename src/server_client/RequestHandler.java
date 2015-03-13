@@ -235,11 +235,27 @@ public class RequestHandler{
 		return dbm.addUserToGroup(username, groupname);
 	}
 	
+	public synchronized static boolean addGroupToGroup(User requestor, Group invitedGroup, String inviteeGroupname) throws UserDoesNotExistException, GroupDoesNotExistException, SessionExpiredException, HasNotTheRightsException {
+		for (User user : invitedGroup.getUsers()) {
+			if (! addUserToGroup(requestor, user.getUsername(), inviteeGroupname))
+				return false;
+		}
+		return true;
+	}
+	
 	public synchronized static boolean removeUserFromGroup(User requestor, String username, String groupname) throws GroupDoesNotExistException, SessionExpiredException, HasNotTheRightsException, UserDoesNotExistException {
 		validate(requestor);
 		if (!dbm.isMemberOf(groupname, requestor.getUsername()))
 			throw new HasNotTheRightsException();
 		return dbm.removeUserFromGroup(username, groupname);
+	}
+	
+	public synchronized static boolean removeGroupFromGroup(User requestor, Group kickedGroup, String groupname) throws GroupDoesNotExistException, SessionExpiredException, HasNotTheRightsException, UserDoesNotExistException {
+		for (User user : kickedGroup.getUsers()) {
+			if (! removeUserFromGroup(requestor, user.getUsername(), groupname))
+				return false;
+		}
+		return true;
 	}
 	
 	
