@@ -109,12 +109,12 @@ public class DataBaseManager implements Closeable {
 	// Does Exist Methods
 	
 	/**
-	 * 
+	 * Note that the string "null" will also return false.
 	 * @param username
-	 * @return true iff the username exists in the DB
+	 * @return true iff the username exists in the DB.
 	 */
 	private boolean doesUserExist(String username){
-		if(username == null){
+		if(username == null || username.equals("null")){
 			return false;
 		}
 		
@@ -137,6 +137,8 @@ public class DataBaseManager implements Closeable {
 	 * @return true iff the entryID exists in the DB
 	 */
 	private boolean doesEntryExist(long entryID){
+		if(entryID < 0){return false;}
+		
 		PreparedStatement findEntry_stmt;
 		try {
 			findEntry_stmt = connection.prepareStatement("SELECT * FROM CalendarEntry WHERE entryID = ?;");
@@ -150,7 +152,9 @@ public class DataBaseManager implements Closeable {
 		}
 	}
 	
-	private boolean doesAlarmExist(String username, long entry_id){
+	private boolean doesAlarmExist(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
+		
+		checkUserAndEntry(username, entry_id);
 		PreparedStatement findAlarm_stmt;
 		try {
 			findAlarm_stmt = connection.prepareStatement("SELECT * FROM Alarm WHERE entryID = ? AND username = ?;");
@@ -170,8 +174,12 @@ public class DataBaseManager implements Closeable {
 	 * @param username
 	 * @param entry_id
 	 * @return true iff the invitation exists in the DB
+	 * @throws UserDoesNotExistException 
+	 * @throws EntryDoesNotExistException 
 	 */
-	private boolean doesInvitationExist(String username, long entry_id){
+	private boolean doesInvitationExist(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
+		checkUserAndEntry(username, entry_id);
+		
 		PreparedStatement findInvitation_stmt;
 		try {
 			findInvitation_stmt = connection.prepareStatement("SELECT * FROM Invitation WHERE entryID = ? AND username = ?;");
@@ -187,6 +195,8 @@ public class DataBaseManager implements Closeable {
 	}
 	
 	private boolean doesNotificationExist(long notification_id){
+		if(notification_id <= 0){return false;}
+		
 		PreparedStatement findNotiction_stmt;
 		try {
 			findNotiction_stmt = connection.prepareStatement("SELECT * FROM Notification WHERE notificationID = ?;");
@@ -206,6 +216,8 @@ public class DataBaseManager implements Closeable {
 	 * @return true iff the group exists in the DB
 	 */
 	private boolean doesGroupExist(String groupname){
+		if(groupname == null){return false;}
+		
 		PreparedStatement findGroup_stmt;
 		try {
 			findGroup_stmt = connection.prepareStatement("SELECT * FROM Gruppe WHERE groupname = ?;");
@@ -225,6 +237,8 @@ public class DataBaseManager implements Closeable {
 	 * @return true iff the room exists in the DB
 	 */
 	private boolean doesRoomExist(String room_id){
+		if(room_id == null || room_id.equals("null")){return false;}
+		
 		PreparedStatement findGroup_stmt;
 		try {
 			findGroup_stmt = connection.prepareStatement("SELECT * FROM Room WHERE roomID = ?;");
@@ -280,6 +294,7 @@ public class DataBaseManager implements Closeable {
 	 * @throws UserDoesNotExistException
 	 */
 	private boolean isCreator(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
+	
 		checkUserAndEntry(username, entry_id);
 		try {
 			PreparedStatement stm = connection.prepareStatement(""
@@ -355,6 +370,9 @@ public class DataBaseManager implements Closeable {
 	 * @throws UserDoesNotExistException if the user does not exists
 	 */
 	private void checkIfUserExists(String username) throws UserDoesNotExistException{
+		if(username == null || username.equals("null")){
+			throw new IllegalArgumentException("username can not be null or 'null'");
+		}
 		if(! doesUserExist(username)){throw new UserDoesNotExistException(username);}
 	}
 	
@@ -364,6 +382,9 @@ public class DataBaseManager implements Closeable {
 	 * @throws EntryDoesNotExistException if the entry does not exists
 	 */
 	private void checkIfEntryExists(long entry_id) throws EntryDoesNotExistException{
+		if(entry_id <= 0){
+			throw new IllegalArgumentException("entry_id must be bigger than 0");
+		}
 		if(! doesEntryExist(entry_id)){throw new EntryDoesNotExistException(entry_id);}
 	}
 	
@@ -373,6 +394,9 @@ public class DataBaseManager implements Closeable {
 	 * @throws GroupDoesNotExistException
 	 */
 	private void checkIfGroupExists(String groupname) throws GroupDoesNotExistException{
+		if(groupname == null || groupname.equals("null")){
+			throw new IllegalArgumentException("groupname can not be null or 'null'");
+		}
 		if(! doesGroupExist(groupname)){throw new GroupDoesNotExistException(groupname);}
 	}
 	
@@ -382,6 +406,9 @@ public class DataBaseManager implements Closeable {
 	 * @throws RoomDoesNotExistException
 	 */
 	private void checkIfRoomExists(String room_id) throws RoomDoesNotExistException{
+		if(room_id == null || room_id.equals("null")){
+			throw new IllegalArgumentException("roomID can not be null or 'null'");
+		}
 		if(! doesRoomExist(room_id)){throw new RoomDoesNotExistException(room_id);}
 	}
 	
@@ -425,6 +452,7 @@ public class DataBaseManager implements Closeable {
 	 * @throws UserDoesNotExistException
 	 */
 	private void checkUserAndEntry(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
+		
 		checkIfUserExists(username);
 		checkIfEntryExists(entry_id);
 		
@@ -467,6 +495,11 @@ public class DataBaseManager implements Closeable {
 	// Add Into Table Methods
 	
 	private boolean addIntoGroup(Group g) throws GroupAlreadyExistsException, UserInGroupDoesNotExistsException {
+		if(g == null || g.getName() == "null"){
+			System.err.println("The group is null or has the name 'null'.");
+			return false;
+		}
+		
 		try {
 			checkIfGroupExists(g.getName());
 			throw new GroupAlreadyExistsException(g.getName());
@@ -505,6 +538,7 @@ public class DataBaseManager implements Closeable {
 	private boolean addIntoMemberOf(String groupname, String username) throws UserDoesNotExistException, GroupDoesNotExistException {
 		checkIfUserExists(username);
 		checkIfGroupExists(groupname);
+		if(isMemberOf(groupname, username)){return true;}
 		
 		PreparedStatement isertUser_stm;
 		try {
@@ -531,8 +565,12 @@ public class DataBaseManager implements Closeable {
 	 * @throws UserDoesNotExistException
 	 */
 	private boolean addIntoNotification(Notification n) throws EntryDoesNotExistException, UserDoesNotExistException {
-		
+		if(n == null){
+			throw new IllegalArgumentException("notification is null");
+		}
 		checkUserAndEntry(n.getUsername(), n.getEntry_id());
+		
+		
 		String addNotification = "INSERT INTO Notification (description, isOpened, time, username, entryID) VALUES (?, ?, ?, ? ,?)";
 		try {
 			PreparedStatement addNotction_stm = connection.prepareStatement(addNotification);
@@ -553,6 +591,9 @@ public class DataBaseManager implements Closeable {
 	}
 	
 	private boolean addIntoRoom(Room r) throws RoomAlreadyExistsException {
+		if(r == null){
+			throw new IllegalArgumentException("room is null");
+		}
 		if(doesRoomExist(r.getRoom_id())){throw new RoomAlreadyExistsException(r.getRoom_id());}
 		
 		String addRoom = "INSERT INTO Room VALUES (?, ?)";
@@ -572,6 +613,9 @@ public class DataBaseManager implements Closeable {
 	}
 	
 	private boolean addIntoUser(User u) throws UsernameAlreadyExistsException {
+		if(u == null){
+			throw new IllegalArgumentException("user is null");
+		}
 		// check if the username already exists.
 		if (doesUserExist(u.getUsername())) {
 			throw new UsernameAlreadyExistsException();
@@ -607,6 +651,12 @@ public class DataBaseManager implements Closeable {
 	 * @return true if the action was successful, false otherwise
 	 */
 	private boolean addIntoEntry(CalendarEntry e) {
+		
+		// TODO handle when roomId = null or "null" or ""
+		
+		if(e == null){
+			throw new IllegalArgumentException("entry is null");
+		}
 		
 		String insert_entry = "INSERT INTO CalendarEntry (startTime, endTime, location, description, roomID, creator) "
 				+ "VALUES (?, ?, ?, ?, ?, ?)"; // without setting entryID -> default value
@@ -644,6 +694,9 @@ public class DataBaseManager implements Closeable {
 	 * @throws InvitationAlreadyExistsException if there is already an Invitation for this user-entry pair
 	 */
 	private boolean addIntoInvitation(Invitation inv) throws EntryDoesNotExistException, UserDoesNotExistException, InvitationAlreadyExistsException{
+		if(inv == null){
+			throw new IllegalArgumentException("invitation is null");
+		}
 		
 		try {
 			checkIfInvitationExists(inv.getUsername(), inv.getEntry_id());  // throws an exception if the invitation does not exists.
@@ -681,6 +734,10 @@ public class DataBaseManager implements Closeable {
 	 * @throws UserDoesNotExistException
 	 */
 	private boolean addIntoAlarm(Alarm a) throws AlarmAlreadyExistsException, EntryDoesNotExistException, UserDoesNotExistException{
+		if(a == null){
+			throw new IllegalArgumentException("alarm is null");
+		}
+		
 		try {
 			checkIfAlarmExists(a.getUsername(), a.getEntry_id());  // throws an exception if the alarm does not exists.
 			// the alarm already exists
@@ -744,6 +801,10 @@ public class DataBaseManager implements Closeable {
 	 * @return true if the action was successful. False otherwise (for example if already the exact same reservation exists)
 	 */
 	private boolean addIntoRoomReservation(RoomReservation rr){
+		if(rr == null){
+			throw new IllegalArgumentException("RoomReservation is null");
+		}
+		
 		try{
 			String add_RoomRes = "INSERT INTO RoomReservation (roomID, startTime, endTime, entryID) VALUES (?, ?, ?, ?);";
 			PreparedStatement addRoomRes_stmt = connection.prepareStatement(add_RoomRes);
@@ -780,6 +841,7 @@ public class DataBaseManager implements Closeable {
 		
 		checkUserAndEntry(username, entry_id);
 		checkIfInvitationExists(username, entry_id);
+		
 		
 		String setValue = "UPDATE Invitation "
 				+ "SET isShowing = ? "
@@ -851,7 +913,7 @@ public class DataBaseManager implements Closeable {
 	 * @return the entryID of the last added entry (the highest entryID) -1 if something went wrong.
 	 */
 	private long getLastEntryID(){
-		// get entry_id of the just added entry
+		// get entry_id of the last added entry
 		String get_id = "SELECT MAX(entryID) FROM CalendarEntry;";
 		Statement get_id_stmt;
 		try {
@@ -1237,6 +1299,10 @@ public class DataBaseManager implements Closeable {
 	 * @throws UserDoesNotExistException
 	 */
 	public boolean isMemberOf(String groupname, String username) throws UserDoesNotExistException{
+		if(username == null || groupname == null){
+			System.err.println("username or groupname are null!");
+			return false;
+		}
 		checkIfUserExists(username);
 		if(! doesGroupExist(groupname)){return false;}
 		
@@ -1299,6 +1365,9 @@ public class DataBaseManager implements Closeable {
 	}
 	
 	public Room getRoom(String room_id) throws RoomDoesNotExistException{
+		if(room_id == null || room_id.equals("null")){
+			throw new IllegalArgumentException("room_id can not be null or 'null'");
+		}
 		PreparedStatement getAlarm_stm;
 		try {
 			getAlarm_stm = connection.prepareStatement("SELECT * FROM Room WHERE roomID = ?; ");
@@ -1480,6 +1549,10 @@ public class DataBaseManager implements Closeable {
 	 * @return HashSet of all reservations for a given room.
 	 */
 	public HashSet<RoomReservation> getReservationsForRoom(Room r){
+		if(r == null){
+			return null;
+		}
+		
 		PreparedStatement getRes_stm;
 		try {
 			getRes_stm = connection.prepareStatement("SELECT * FROM RoomReservation WHERE roomID=?");
@@ -1603,7 +1676,9 @@ public class DataBaseManager implements Closeable {
 	 * @throws EntryDoesNotExistException 
 	 */
 	public boolean editAlarm(String username, long entry_id, long newAlarmTime) throws EntryDoesNotExistException, UserDoesNotExistException {
-
+		// TODO handle negative and illegal newAlarmtimes 
+		checkUserAndEntry(username, entry_id);
+		
 		try {
 			boolean bool = addIntoAlarm(new Alarm(newAlarmTime, username, entry_id));
 			return bool;
@@ -1641,6 +1716,9 @@ public class DataBaseManager implements Closeable {
 	 * @throws NotificationDoesNotExistException if the notification does not exist in the DB. 
 	 */
 	public boolean editNotification(Notification n) throws NotificationDoesNotExistException{
+		if(n == null){
+			return false;
+		}
 		checkIfNotificationExists(n.getNotificationID());
 		
 		String edit_notific = "UPDATE Notification "
@@ -1709,8 +1787,9 @@ public class DataBaseManager implements Closeable {
 	 * @throws UserDoesNotExistException 
 	 */
 	public boolean editEntry(CalendarEntry newEntry, String username) throws EntryDoesNotExistException, UserDoesNotExistException{
-		
+		// TODO entry = null. what to do?
 		// TODO update with alarm etc...
+		
 		// checks
 		checkUserAndEntry(username, newEntry.getEntryID());
 		checkIfUserExists(newEntry.getCreator());
@@ -1829,6 +1908,7 @@ public class DataBaseManager implements Closeable {
 	 */
 	public boolean hideEventGroup(String groupname, int entry_id) throws GroupDoesNotExistException, UserInGroupDoesNotExistsException, EntryDoesNotExistException, InvitationDoesNotExistException{
 		checkIfEntryExists(entry_id); // to detect an exception early.
+		checkIfGroupExists(groupname);
 		
 		for(User u : getGroup(groupname).getUsers()){
 			try {
@@ -1889,10 +1969,7 @@ public class DataBaseManager implements Closeable {
 		}
 	}
 	
-	public boolean revokeAdmin(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, NotAllowedException{
-		if(isCreator(username, entry_id)){
-			throw new NotAllowedException("The creator can not be removed as admin! ('"+username+"' is the creator of '"+entry_id+"')");
-		}
+	public boolean revokeAdmin(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
 		
 		try {
 			PreparedStatement stm = connection.prepareStatement("DELETE FROM IsAdmin WHERE entryID = ? AND username = ?");
@@ -1930,8 +2007,11 @@ public class DataBaseManager implements Closeable {
 	 * @throws UserDoesNotExistException 
 	 * @throws EntryDoesNotExistException 
 	 */
-	public boolean deleteEntry(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
-		
+	public boolean deleteEntry(String username, long entry_id) {
+		if(username == null){
+			System.err.println("username is null");
+			return false;
+		}
 		try {
 			PreparedStatement stm = connection.prepareStatement("DELETE FROM CalendarEntry WHERE entryID = ?");
 			stm.setLong(1, entry_id);
@@ -1951,6 +2031,10 @@ public class DataBaseManager implements Closeable {
 	 * @return true iff the action was successful. false otherwise.
 	 */
 	public boolean deleteRoomReservation(RoomReservation rr){
+		if(rr == null){
+			System.err.println("roomreservation is null");
+			return false;
+		}
 		try {
 			PreparedStatement stm = connection.prepareStatement("DELETE FROM RoomReservation WHERE roomID = ? and startTime = ? and endTime = ?;");
 			int i = 0;
@@ -1973,8 +2057,11 @@ public class DataBaseManager implements Closeable {
 	 * @return true iff action was successful. false otherwise
 	 * @throws GroupDoesNotExistException 
 	 */
-	public boolean removeUserFromGroup(String username, String groupname) throws GroupDoesNotExistException{
-		checkIfGroupExists(groupname);
+	public boolean removeUserFromGroup(String username, String groupname){
+		if(username == null || groupname == null){
+			System.err.println("username or groupname == null");
+			return false;
+		}
 		
 		PreparedStatement removeUser_stm;
 		try {
@@ -2000,6 +2087,10 @@ public class DataBaseManager implements Closeable {
 	 * @return
 	 */
 	public boolean deleteGroup(String groupname){
+		if(groupname == null){
+			System.err.println("groupname is null");
+			return false;
+		}
 		
 		PreparedStatement removeGroupFromMemberOf_stm;
 		PreparedStatement deleteGroup_stm;
@@ -2026,6 +2117,11 @@ public class DataBaseManager implements Closeable {
 	
 	
 	public boolean deleteRoom(String roomID){
+		if(roomID == null){
+			System.err.println("roomID is null!");
+			return false;
+		}
+		
 		
 		String deleteRoom = "DELETE FROM Room	WHERE roomID = ?";
 		try {

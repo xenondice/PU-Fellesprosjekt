@@ -67,6 +67,7 @@ public abstract class Command {
 	 * @return
 	 */
 	public static Command getCommand(String command) {
+		// TODO can be written shorter as commands.get(command) or something like that.
 		for (Command command_type : commands)
 			if (command.equals(command_type.getCommand()))
 				return command_type;
