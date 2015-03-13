@@ -249,8 +249,6 @@ public class RequestHandler{
 	
 	public synchronized static boolean removeUserFromGroup(User requestor, String username, String groupname) throws GroupDoesNotExistException, SessionExpiredException, HasNotTheRightsException, UserDoesNotExistException {
 		validate(requestor);
-		if (!dbm.isMemberOf(groupname, requestor.getUsername()))
-			throw new HasNotTheRightsException();
 		return dbm.removeUserFromGroup(username, groupname);
 	}
 	
