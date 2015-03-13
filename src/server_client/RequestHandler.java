@@ -24,7 +24,9 @@ import user.Group;
 import user.User;
 
 public class RequestHandler{
-
+	
+	// TODO not all methods must be synchronized --lukas
+	
 	private static DataBaseManager dbm;
 	private static ServerSocket server;
 	private static Set<ServerClientHandler> currently_connected;
@@ -34,6 +36,7 @@ public class RequestHandler{
 	public static final long WAIT_BEFORE_TIMOUT = 1440000;
 	
 	public static void main(String[] args) {
+		// TODO dont put the dispose() here, but rather at the end of the acceptClinets() function? --lukas
 		init();
 		acceptClients();
 		dispose();
@@ -101,11 +104,12 @@ public class RequestHandler{
 		if (client.getUser() == null ) System.out.println("not identified client");
 		else System.out.println(client.getUser().getUsername());
 		currently_connected.remove(client);
+		// TODO does the request handler have to make sure that the client really disconnects? -- lukas
 	}
 	
 	private static void sendToInvitedIfLoggedIn(String message, long entry_id) {
 		Set<User> users = dbm.getInvitedUsersForEntry(entry_id);
-		
+		// TODO more efficient to do a search here than to do several searches in 'getUserHandlerIfactive'?--lukas
 		for (User user : users) {
 			ServerClientHandler handler = getUserHandlerIfActive(user.getUsername());
 			if (handler != null) {
