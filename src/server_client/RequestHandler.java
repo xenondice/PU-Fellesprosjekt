@@ -10,12 +10,15 @@ import room_booking.Room;
 import room_booking.RoomBookingHandler;
 import calendar.Calendar;
 import calendar.CalendarEntry;
+import calendar.Invitation;
+import calendar.InvitationBuilder;
 import calendar.Notification;
 import dbms.DataBaseManager;
 import exceptions.EntryDoesNotExistException;
 import exceptions.GroupAlreadyExistsException;
 import exceptions.GroupDoesNotExistException;
 import exceptions.HasNotTheRightsException;
+import exceptions.InvitationAlreadyExistsException;
 import exceptions.InvitationDoesNotExistException;
 import exceptions.RoomAlreadyBookedException;
 import exceptions.SessionExpiredException;
@@ -211,18 +214,39 @@ public class RequestHandler{
 		return dbm.hideEventGroup(groupname, entry_id); //TODO: Add send notification
 	}
 	
-	public synchronized static boolean inviteUserToEntry(User requestor, String username, int entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException, SessionExpiredException {
+	public synchronized static boolean inviteUserToEntry(User requestor, String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException, SessionExpiredException, InvitationAlreadyExistsException {
 		validate(requestor);
 		if (!dbm.isAllowedToEdit(requestor.getUsername(), entry_id))
 			throw new HasNotTheRightsException();
-		return false;//dbm.inviteUser(requestor.getUsername(), username, entry_id); //TODO: Add send notification, make invitation
+		
+		InvitationBuilder invitation_builder = new InvitationBuilder();
+		invitation_builder.setEntry_id(entry_id);
+		invitation_builder.setGoing(true);
+		invitation_builder.setShowing(true);
+		invitation_builder.setUsername(username);
+		Invitation inv = invitation_builder.build();
+		return dbm.addInvitation(inv);
+		//TODO: Add send notification
 	}
 	
-	public synchronized static boolean inviteGroupToEntry(User requestor, String groupname, int entry_id) throws GroupDoesNotExistException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException, SessionExpiredException {
+	public synchronized static boolean inviteGroupToEntry(User requestor, String groupname, long entry_id) throws GroupDoesNotExistException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException, SessionExpiredException, InvitationAlreadyExistsException {
 		validate(requestor);
 		if (!dbm.isAllowedToEdit(requestor.getUsername(), entry_id))
 			throw new HasNotTheRightsException();
-		return false;//dbm.inviteGroup(requestor.getUsername(), groupname, entry_id); //TODO: Add send notification, make invitation
+		
+		for (User user : dbm.getGroup(groupname).getUsers()) {
+			InvitationBuilder invitation_builder = new InvitationBuilder();
+			invitation_builder.setEntry_id(entry_id);
+			invitation_builder.setGoing(true);
+			invitation_builder.setShowing(true);
+			invitation_builder.setUsername(user.getUsername());
+			Invitation inv = invitation_builder.build();
+			
+			if (! dbm.addInvitation(inv))
+				return false;
+		}
+		return true;
+		 //TODO: Add send notification
 	}
 	
 	/* ===============
