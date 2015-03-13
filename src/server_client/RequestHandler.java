@@ -32,9 +32,6 @@ public class RequestHandler{
 	public static final int PORT = 80;
 	public static final long CHECK_FOR_EXPECTED_INPUT_INTERVAL = 500;
 	public static final long WAIT_BEFORE_TIMOUT = 60000;
-	public static final char STATUS_OK = 'a';
-	public static final char STATUS_DISCONNECTED = 's';
-	public static final char STATUS_NOTIFICATION = 'n';
 	
 	public static void main(String[] args) {
 		init();
@@ -208,14 +205,14 @@ public class RequestHandler{
 		validate(requestor);
 		if (!dbm.isAllowedToEdit(requestor.getUsername(), entry_id))
 			throw new HasNotTheRightsException();
-		return dbm.inviteUser(requestor.getUsername(), username, entry_id); //TODO: Add send notification, make invitation
+		return false;//dbm.inviteUser(requestor.getUsername(), username, entry_id); //TODO: Add send notification, make invitation
 	}
 	
 	public synchronized static boolean inviteGroupToEntry(User requestor, String groupname, int entry_id) throws GroupDoesNotExistException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException, SessionExpiredException {
 		validate(requestor);
 		if (!dbm.isAllowedToEdit(requestor.getUsername(), entry_id))
 			throw new HasNotTheRightsException();
-		return dbm.inviteGroup(requestor.getUsername(), groupname, entry_id); //TODO: Add send notification, make invitation
+		return false;//dbm.inviteGroup(requestor.getUsername(), groupname, entry_id); //TODO: Add send notification, make invitation
 	}
 	
 	/* ===============

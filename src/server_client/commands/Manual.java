@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import exceptions.ForcedReturnException;
+import server_client.Argument;
+import server_client.Argument.ArgumentType;
 import server_client.Command;
 import server_client.ServerClientHandler;
 
@@ -26,9 +28,9 @@ public class Manual extends Command {
 	}
 
 	@Override
-	public String[] getArguments() {
-		return new String[]{
-				"command"
+	public Argument[] getArguments() {
+		return new Argument[]{
+				new Argument(false, "command", ArgumentType.text),
 		};
 	}
 
@@ -45,22 +47,24 @@ public class Manual extends Command {
 			return "Not a command!";
 		}
 		
-		handler.status("Manual for " + command.getCommand() + ":");
+		String message = ""
+				+ "Manual for " + command.getCommand() + ":\n"
+				+ "\n"
+				+ command.getManual() + "\n"
+				+ "\n"
+				+ "Syntax: " + command.getCommand();
 		
-		handler.status(command.getManual());
-		
-		String message = "Syntax: " + command.getCommand();
-		for (String argument : command.getArguments())
+		for (Argument argument : command.getArguments())
 			message += " " + argument;
 		
 		int i = 0;
 		for (String example : command.getExamples()) {
 			i++;
-			message += System.lineSeparator();
-			message += System.lineSeparator();
-			message += "Example " + i + ":";
-			message += System.lineSeparator();
-			message += example;
+			message += ""
+					+ "\n"
+					+ "\n"
+					+ "Example " + i + ":\n"
+					+ example;
 		}
 		
 		return message;

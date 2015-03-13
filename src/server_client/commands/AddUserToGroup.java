@@ -9,9 +9,11 @@ import exceptions.GroupDoesNotExistException;
 import exceptions.HasNotTheRightsException;
 import exceptions.SessionExpiredException;
 import exceptions.UserDoesNotExistException;
+import server_client.Argument;
 import server_client.Command;
 import server_client.RequestHandler;
 import server_client.ServerClientHandler;
+import server_client.Argument.ArgumentType;
 
 public class AddUserToGroup extends Command {
 	
@@ -31,10 +33,10 @@ public class AddUserToGroup extends Command {
 	}
 
 	@Override
-	public String[] getArguments() {
-		return new String[]{
-			"name",
-			"username"
+	public Argument[] getArguments() {
+		return new Argument[]{
+			new Argument(false, "name", ArgumentType.text),
+			new Argument(false, "username", ArgumentType.text),
 		};
 	}
 

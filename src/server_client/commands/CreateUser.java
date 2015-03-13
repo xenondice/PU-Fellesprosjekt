@@ -6,9 +6,11 @@ import java.util.concurrent.TimeoutException;
 
 import exceptions.ForcedReturnException;
 import exceptions.UsernameAlreadyExistsException;
+import server_client.Argument;
 import server_client.Command;
 import server_client.RequestHandler;
 import server_client.ServerClientHandler;
+import server_client.Argument.ArgumentType;
 import user.User;
 import user.UserBuilder;
 
@@ -30,12 +32,12 @@ public class CreateUser extends Command {
 	}
 
 	@Override
-	public String[] getArguments() {
-		return new String[]{
-			"username",
-			"password",
-			"name",
-			"email"
+	public Argument[] getArguments() {
+		return new Argument[]{
+			new Argument(false, "username", ArgumentType.text),
+			new Argument(false, "password", ArgumentType.text),
+			new Argument(true, "name", ArgumentType.text),
+			new Argument(true, "email", ArgumentType.text),
 		};
 	}
 

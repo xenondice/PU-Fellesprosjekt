@@ -7,6 +7,8 @@ import java.util.concurrent.TimeoutException;
 
 import calendar.Notification;
 import exceptions.ForcedReturnException;
+import server_client.Argument;
+import server_client.Argument.ArgumentType;
 import server_client.Command;
 import server_client.RequestHandler;
 import server_client.ServerClientHandler;
@@ -29,9 +31,9 @@ public class ShowNotifications extends Command {
 	}
 
 	@Override
-	public String[] getArguments() {
-		return new String[]{
-			"username",
+	public Argument[] getArguments() {
+		return new Argument[]{
+			new Argument(false, "username", ArgumentType.text),
 		};
 	}
 

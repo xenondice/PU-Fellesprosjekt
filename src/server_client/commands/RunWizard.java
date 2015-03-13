@@ -1,25 +1,27 @@
 package server_client.commands;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import exceptions.ForcedReturnException;
 import server_client.Argument;
+import server_client.Argument.ArgumentType;
 import server_client.Command;
 import server_client.ServerClientHandler;
-import server_client.Argument.ArgumentType;
+import server_client.Wizard;
 
-public class Help extends Command {
+public class RunWizard extends Command {
 
 	@Override
 	public String getCommand() {
-		return "help";
+		return "wiz";
 	}
 
 	@Override
 	public String getDescription() {
-		return "Show a short description of a command.";
+		return "Makes it easier to write a command.";
 	}
 
 	@Override
@@ -30,7 +32,7 @@ public class Help extends Command {
 	@Override
 	public Argument[] getArguments() {
 		return new Argument[]{
-			new Argument(false, "command", ArgumentType.text),
+				new Argument(false, "command", ArgumentType.text),
 		};
 	}
 
@@ -44,16 +46,19 @@ public class Help extends Command {
 		
 		Command command = Command.getCommand(arguments.get(0));
 		if (command == null)
-			return "Not a command!";
+			return "Not a command!\n";
 		
-		String message = ""
-				+ command.getDescription() + "\n"
-				+ "Syntax: " + command.getCommand();
+		Wizard wizard = new Wizard();
+		for (Argument argument : command.getArguments()) {
+			wizard.add(argument);
+		}
 		
-		for (Argument argument : command.getArguments())
-			message += " " + argument;
+		List<Object> results = handler.runWizard(wizard);
+		List<String> string_results = new ArrayList<>();
 		
-		return message;
+		for (Object result : results)
+			string_results.add(result.toString());
+		
+		return command.run(handler, string_results);
 	}
-
 }

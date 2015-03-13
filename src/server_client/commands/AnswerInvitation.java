@@ -5,9 +5,11 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import exceptions.ForcedReturnException;
+import server_client.Argument;
 import server_client.Command;
 import server_client.RequestHandler;
 import server_client.ServerClientHandler;
+import server_client.Argument.ArgumentType;
 
 public class AnswerInvitation extends Command {
 	
@@ -27,10 +29,10 @@ public class AnswerInvitation extends Command {
 	}
 
 	@Override
-	public String[] getArguments() {
-		return new String[]{
-			"entryID",
-			"answer"
+	public Argument[] getArguments() {
+		return new Argument[]{
+			new Argument(false, "entryID", ArgumentType.text),
+			new Argument(false, "answer", ArgumentType.logic),
 		};
 	}
 

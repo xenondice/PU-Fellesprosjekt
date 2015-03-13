@@ -5,12 +5,9 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import exceptions.ForcedReturnException;
-import exceptions.UserDoesNotExistException;
-import exceptions.WrongPasswordException;
+import server_client.Argument;
 import server_client.Command;
-import server_client.RequestHandler;
 import server_client.ServerClientHandler;
-import user.User;
 
 public class Logout extends Command {
 
@@ -30,8 +27,8 @@ public class Logout extends Command {
 	}
 
 	@Override
-	public String[] getArguments() {
-		return new String[0];
+	public Argument[] getArguments() {
+		return new Argument[0];
 	}
 
 	@Override

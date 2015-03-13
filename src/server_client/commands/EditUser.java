@@ -8,6 +8,8 @@ import exceptions.ForcedReturnException;
 import exceptions.HasNotTheRightsException;
 import exceptions.SessionExpiredException;
 import exceptions.UserDoesNotExistException;
+import server_client.Argument;
+import server_client.Argument.ArgumentType;
 import server_client.Command;
 import server_client.RequestHandler;
 import server_client.ServerClientHandler;
@@ -32,12 +34,12 @@ public class EditUser extends Command {
 	}
 
 	@Override
-	public String[] getArguments() {
-		return new String[]{
-			"username",
-			"password",
-			"name",
-			"email"
+	public Argument[] getArguments() {
+		return new Argument[]{
+			new Argument(false, "username", ArgumentType.text),
+			new Argument(false, "password", ArgumentType.text),
+			new Argument(false, "name", ArgumentType.text),
+			new Argument(false, "email", ArgumentType.text),
 		};
 	}
 

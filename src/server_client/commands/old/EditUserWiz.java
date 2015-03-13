@@ -1,4 +1,4 @@
-package server_client.commands;
+package server_client.commands.old;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import exceptions.ForcedReturnException;
-import exceptions.GroupDoesNotExistException;
 import exceptions.HasNotTheRightsException;
 import exceptions.SessionExpiredException;
 import exceptions.UserDoesNotExistException;
@@ -14,23 +13,25 @@ import server_client.Command;
 import server_client.RequestHandler;
 import server_client.ServerClientHandler;
 import server_client.ServerClientHandler.ArgumentType;
+import user.User;
+import user.UserBuilder;
 
-public class AddUserToGroupWiz extends Command {
+public class EditUserWiz extends Command {
 
 	@Override
 	public String getCommand() {
-		return "add-user-to-group-wiz";
+		return "edit-user-wiz";
 	}
 
 	@Override
 	public String getDescription() {
-		return "Add a user to a group using a wizard.";
+		return "Edit an existing user using a wizard.";
 	}
 
 	@Override
 	public String getManual() {
 		return ""
-				+ "Easier way of adding a user to a group.\n"
+				+ "Easier way of editing a user.\n"
 				+ "Walks you through each of the required arguments and asks again if an argument is wrong.";
 	}
 
@@ -52,26 +53,36 @@ public class AddUserToGroupWiz extends Command {
 		String intro_message = "";
 		
 		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in the name of the group you want to add a user to");
+		descriptions.add("Type in your username.");
 		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in username of the user you want to add");
-
+		descriptions.add("Type in new password to edit. Else: type in old password");
+		argument_types.add(ArgumentType.text);
+		descriptions.add("Type in new full name in quotes to edit. Else: type in old name");
+		argument_types.add(ArgumentType.text);
+		descriptions.add("Type in new email-address to edit. Else: type in old email-address");
+		
 		List<Object> result = handler.wizard(argument_types, descriptions, intro_message);
 		
+		UserBuilder user_builder = new UserBuilder();
+		user_builder.setUsername((String) result.get(0));
+		user_builder.setPassword((String) result.get(1));
+		user_builder.setName((String) result.get(2));
+		user_builder.setEmail((String) result.get(3));
+		user_builder.setSalt("");
+		User user = user_builder.build();
+		
 		try {
-			if (RequestHandler.removeUserFromGroup(handler.getUser(), arguments.get(0), arguments.get(1)))
-				return "User successfully added to group!";
-			else
-				return "User couldn't be added!";
-		} catch (GroupDoesNotExistException e) {
-			return "User couldn't be added - Group does not exist!";
+			if (RequestHandler.editUser(handler.getUser(), user)) {
+				return "User successfully edited!";
+			} else {
+				return "User could not be edited!";
+			}
 		} catch (UserDoesNotExistException e) {
-			return "User couldn't be added - User does not exist!";
+			return "User does not exist!";
 		} catch (HasNotTheRightsException e) {
-			return "User couldn't be added - User does not have the rights to add!";
+			return "You do not have the rights!";
 		} catch (SessionExpiredException e) {
-			return "User couldn't be added - Session expired!";
+			return "Session expired!";
 		}
 	}
 }
-

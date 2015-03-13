@@ -1,4 +1,4 @@
-package server_client.commands;
+package server_client.commands.old;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -11,22 +11,22 @@ import server_client.RequestHandler;
 import server_client.ServerClientHandler;
 import server_client.ServerClientHandler.ArgumentType;
 
-public class KickGroupWiz extends Command {
+public class InviteUserWiz extends Command {
 
 	@Override
 	public String getCommand() {
-		return "kick-group-wiz";
+		return "invite-user-wiz";
 	}
 
 	@Override
 	public String getDescription() {
-		return "Kick users in a group from a calendar entry using a wizard.";
+		return "Invite a user to a calendar entry using a wizard.";
 	}
 
 	@Override
 	public String getManual() {
 		return ""
-				+ "Easier way of kicking users in a group from a calendar entry.\n"
+				+ "Easier way of inviting a user to a calendar entry.\n"
 				+ "Walks you through each of the required arguments and asks again if an argument is wrong.";
 	}
 
@@ -48,21 +48,20 @@ public class KickGroupWiz extends Command {
 		String intro_message = "";
 		
 		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in group name of the group you wish to kick.");
+		descriptions.add("Type in the username of the user you would like to invite.");
 		argument_types.add(ArgumentType.number);
-		descriptions.add("Type in entryID of the entry you wish to kick the group from.");
-
+		descriptions.add("Type in the entryID of the calendar entry you wish to invite to.");
 		
 		List<Object> result = handler.wizard(argument_types, descriptions, intro_message);
 		
 		
 		try {
-			if (RequestHandler.kickGroupFromEntry(handler.getUser(), (String) result.get(0), (Integer) result.get(1)))
-				return "Users in group successfully kicked from calendar entry!";
+			if (RequestHandler.inviteUserToEntry(handler.getUser(), (String) result.get(0), (int) result.get(1)))
+				return "User successfully invited to calendar entry!";
 			else
-				return "Could not kick users in group from calendar entry!";
+				return "User couldn't be invited to calendar entry!";
 		} catch (Exception e) {
-			return "Could not kick users in group from calendar entry!";
+			return "User couldn't be invited to calendar entry!!";
 		}
 	}
 }

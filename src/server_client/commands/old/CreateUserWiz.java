@@ -1,4 +1,4 @@
-package server_client.commands;
+package server_client.commands.old;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -6,9 +6,7 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import exceptions.ForcedReturnException;
-import exceptions.HasNotTheRightsException;
-import exceptions.SessionExpiredException;
-import exceptions.UserDoesNotExistException;
+import exceptions.UsernameAlreadyExistsException;
 import server_client.Command;
 import server_client.RequestHandler;
 import server_client.ServerClientHandler;
@@ -16,22 +14,22 @@ import server_client.ServerClientHandler.ArgumentType;
 import user.User;
 import user.UserBuilder;
 
-public class EditUserWiz extends Command {
+public class CreateUserWiz extends Command {
 
 	@Override
 	public String getCommand() {
-		return "edit-user-wiz";
+		return "create-user-wiz";
 	}
 
 	@Override
 	public String getDescription() {
-		return "Edit an existing user using a wizard.";
+		return "Create a new user using a wizard.";
 	}
 
 	@Override
 	public String getManual() {
 		return ""
-				+ "Easier way of editing a user.\n"
+				+ "Easier way of creating a user.\n"
 				+ "Walks you through each of the required arguments and asks again if an argument is wrong.";
 	}
 
@@ -53,13 +51,13 @@ public class EditUserWiz extends Command {
 		String intro_message = "";
 		
 		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in your username.");
+		descriptions.add("Type in wanted username.");
 		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in new password to edit. Else: type in old password");
+		descriptions.add("Type in password.");
 		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in new full name in quotes to edit. Else: type in old name");
+		descriptions.add("Type in full name in quotes.");
 		argument_types.add(ArgumentType.text);
-		descriptions.add("Type in new email-address to edit. Else: type in old email-address");
+		descriptions.add("Type in email-address.");
 		
 		List<Object> result = handler.wizard(argument_types, descriptions, intro_message);
 		
@@ -72,17 +70,12 @@ public class EditUserWiz extends Command {
 		User user = user_builder.build();
 		
 		try {
-			if (RequestHandler.editUser(handler.getUser(), user)) {
-				return "User successfully edited!";
-			} else {
-				return "User could not be edited!";
-			}
-		} catch (UserDoesNotExistException e) {
-			return "User does not exist!";
-		} catch (HasNotTheRightsException e) {
-			return "You do not have the rights!";
-		} catch (SessionExpiredException e) {
-			return "Session expired!";
+			if (RequestHandler.createUser(user))
+				return "User successfully created!";
+			else
+				return "User couldn't be created!";
+		} catch (UsernameAlreadyExistsException e) {
+			return "Username already taken!";
 		}
 	}
 }

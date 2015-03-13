@@ -1,34 +1,34 @@
-package server_client.commands;
+package server_client.commands.old;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-import calendar.CalendarEntry;
-import calendar.CalendarEntryBuilder;
+import calendar.Notification;
 import exceptions.ForcedReturnException;
 import server_client.Command;
 import server_client.RequestHandler;
 import server_client.ServerClientHandler;
 import server_client.ServerClientHandler.ArgumentType;
 
-public class AnswerInvitationWiz extends Command {
+public class ShowNotificationsWiz extends Command {
 
 	@Override
 	public String getCommand() {
-		return "answer-invitation-wiz";
+		return "show-notifications-wiz";
 	}
 
 	@Override
 	public String getDescription() {
-		return "Answer an invitation using a wizard.";
+		return "Show notifications using a wizard.";
 	}
 
 	@Override
 	public String getManual() {
 		return ""
-				+ "Easier way of answering an invitation.\n"
+				+ "Easier way of showing notifications.\n"
 				+ "Walks you through each of the required arguments and asks again if an argument is wrong.";
 	}
 
@@ -49,20 +49,21 @@ public class AnswerInvitationWiz extends Command {
 		
 		String intro_message = "";
 		
-		argument_types.add(ArgumentType.number);
-		descriptions.add("Type in entryID of the calendar entry you wish to answer an invitation to.");
-		argument_types.add(ArgumentType.logic);
-		descriptions.add("Type in answer. 'True' or 'False'");
+		argument_types.add(ArgumentType.text);
+		descriptions.add("Type in username of the user you wish to see the notifications for.");
 		
 		List<Object> result = handler.wizard(argument_types, descriptions, intro_message);
 		
+		
 		try {
-			if (RequestHandler.invitationAnswer(handler.getUser(), (int) result.get(0), (boolean) result.get(1)))
-				return "Invitation successfully answered!";
-			else
-				return "Invitation couldn't be answered!";
+			HashSet<Notification> notifications = RequestHandler.getNotifications((String)result.get(0));
+			String s = "";
+			for (Notification notification : notifications) {
+				s += notification.toString() +"\n";
+			}
+			return s;
 		} catch (Exception e) {
-			return "Could not answer invitation!";
+			return "Notifications couldn't be found!";
 		}
 	}
 }

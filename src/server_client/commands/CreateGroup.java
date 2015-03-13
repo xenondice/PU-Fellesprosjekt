@@ -5,7 +5,8 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import exceptions.ForcedReturnException;
-import exceptions.GroupAlreadyExistsException;
+import server_client.Argument;
+import server_client.Argument.ArgumentType;
 import server_client.Command;
 import server_client.RequestHandler;
 import server_client.ServerClientHandler;
@@ -31,9 +32,9 @@ public class CreateGroup extends Command {
 	}
 
 	@Override
-	public String[] getArguments() {
-		return new String[]{
-			"name"
+	public Argument[] getArguments() {
+		return new Argument[]{
+			new Argument(false, "groupname", ArgumentType.text),
 		};
 	}
 

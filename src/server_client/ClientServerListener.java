@@ -23,7 +23,7 @@ public class ClientServerListener implements Runnable {
 					
 					char status = (char) server_input.read();
 					
-					if (!Client.ready()) {
+					if (!Client.ready() || status == Client.STATUS_NOTIFICATION) {
 						console_output.write(System.lineSeparator());
 						console_output.write(System.lineSeparator());
 						console_output.write("Incomming message from server:");
@@ -34,19 +34,22 @@ public class ClientServerListener implements Runnable {
 					while (server_input.ready()) {
 						console_output.write(server_input.read());
 						console_output.flush();
-						client_thread.interrupt();
+						if (status != Client.STATUS_NOTIFICATION) client_thread.interrupt();
 					}
 					
-					if (!Client.ready()) {
+					if (!Client.ready() || status == Client.STATUS_NOTIFICATION) {
 						console_output.write(System.lineSeparator());
 						console_output.flush();
 					}
 					
-					if (status == Client.STATUS_DISCONNECTED) {
+					if (status == Client.STATUS_DISCONNECT) {
 						Client.disconnect();
 						Client.markEnd();
 						client_thread.interrupt();
 						return;
+					} else if (status == Client.STATUS_DONE) {
+						console_output.write(System.lineSeparator());
+						console_output.flush();
 					}
 					
 					Client.markEnd();

@@ -13,6 +13,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import server_client.Argument.ArgumentType;
 import user.User;
 import exceptions.ForcedReturnException;
 
@@ -21,112 +22,40 @@ public class ServerClientHandler implements Runnable, Closeable {
 	private BufferedWriter client_output;
 	private Socket client;
 	private User user;
-	private String temp_message;
 	
-	public static enum ArgumentType {
-		number,
-		long_number,
-		text,
-		logic,
-	}
+	// Protocol declaration (headers to messages)
+	public static final int STATUS_DONE =			0;
+	public static final int STATUS_AWAIT_MORE =		1;
+	public static final int STATUS_DISCONNECT =		2;
+	public static final int STATUS_NOTIFICATION =	3;
+	public static final int STATUS_RETURN =			4;
 	
-	/*public static final String[][][] commands = { // Once login is done, store user creditals and change eg. calendar to show your calendar only
-		{
-			{"user", "Commands connected to users"},
-				{
-					"create",
-					"Create a new user",
-					"username"
-				},{
-					"edit",
-					"Edit an existing user",
-					"username"
-				},{
-					"make-admin",
-					"Make an existing user a admin",
-					"username"
-				}
-		},{
-			{"entry", "Commands connected to entries"},
-				{
-					"create",
-					"Create a new entry"
-				},{
-					"edit",
-					"Edit an existing entry",
-					"entryid"
-				},{
-					"delete",
-					"Delete an existing entry",
-					"entryid"
-				},{
-					"kick-user",
-					"Kick an invited user from an entry",
-					"username", "entryid"
-				},{
-					"kick-group",
-					"Kick invited users in a group from an entry",
-					"groupname", "entryid"
-				},{
-					"invite-user",
-					"Invite an user to an entry",
-					"username"
-				},{
-					"invite-group",
-					"Invite a group to an entry",
-					"groupname"
-				}
-		},{
-			{"group", "Commands connected to groups"},
-				{
-					"create",
-					"Create a new group",
-					"groupname"
-				},{
-					"add",
-					"Add an existing user to a group",
-					"username", "groupname"
-				},{
-					"remove",
-					"Remove an existing user from a group",
-					"username", "groupname"
-				}
-		},{
-			{
-				"calendar",
-				"Show the calendar of the given user",
-				"username"
-			}
-		},{
-			{
-				"help",
-				"Show a list over all the commands"
-			}
-		},{
-			{"notification", "Commands connected to notifications"},
-				{
-					"answer",
-					"Answer to a invitation",
-					"username", "entryid"
-				},{
-					"show",
-					"Show all active notifications of a given user",
-					"username"
-				}
-		}
-	};*/
+	public static final String ESCAPE_STRING =		"/c";
 	
+	private static final String FORMATTING_RULES = "([^\\s\"']+)|\"([^\"]*)\"|'([^']*)'";
+	
+	/**
+	 * Runs on its own thread and looks for input from a open socket.
+	 * If anything is found, the input is formatted and checked against a set of commands.
+	 * If a command is recognized, the command is run with a given set of arguments.
+	 * @param open socket to a user
+	 * @throws IOException
+	 */
 	public ServerClientHandler(Socket user) throws IOException {
 		client_output = new BufferedWriter(new OutputStreamWriter(user.getOutputStream()));
 		client_input = new BufferedReader(new InputStreamReader(user.getInputStream()));
 		client = user;
-		temp_message = "";
 	}
 	
+	/**
+	 * Formats a request according to a set RegeX expression.
+	 * @param Request string to be formatted.
+	 * @return A list over the words in the string divided by spaces, and grouped by quotes and all in lower case.
+	 */
 	private List<String> formatRequest(String request) {
 		List<String> splitted_answer = new ArrayList<>();
 		
-		Pattern regex_pattern = Pattern.compile("([^\\s\"']+)|\"([^\"]*)\"|'([^']*)'");
+		Pattern regex_pattern = Pattern.compile(FORMATTING_RULES);
 		Matcher matcher = regex_pattern.matcher(request);
 		
 		while (matcher.find())
@@ -137,196 +66,279 @@ public class ServerClientHandler implements Runnable, Closeable {
 		return splitted_answer;
 	}
 	
-	public List<String> expectInput() throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+	/**
+	 * Waits for input from a user.
+	 * @return What the user answered.
+	 * @throws IOException
+	 * @throws TimeoutException
+	 * @throws InterruptedException if user disconnects.
+	 * @throws ForcedReturnException if user cancels operation.
+	 */
+	private String expectInput() throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		
 		long time_inactive = 0;
 		
 		while (true) {
 			if (client_input.ready()) {
-				time_inactive = 0;
 				
-				char status = (char) client_input.read();
-				if (status == RequestHandler.STATUS_DISCONNECTED) {
+				// Handle header
+				int status = client_input.read();
+				if (status == STATUS_DISCONNECT) {
 					throw new InterruptedException();
+				} else if (status == STATUS_RETURN) {
+					throw new ForcedReturnException("Cancelled by user!");
 				}
-				
-				List<String> formatted = formatRequest(client_input.readLine());
-				if (formatted.size() > 0) {
-					if (formatted.get(0).equals("cancel")) throw new ForcedReturnException("Cancelled by user!");
-					return formatted;
-				}
+		
+				return client_input.readLine();
 			}
-				
+			
 			if (time_inactive > RequestHandler.WAIT_BEFORE_TIMOUT) throw new TimeoutException();
 			time_inactive += RequestHandler.CHECK_FOR_EXPECTED_INPUT_INTERVAL;
 			Thread.sleep(RequestHandler.CHECK_FOR_EXPECTED_INPUT_INTERVAL);
 		}
 	}
 	
-	public synchronized void explain(String message) throws IOException {
-		temp_message += message;
-		temp_message += System.lineSeparator();
-	}
-	
-	public synchronized void space() throws IOException {
-		temp_message += System.lineSeparator();
-	}
-	
-	public synchronized void status(String message) throws IOException {
-		temp_message += message;
-		temp_message += System.lineSeparator();
-		temp_message += System.lineSeparator();
-	}
-	
-	public synchronized String getBuffer() {
-		String message = temp_message;
-		temp_message = "";
-		return message;
-	}
-	
-	private synchronized void send(char status, String message) throws IOException {
-		client_output.write(status + message);
+	/**
+	 * Send a message to the client with a given header
+	 * @param status
+	 * @param message
+	 * @throws IOException
+	 */
+	private synchronized void send(int status, String message) throws IOException {
+		client_output.write(((char) status) + message + '\n');
 		client_output.flush();
 	}
 	
-	public int verifyInt(String argument) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
-		while (true) {
-			try {
-				return Integer.parseInt(argument);
-			} catch (NumberFormatException e) {
-				argument = ask("\"" + argument + "\" is not an integer, please type only this argument again.", 1).get(0);
-			}
-		}
-	}
-	
-	public long verifyLong(String argument) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
-		while (true) {
-			try {
-				return Long.parseLong(argument);
-			} catch (NumberFormatException e) {
-				argument = ask("\"" + argument + "\" is not a long, please type only this argument again.", 1).get(0);
-			}
-		}
-	}
-	
-	public boolean verifyYesOrNo(String response) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
-		while (true) {
-			if (response.equals("yes") || response.equals("y"))
-				return true;
-			else if (response.equals("no") || response.equals("n"))
-				return false;
-			
-			response = ask("Please answer with yes[y] or no[n]!", 1).get(0);
-		}
-	}
-	
+	/**
+	 * Asks the user a question.
+	 * @param Question to be asked.
+	 * @param How many arguments that are accepted.
+	 * @return The arguments given by the user.
+	 * @throws IOException
+	 * @throws TimeoutException
+	 * @throws InterruptedException
+	 * @throws ForcedReturnException
+	 */
 	public List<String> ask(String question, int number_of_arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		
-		explain(question);
-		send(RequestHandler.STATUS_OK, getBuffer());
+		send(STATUS_AWAIT_MORE, question);
 		
-		while (true) {
-			List<String> response = expectInput();
-			
-			if (response.size() == number_of_arguments) return response;
-			
-			explain("Please provide " + number_of_arguments + " argument(s)!");
-			send(RequestHandler.STATUS_OK, getBuffer());
-		}
+		List<String> response = formatRequest(expectInput());
+		
+		if (response.size() != number_of_arguments)
+			throw new ForcedReturnException("Please provide " + number_of_arguments + " number of argument(s)!");
+		
+		return response;
+	}
+	
+	/**
+	 * Asks the user a question.
+	 * @param Question to be asked
+	 * @return What the user wrote in one complete line in lower case.
+	 * @throws IOException
+	 * @throws TimeoutException
+	 * @throws InterruptedException
+	 * @throws ForcedReturnException
+	 */
+	public String ask(String question) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+		send(STATUS_AWAIT_MORE, question);
+		return expectInput().toLowerCase();
 	}
 
-	public List<Object> wizard(List<ArgumentType> argument_types, List<String> description, String intro_message) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
-		
-		if (argument_types.size() != description.size())
-			throw new ForcedReturnException("Internal error!");
-		
-		if (!intro_message.isEmpty()) status(intro_message);
+	/**
+	 * Runs through a wizard and asks about the values. Guarantees that the non-optional values are not null.
+	 * @param wizard
+	 * @return A list of objects that is guaranteed to be the object types specified in the wizard. Needs to be casted!
+	 * @throws IOException
+	 * @throws TimeoutException
+	 * @throws InterruptedException
+	 * @throws ForcedReturnException
+	 */
+	public List<Object> runWizard(Wizard wizard) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		
 		List<Object> results = new ArrayList<>();
 		
-		for (int i = 0; i < argument_types.size(); i++) {
+		for (int i = 0; i < wizard.size(); i++) {
+			Argument argument = wizard.get(i);
 			
-			String answer = ask(description.get(i) + " (" + (i+1) + "/" + argument_types.size() + ")",1).get(0);
+			String answer = ask("Enter " + (argument.optional?"optional ":"") + argument.type.name().replace('_', ' ') + " " + argument.description + " (" + (i+1) + "/" + wizard.size() + ")");
+			Object result = null;
 			
-			Object result;
+			boolean repeat = true;
 			
-			switch (argument_types.get(i)) {
-				case long_number:
-					result = verifyLong(answer);
+			while (repeat) {
+				String question;
+				
+				if (answer.isEmpty() && argument.optional) {
 					break;
-				case number:
-					result = verifyInt(answer);
-					break;
-				case text:
+				} else if (argument.type == ArgumentType.number) {
+					try {
+						result = Integer.parseInt(answer);
+						break;
+					} catch (NumberFormatException e) {
+						question = "Answer is not an integer! Please try again.";
+					}
+					question = "";
+				} else if (argument.type == ArgumentType.long_number) {
+					try {
+						result = Long.parseLong(answer);
+						break;
+					} catch (NumberFormatException e) {
+						question = "Answer is not a long! Please try again.";
+					}
+				} else if (argument.type == ArgumentType.text) {
 					result = answer;
 					break;
-				case logic:
-					result = verifyYesOrNo(answer);
-				default:
-					result = null;
-					break;
-			}
-			
+				} else if (argument.type == ArgumentType.logic) {
+					if (answer.equals("yes") || answer.equals("y")) {
+						result = true;
+						break;
+					} else if (answer.equals("no") || answer.equals("n")) {
+						result = false;
+						break;
+					}
+					question = "Please answer with yes[y] or no[n]!";
+				} else if (argument.type == ArgumentType.date) {
+					result = answer;
+					break; //TODO: Make it read the format DD/MM/YYYY and DD/MM/YYYY MM:SS
+				} else {
+					throw new ForcedReturnException("Internal error!");
+				}
+				answer = ask(question);
+			}	
 			results.add(result);
 		}
-		
 		return results;
 	}
 	
+	/**
+	 * Gets a list of arguments in and runs the commands (first argument) if everything is correct
+	 * @param arguments
+	 * @throws IOException
+	 * @throws TimeoutException
+	 * @throws InterruptedException
+	 * @throws ForcedReturnException
+	 */
 	private void handleRequest(List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+		
+		if (arguments.size() == 0) {
+			send(STATUS_DONE, "");
+			return;
+		}
 		
 		String command = arguments.remove(0);
 		
 		Command command_type = Command.getCommand(command);
 		if (command_type == null) {
-			status("Unrecognized command! Type \"commands\" for a list over commands.");
-			send(RequestHandler.STATUS_OK, getBuffer());
+			send(STATUS_DONE, "Unrecognized command! Type \"commands\" for a list over commands.");
 			return;
 		}
 		
-		if (arguments.size() != command_type.getArguments().length) {
-			status("Command syntax is wrong! Type \"help command\" or \"man command\" for information about the command.");
-			send(RequestHandler.STATUS_OK, getBuffer());
+		if (!checkArguments(command_type, arguments)) {
+			send(STATUS_DONE, "Command syntax is wrong! Type \"help command\" or \"man command\" for information about the command.");
 			return;
 		}
 		
-		status(command_type.run(this, arguments));
-		send(RequestHandler.STATUS_OK, getBuffer());
+		send(STATUS_DONE, command_type.run(this, arguments));
 	}
 	
+	/**
+	 * Verifies that the arguments given are of the right type and amount
+	 * @param command
+	 * @param arguments
+	 * @return
+	 */
+	private boolean checkArguments(Command command, List<String> arguments) {
+		Argument[] command_arguments = command.getArguments();
+		
+		if (arguments.size() != command_arguments.length)
+			return false;
+		
+		for (int i = 0; i < command_arguments.length; i++) {
+			if (arguments.get(i) == null) {
+				if (!command_arguments[i].optional)
+					return false;
+			} else if (command_arguments[i].type == ArgumentType.number) {
+				try {
+					Integer.parseInt(arguments.get(i));
+				} catch (NumberFormatException e) {
+					return false;
+				}
+			} else if (command_arguments[i].type == ArgumentType.long_number) {
+				try {
+					Long.parseLong(arguments.get(i));
+				} catch (NumberFormatException e) {
+					return false;
+				}
+			} else if (command_arguments[i].type == ArgumentType.text) {
+				
+			} else if (command_arguments[i].type == ArgumentType.logic) {
+				try {
+					Boolean.parseBoolean(arguments.get(i));
+				} catch (NumberFormatException e) {
+					return false;
+				}
+			} else if (command_arguments[i].type == ArgumentType.date) {
+				try {
+					Long.parseLong(arguments.get(i));
+				} catch (NumberFormatException e) {
+					return false;
+				}
+			} else {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	/**
+	 * Get the user that this handler is currently listening to.
+	 * @return
+	 */
 	public User getUser() {
 		return user;
 	}
 	
-	public synchronized void sendNotification(String message) {
-		try {
-			send(RequestHandler.STATUS_NOTIFICATION, message);
-		} catch (IOException e) {
-		}
-	}
-	
+	/**
+	 * Sets who this handler is currently listening to (for verification, etc).
+	 * @param user
+	 */
 	public void setUser(User user) {
 		this.user = user;
+	}
+	
+	/**
+	 * Send a instant message to the user this handler is listening to.
+	 * @param message
+	 */
+	public synchronized void sendNotification(String message) {
+		try {
+			send(STATUS_NOTIFICATION, message);
+		} catch (IOException e) {
+		}
 	}
 
 	@Override
 	public void run() {
 		
+		// Send a welcome message
 		try {
-			explain("Welcome to the calendar system!");
-			explain("You are currently logged in as a guest.");
-			explain("This means you only have access to create-user, create-user-wiz and login.");
-			explain("You will have to login before you can make any further requests!");
-			space();
-			send(RequestHandler.STATUS_OK, getBuffer());
+			String welcome_message = ""
+					+ "Welcome to the calendar system!\n"
+					+ "You are currently logged in as a guest.\n"
+					+ "This means you only have access to create-user, create-user-wiz and login.\n"
+					+ "You will have to login before you can make any further requests!";
+			
+			send(STATUS_DONE, welcome_message);
 		} catch (IOException e) {
 		}
-			
+		
+		// Check for input and handle requests
 		while (true) {
 			try {
-				handleRequest(expectInput());
+				handleRequest(formatRequest(expectInput()));
 			} catch (ForcedReturnException e) {
-				try {status(e.getMessage()); send(RequestHandler.STATUS_OK, getBuffer());} catch (IOException e1) {e.printStackTrace();};
+				try {send(STATUS_DONE, e.getMessage());} catch (IOException e1) {e.printStackTrace();};
 				continue;
 			} catch (IOException | TimeoutException | InterruptedException e) {
 				break;

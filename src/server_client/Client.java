@@ -25,8 +25,13 @@ public class Client {
 	public static final int DEFAULT_SERVER_PORT = 80;
 	public static final long SERVER_LISTENER_CHECK_INTERVAL = 100;
 	public static final long WAIT_BEFORE_TIMEOUT = 15000;
-	public static final char STATUS_OK = 'a';
-	public static final char STATUS_DISCONNECTED = 's';
+	
+	// Protocol declaration (headers to messages)
+	public static final int STATUS_DONE =			0;
+	public static final int STATUS_AWAIT_MORE =		1;
+	public static final int STATUS_DISCONNECT =		2;
+	public static final int STATUS_NOTIFICATION =	3;
+	public static final int STATUS_RETURN =			4;
 	
 	private static boolean can_write = true;
 	private static boolean can_recieve_input = true;
@@ -161,7 +166,7 @@ public class Client {
 	
 	private static void sendRequest(String request) throws TimeoutException, IOException {
 		can_write = false;
-		server_output.write(STATUS_OK + request + System.lineSeparator());
+		server_output.write(STATUS_DONE + request + System.lineSeparator());
 		server_output.flush();
 		
 		waitForEnd();
@@ -183,7 +188,7 @@ public class Client {
 	}
 	
 	public static void disconnect() throws IOException {
-		server_output.write(STATUS_DISCONNECTED);
+		server_output.write(STATUS_DISCONNECT);
 		server_output.flush();
 		connected = false;
 	}
@@ -194,19 +199,12 @@ public class Client {
 		
 		String request = "";
 		
-		while (true) {
-			console_output.write("$ ");
-			console_output.flush();
+		console_output.write("$ ");
+		console_output.flush();
+		
+		request = console_input.readLine().trim().toLowerCase();
 			
-			request = console_input.readLine().trim().toLowerCase();
-			
-			message();
-			
-			if (request.length() > 0) break;
-			
-			message("Can't send empty string!");
-			message();
-		}
+		message();
 		
 		can_recieve_input = true;
 		
@@ -228,6 +226,8 @@ public class Client {
 		  //Make some arguments optional in wizard and accept blank line
 		  //Fix session expired to display the same message always, catch it in outer block
 		  //Make a input taker other than expect input that takes in a whole line with spaces as one argument for the wizard
+		  //Send information about a result if it's in a command or if its at the end, remove all formatting tools and buffer stuff, just have send()
+		  //Make the serverhandler not time out, just let the session validation handle it?
 		  //make ask take in a list of ints that define the number of arguments it takes, like either 0 or 1 arg, update help and remove commands
 		  //fix broken commands, add view user, add view calendar, add notifications to welcome message, add show rooms/available rooms
 		  // Make the start new command (expect input) quit if something is wrong and throw forced exit

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import exceptions.ForcedReturnException;
+import server_client.Argument;
 import server_client.Command;
 import server_client.ServerClientHandler;
 
@@ -26,8 +27,8 @@ public class ShowCommands extends Command {
 	}
 
 	@Override
-	public String[] getArguments() {
-		return new String[0];
+	public Argument[] getArguments() {
+		return new Argument[0];
 	}
 
 	@Override
@@ -38,17 +39,16 @@ public class ShowCommands extends Command {
 	@Override
 	public String run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		
-		handler.explain("Valid commands:");
+		String message = ""
+				+ "Valid commands:\n";
 		
 		for (Command command : Command.commands) {
-			String message = " * " + command.getCommand();	
-			for (String argument : command.getArguments())
+			message += " * " + command.getCommand();	
+			for (Argument argument : command.getArguments())
 				message += " " + argument;
-			handler.explain(message);
+			message += "\n";
 		}
-
-		handler.space();
-		return "Please use one of the commands above";
+		
+		return message.substring(0, message.length()-1);
 	}
-
 }

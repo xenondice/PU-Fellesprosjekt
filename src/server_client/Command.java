@@ -4,21 +4,27 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
+import server_client.commands.AddUserToGroup;
+import server_client.commands.AnswerInvitation;
 import server_client.commands.CreateEntry;
-import server_client.commands.CreateEntryWiz;
 import server_client.commands.CreateGroup;
-import server_client.commands.CreateGroupWiz;
 import server_client.commands.CreateUser;
-import server_client.commands.CreateUserWiz;
+import server_client.commands.DeleteEntry;
+import server_client.commands.EditEntry;
 import server_client.commands.EditUser;
-import server_client.commands.EditUserWiz;
 import server_client.commands.Help;
+import server_client.commands.InviteGroup;
+import server_client.commands.InviteUser;
+import server_client.commands.KickGroup;
+import server_client.commands.KickUser;
 import server_client.commands.Login;
 import server_client.commands.Logout;
 import server_client.commands.MakeAdmin;
-import server_client.commands.MakeAdminWiz;
 import server_client.commands.Manual;
+import server_client.commands.RemoveUserFromGroup;
+import server_client.commands.RunWizard;
 import server_client.commands.ShowCommands;
+import server_client.commands.ShowNotifications;
 import exceptions.ForcedReturnException;
 
 /**
@@ -28,23 +34,38 @@ import exceptions.ForcedReturnException;
 public abstract class Command {
 	
 	public static final Command[] commands = {
+		
+		// Essential
 		new Help(),
 		new Manual(),
 		new ShowCommands(),
-		new CreateUser(),
-		new CreateUserWiz(),
-		new EditUser(),
-		new EditUserWiz(),
 		new Login(),
-		new MakeAdmin(),
-		new MakeAdminWiz(),
 		new Logout(),
+		new CreateUser(),
+		new RunWizard(),
+		
+		// Arbitrary
+		new AddUserToGroup(),
+		new AnswerInvitation(),
 		new CreateEntry(),
-		new CreateEntryWiz(),
 		new CreateGroup(),
-		new CreateGroupWiz(),
+		new DeleteEntry(),
+		new EditEntry(),
+		new EditUser(),
+		new InviteGroup(),
+		new InviteUser(),
+		new KickGroup(),
+		new KickUser(),
+		new MakeAdmin(),
+		new RemoveUserFromGroup(),
+		new ShowNotifications(),
 	};
 	
+	/**
+	 * Get the command class from the command name.
+	 * @param command
+	 * @return
+	 */
 	public static Command getCommand(String command) {
 		for (Command command_type : commands)
 			if (command.equals(command_type.getCommand()))
@@ -68,9 +89,9 @@ public abstract class Command {
 	public abstract String getManual();
 	
 	/**
-	 * Get an descriptive array of the arguments required by the command.
+	 * Get an descriptive array of the arguments required by the command
 	 */
-	public abstract String[] getArguments();
+	public abstract Argument[] getArguments();
 	
 	/**
 	 * Get an array with examples of how the command might be used.

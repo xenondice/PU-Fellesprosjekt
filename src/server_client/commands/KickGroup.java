@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import exceptions.ForcedReturnException;
+import server_client.Argument;
+import server_client.Argument.ArgumentType;
 import server_client.Command;
 import server_client.RequestHandler;
 import server_client.ServerClientHandler;
@@ -27,10 +29,10 @@ public class KickGroup extends Command {
 	}
 
 	@Override
-	public String[] getArguments() {
-		return new String[]{
-			"group name",
-			"entryID"
+	public Argument[] getArguments() {
+		return new Argument[]{
+			new Argument(false, "groupname", ArgumentType.text),
+			new Argument(false, "entryID", ArgumentType.long_number),
 		};
 	}
 

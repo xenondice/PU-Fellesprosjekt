@@ -7,6 +7,8 @@ import java.util.concurrent.TimeoutException;
 import calendar.CalendarEntry;
 import calendar.CalendarEntryBuilder;
 import exceptions.ForcedReturnException;
+import server_client.Argument;
+import server_client.Argument.ArgumentType;
 import server_client.Command;
 import server_client.RequestHandler;
 import server_client.ServerClientHandler;
@@ -29,13 +31,13 @@ public class CreateEntry extends Command {
 	}
 
 	@Override
-	public String[] getArguments() {
-		return new String[]{
-			"description",
-			"end time",
-			"location",
-			"roomID",
-			"start time"
+	public Argument[] getArguments() {
+		return new Argument[]{
+			new Argument(false, "description", ArgumentType.text),
+			new Argument(false, "end time", ArgumentType.date),
+			new Argument(false, "location", ArgumentType.text),
+			new Argument(false, "roomID", ArgumentType.text),
+			new Argument(false, "start time", ArgumentType.date),
 		};
 	}
 

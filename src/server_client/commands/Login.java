@@ -7,9 +7,11 @@ import java.util.concurrent.TimeoutException;
 import exceptions.ForcedReturnException;
 import exceptions.UserDoesNotExistException;
 import exceptions.WrongPasswordException;
+import server_client.Argument;
 import server_client.Command;
 import server_client.RequestHandler;
 import server_client.ServerClientHandler;
+import server_client.Argument.ArgumentType;
 import user.User;
 
 public class Login extends Command {
@@ -30,10 +32,10 @@ public class Login extends Command {
 	}
 
 	@Override
-	public String[] getArguments() {
-		return new String[]{
-			"username",
-			"password"
+	public Argument[] getArguments() {
+		return new Argument[]{
+			new Argument(false, "username", ArgumentType.text),
+			new Argument(false, "password", ArgumentType.text),
 		};
 	}
 
