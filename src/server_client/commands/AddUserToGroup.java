@@ -35,8 +35,8 @@ public class AddUserToGroup extends Command {
 	@Override
 	public Argument[] getArguments() {
 		return new Argument[]{
-			new Argument(false, "name", ArgumentType.text),
 			new Argument(false, "username", ArgumentType.text),
+			new Argument(false, "groupname", ArgumentType.text),
 		};
 	}
 
