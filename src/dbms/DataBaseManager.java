@@ -907,7 +907,7 @@ public class DataBaseManager implements Closeable {
 	public boolean addEntry(CalendarEntry e) throws UserDoesNotExistException{
 		
 		// TODO update with alarm etc. 
-		// TODO should it handle the addIntoAdmin etc?
+		// TODO should it handle the addIntoAdmin etc? -> only add into Entry. Request handler handels the is admin etc.
 		
 		checkIfUserExists(e.getCreator());
 		

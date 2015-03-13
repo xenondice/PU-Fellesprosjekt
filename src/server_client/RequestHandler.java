@@ -138,7 +138,7 @@ public class RequestHandler{
 			throw new SessionExpiredException();
 		}
 		System.out.println("Request from user " + requestor.getUsername() + " validated");
-		//TODO: Make validation function
+		//TODO: Make validation function.
 	}
 	
 	public synchronized static boolean createUser(User user) throws UsernameAlreadyExistsException {
@@ -168,6 +168,7 @@ public class RequestHandler{
 		boolean result = dbm.addEntry(entry); //TODO: make sure CalendarEntryBuilder's field creator is set everywhere!!!
 		if (result) sendToInvitedIfLoggedIn("You have just been invited to a newly created entry! Type \"inbox\" to see.", entry.getEntryID());
 		return result;
+		// TODO make sure the dbm.addEntry and this function add into all the correct tables.
 	}
 	
 	public synchronized static boolean deleteEntry(User requestor, int entry_id) throws SessionExpiredException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException {
@@ -179,12 +180,11 @@ public class RequestHandler{
 		return result;
 	}
 	
-	public synchronized static boolean editEntry(User requestor, CalendarEntry entry) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException, SessionExpiredException {
+	public synchronized static boolean editEntry(User requestor, CalendarEntry newEntry) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException, SessionExpiredException {
 		validate(requestor);
-		if (!dbm.isAllowedToEdit(requestor.getUsername(), entry.getEntryID()))
-			throw new HasNotTheRightsException();
-		boolean result = dbm.editEntry(entry, requestor.getUsername());
-		if (result) sendToInvitedIfLoggedIn("An entry you are invited to has just changed! Type \"inbox\" to see.", entry.getEntryID());
+		dbm.checkIfisAdmin(requestor.getUsername(), newEntry.getEntryID());
+		boolean result = dbm.editEntry(newEntry, requestor.getUsername());
+		if (result) sendToInvitedIfLoggedIn("An entry you are invited to has just changed! Type \"inbox\" to see.", newEntry.getEntryID());
 		return result;
 	}
 	
