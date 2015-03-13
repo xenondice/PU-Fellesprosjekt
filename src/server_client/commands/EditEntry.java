@@ -53,7 +53,7 @@ public class EditEntry extends Command {
 		CalendarEntryBuilder entry_builder = new CalendarEntryBuilder();
 		entry_builder.setDescription(arguments.get(0));
 		entry_builder.setEndTime(Integer.parseInt(arguments.get(1)));
-		entry_builder.setEventID(Integer.parseInt(arguments.get(2)));
+		entry_builder.setEntryID(Integer.parseInt(arguments.get(2)));
 		entry_builder.setLocation(arguments.get(2));
 		entry_builder.setRoomID(arguments.get(3));
 		entry_builder.setCreator(handler.getUser().getUsername());

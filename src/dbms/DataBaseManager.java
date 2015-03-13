@@ -1186,7 +1186,7 @@ public class DataBaseManager implements Closeable {
 			HashSet<CalendarEntry> entries = new HashSet<>();
 			while(rset.next()){
 				CalendarEntryBuilder eb = new CalendarEntryBuilder();
-				eb.setEventID(rset.getLong("entryID")); // TODO change to setEntryID()
+				eb.setEntryID(rset.getLong("entryID"));
 				eb.setCreator(rset.getString("creator"));
 				eb.setDescription(rset.getString("description"));
 				eb.setEndTime(rset.getTimestamp("endTime").getTime());
@@ -1418,7 +1418,7 @@ public class DataBaseManager implements Closeable {
 			if (rset.next()) {
 				CalendarEntryBuilder ub = new CalendarEntryBuilder();
 				
-				ub.setEventID(entry_id);
+				ub.setEntryID(entry_id);
 				ub.setDescription(rset.getString("description"));
 				
 				Timestamp sstmp = rset.getTimestamp("startTime");
@@ -2072,7 +2072,7 @@ public class DataBaseManager implements Closeable {
 			while(rset.next()){
 				CalendarEntryBuilder entryB = new CalendarEntryBuilder();
 				
-				entryB.setEventID(rset.getInt("entryID"));
+				entryB.setEntryID(rset.getInt("entryID"));
 				entryB.setStartTime(rset.getLong("startTime"));
 				entryB.setEndTime(rset.getLong("endTime"));
 				entryB.setLocation(rset.getString("location"));

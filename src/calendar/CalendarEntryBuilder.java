@@ -22,7 +22,7 @@ public class CalendarEntryBuilder implements Builder<CalendarEntry>{
 	public CalendarEntryBuilder(CalendarEntry e){
 		this.setDescription(e.getDescription());
 		this.setEndTime(e.getEndTime());
-		this.setEventID(e.getEntryID());
+		this.setEntryID(e.getEntryID());
 		this.setLocation(e.getLocation());
 		this.setRoomID(e.getRoomID());
 		this.setStartTime(e.getStartTime());
@@ -40,7 +40,7 @@ public class CalendarEntryBuilder implements Builder<CalendarEntry>{
 	public void setEndTime(long endTime) {
 		this.endTime = endTime;
 	}
-	public void setEventID(long entryID) {
+	public void setEntryID(long entryID) {
 		this.entryID = entryID;
 	}
 	public void setLocation(String location) {

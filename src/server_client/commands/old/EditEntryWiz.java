@@ -67,7 +67,7 @@ public class EditEntryWiz extends Command {
 		CalendarEntryBuilder entry_builder = new CalendarEntryBuilder();
 		entry_builder.setDescription((String) result.get(0));
 		entry_builder.setEndTime((Integer) (result.get(1)));
-		entry_builder.setEventID((Integer) result.get(2));
+		entry_builder.setEntryID((Integer) result.get(2));
 		entry_builder.setLocation((String) result.get(3));
 		entry_builder.setRoomID((String) result.get(4));
 		entry_builder.setCreator(handler.getUser().getUsername());
