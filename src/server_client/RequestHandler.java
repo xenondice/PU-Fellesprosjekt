@@ -30,8 +30,8 @@ public class RequestHandler{
 	private static Set<ServerClientHandler> currently_connected;
 	
 	public static final int PORT = 80;
-	public static final long CHECK_FOR_EXPECTED_INPUT_INTERVAL = 500;
-	public static final long WAIT_BEFORE_TIMOUT = 60000;
+	public static final long CHECK_FOR_EXPECTED_INPUT_INTERVAL = 100;
+	public static final long WAIT_BEFORE_TIMOUT = 1440000;
 	
 	public static void main(String[] args) {
 		init();
@@ -46,7 +46,7 @@ public class RequestHandler{
 			dbm = new DataBaseManager();
 			server = new ServerSocket(PORT);
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.out.println("Couldn't start server! Is the port available?");
 			dispose();
 			System.exit(-1);
 		}
@@ -58,8 +58,8 @@ public class RequestHandler{
 		try {
 			for (ServerClientHandler handler : currently_connected)
 				handler.close();
-			server.close();
-			dbm.close();
+			if (server != null) server.close();
+			if (dbm != null) dbm.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(-1);

@@ -197,8 +197,12 @@ public class ServerClientHandler implements Runnable, Closeable {
 					}
 					question = "Please answer with yes[y] or no[n]!";
 				} else if (argument.type == ArgumentType.date) {
-					result = answer;
-					break; //TODO: Make it read the format DD/MM/YYYY and DD/MM/YYYY MM:SS
+					try {
+						result = Long.parseLong(answer);
+						break;
+					} catch (NumberFormatException e) {
+						question = "Answer is not a long! Please try again.";
+					} //TODO: Make it read the format DD/MM/YYYY and DD/MM/YYYY MM:SS
 				} else {
 					throw new ForcedReturnException("Internal error!");
 				}
@@ -291,7 +295,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 	
 	/**
 	 * Get the user that this handler is currently listening to.
-	 * @return
+	 * @return A user if the user is logged in, null if not.
 	 */
 	public User getUser() {
 		return user;
@@ -324,7 +328,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 			String welcome_message = ""
 					+ "Welcome to the calendar system!\n"
 					+ "You are currently logged in as a guest.\n"
-					+ "This means you only have access to create-user, create-user-wiz and login.\n"
+					+ "This means you only have access to create-user, wiz, help, man and login.\n"
 					+ "You will have to login before you can make any further requests!";
 			
 			send(STATUS_DONE, welcome_message);

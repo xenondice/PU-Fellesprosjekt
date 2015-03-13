@@ -54,7 +54,7 @@ public class CreateEntry extends Command {
 		entry_builder.setEndTime(Long.parseLong(arguments.get(1)));
 		entry_builder.setLocation(arguments.get(2));
 		entry_builder.setRoomID(arguments.get(3));
-		entry_builder.setCreator(handler.getUser().getUsername());
+		entry_builder.setCreator(handler.getUser()==null?"":handler.getUser().getUsername());
 		entry_builder.setStartTime(Long.parseLong(arguments.get(4)));
 		CalendarEntry calendarEntry = entry_builder.build();
 		
