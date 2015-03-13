@@ -23,6 +23,7 @@ import org.apache.ibatis.jdbc.ScriptRunner;
 import room_booking.Room;
 import room_booking.RoomBuilder;
 import room_booking.RoomReservation;
+import room_booking.RoomReservationBuilder;
 import user.Group;
 import user.GroupBuilder;
 import user.User;
@@ -744,12 +745,13 @@ public class DataBaseManager implements Closeable {
 	 */
 	private boolean addIntoRoomReservation(RoomReservation rr){
 		try{
-			String add_RoomRes = "INSERT INTO RoomReservation (roomID, startTime, endTime) VALUES (?, ?, ?);";
+			String add_RoomRes = "INSERT INTO RoomReservation (roomID, startTime, endTime, entryID) VALUES (?, ?, ?, ?);";
 			PreparedStatement addRoomRes_stmt = connection.prepareStatement(add_RoomRes);
 			int i = 0;
 			addRoomRes_stmt.setString(++i, rr.getRoom().getRoom_id());
 			addRoomRes_stmt.setTimestamp(++i, new Timestamp(rr.getStartTime()));
 			addRoomRes_stmt.setTimestamp(++i, new Timestamp(rr.getEndTime()));
+			addRoomRes_stmt.setLong(++i, rr.getEntryID());
 	
 			addRoomRes_stmt.executeUpdate();
 			addRoomRes_stmt.close();
@@ -876,7 +878,6 @@ public class DataBaseManager implements Closeable {
 	
 	public boolean addRoomReservation(RoomReservation rr){
 		return this.addIntoRoomReservation(rr);
-		// TODO update changes
 	}
 	
 	public boolean addInvitation(Invitation inv) throws EntryDoesNotExistException, UserDoesNotExistException, InvitationAlreadyExistsException{
@@ -1146,23 +1147,31 @@ public class DataBaseManager implements Closeable {
 	}
 	
 	public HashSet<RoomReservation> getAllRoomReservations(){
+
 		try {
-			PreparedStatement getRooms_stm = connection.prepareStatement("SELECT * FROM RoomReservation; ");
+			PreparedStatement getRes_stm = connection.prepareStatement("SELECT * FROM RoomReservation");
+
+			ResultSet rset = getRes_stm.executeQuery();
 			
-			ResultSet rset = getRooms_stm.executeQuery();
-			
-			HashSet<RoomReservation> reservs = new HashSet<>();
+			HashSet<RoomReservation> reservations = new HashSet<>();
 			while(rset.next()){
-				RoomReservationBuilder rrb = new RoomReservationBuilder();
-				rrb.setEntry_id(rset.getLong("entryID"));
-				// TODO finish
+				RoomReservationBuilder rb = new RoomReservationBuilder();
+				rb.setStartTime(rset.getTimestamp("startTime").getTime());
+				rb.setEndTime(rset.getTimestamp("endTime").getTime());
+				rb.setEntryID(rset.getLong("entryID"));
+				rb.setRoom(this.getRoom(rset.getString("roomID")));
 				
-				reservs.add(rrb.build());
+				reservations.add(rb.build());
 			}
 			
-			return reservs;
+			return reservations;
+			
 			
 		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		} catch (RoomDoesNotExistException e) {
+			// should never happen!
 			e.printStackTrace();
 			return null;
 		}
@@ -1480,7 +1489,13 @@ public class DataBaseManager implements Closeable {
 			
 			HashSet<RoomReservation> reservations = new HashSet<>();
 			while(rs.next()){
-				reservations.add(new RoomReservation(r, rs.getTimestamp("startTime").getTime(), rs.getTimestamp("startTime").getTime()));
+				RoomReservationBuilder rb = new RoomReservationBuilder();
+				rb.setStartTime(rs.getTimestamp("startTime").getTime());
+				rb.setEndTime(rs.getTimestamp("endTime").getTime());
+				rb.setEntryID(rs.getLong("entryID"));
+				rb.setRoom(r);
+				
+				reservations.add(rb.build());
 			}
 			
 			return reservations;

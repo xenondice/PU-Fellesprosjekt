@@ -27,7 +27,7 @@ public class RoomReservation {
 		return endTime;
 	}
 	
-	public long entryID(){
+	public long getEntryID(){
 		return entryID;
 	}
 	
