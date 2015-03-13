@@ -13,10 +13,10 @@ CREATE TABLE Room (
  
 CREATE TABLE User (
     username    VARCHAR(30)    NOT NULL,
-    name        VARCHAR(100)    NOT NULL,
-    password    VARCHAR(20)    NOT NULL, # the hashed password and salt. h(pw+salt)
-    salt        VARCHAR(30)    NOT NULL, # to safely store the password
-    email        VARCHAR(50)    NOT NULL,
+    name        VARCHAR(100)   NOT NULL,
+    password    VARCHAR(20)    NOT NULL, 	# the hashed password and salt. h(pw+salt)
+    salt        VARCHAR(30), 			# to safely store the password
+    email       VARCHAR(50),
     PRIMARY KEY (username)
 );
 
