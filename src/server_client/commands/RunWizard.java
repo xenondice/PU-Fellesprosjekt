@@ -46,7 +46,7 @@ public class RunWizard extends Command {
 		
 		Command command = Command.getCommand(arguments.get(0));
 		if (command == null)
-			return "Not a command!\n";
+			return "Not a command!";
 		
 		Wizard wizard = new Wizard();
 		for (Argument argument : command.getArguments()) {
@@ -57,7 +57,10 @@ public class RunWizard extends Command {
 		List<String> string_results = new ArrayList<>();
 		
 		for (Object result : results)
-			string_results.add(result.toString());
+			if (result == null)
+				string_results.add("");
+			else
+				string_results.add(result.toString());
 		
 		return command.run(handler, string_results);
 	}

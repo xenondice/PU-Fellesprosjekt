@@ -30,8 +30,6 @@ public class ServerClientHandler implements Runnable, Closeable {
 	public static final int STATUS_NOTIFICATION =	3;
 	public static final int STATUS_RETURN =			4;
 	
-	public static final String ESCAPE_STRING =		"/c";
-	
 	private static final String FORMATTING_RULES = "([^\\s\"']+)|\"([^\"]*)\"|'([^']*)'";
 	
 	/**

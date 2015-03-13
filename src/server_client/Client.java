@@ -25,6 +25,7 @@ public class Client {
 	public static final int DEFAULT_SERVER_PORT = 80;
 	public static final long SERVER_LISTENER_CHECK_INTERVAL = 100;
 	public static final long WAIT_BEFORE_TIMEOUT = 15000;
+	public static final String ESCAPE_SENTENCE = "\\c";
 	
 	// Protocol declaration (headers to messages)
 	public static final int STATUS_DONE =			0;
@@ -215,6 +216,11 @@ public class Client {
 		return can_recieve_input;
 	}
 	
+	private static void cancel() throws IOException {
+		server_output.write(STATUS_RETURN);
+		server_output.flush();
+	}
+	
 	private static void run() throws IOException {
 		
 		try {
@@ -249,6 +255,16 @@ public class Client {
 					break;
 				}
 				continue;
+			} else if (request.equals(ESCAPE_SENTENCE)) {
+				cancel();
+				can_write = false;
+				try {
+					waitForEnd();
+				} catch (TimeoutException e) {
+					error("Server timeout!", false);
+					break;
+				}
+				continue;
 			}
 			
 			try {
@@ -264,7 +280,7 @@ public class Client {
 		
 		dispose();
 	}
-	
+
 	private static void dispose() throws IOException {
 		server_connection.close();
 		server_listener_thread.interrupt();
