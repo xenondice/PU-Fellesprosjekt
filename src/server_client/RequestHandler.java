@@ -53,8 +53,10 @@ public class RequestHandler{
 			currently_connected = new HashSet<>();
 			dbm = new DataBaseManager();
 			server = new ServerSocket(PORT);
+			System.out.println(server.getLocalSocketAddress());
 			rbh = new RoomBookingHandler(dbm);
 		} catch (IOException e) {
+			e.printStackTrace();
 			System.out.println("Couldn't start server! Is the port available?");
 			dispose();
 			System.exit(-1);
