@@ -25,7 +25,7 @@ import user.User;
 
 public class RequestHandler{
 	
-	// TODO not all methods must be synchronized --lukas
+	// TODO which methods must be synchronized? --lukas
 	
 	private static DataBaseManager dbm;
 	private static ServerSocket server;
@@ -109,7 +109,7 @@ public class RequestHandler{
 	
 	private static void sendToInvitedIfLoggedIn(String message, long entry_id) {
 		Set<User> users = dbm.getInvitedUsersForEntry(entry_id);
-		// TODO more efficient to do a search here than to do several searches in 'getUserHandlerIfactive'?--lukas
+		// TODO more efficient to do a search here than to do several searches in 'getUserHandlerIfActive'?--lukas
 		for (User user : users) {
 			ServerClientHandler handler = getUserHandlerIfActive(user.getUsername());
 			if (handler != null) {
