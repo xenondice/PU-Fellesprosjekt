@@ -35,8 +35,8 @@ public class AddUserToGroup extends Command {
 	@Override
 	public Argument[] getArguments() {
 		return new Argument[]{
-			new Argument(false, "name", ArgumentType.text),
 			new Argument(false, "username", ArgumentType.text),
+			new Argument(false, "groupname", ArgumentType.text),
 		};
 	}
 
@@ -49,7 +49,7 @@ public class AddUserToGroup extends Command {
 	public String run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		
 		try {
-			if (RequestHandler.removeUserFromGroup(handler.getUser(), arguments.get(0), arguments.get(1)))
+			if (RequestHandler.addUserToGroup(handler.getUser(), arguments.get(0), arguments.get(1)))
 				return "User successfully added to group!";
 			else
 				return "User couldn't be added!";

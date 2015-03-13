@@ -7,8 +7,14 @@ import exceptions.RoomAlreadyBookedException;
 
 public class RoomBookingHandler {
 
-	private static DataBaseManager dbm = new DataBaseManager();
+	private DataBaseManager dbm;
 	
+	public RoomBookingHandler(DataBaseManager dbm){
+		this.dbm = dbm;
+	}
+
+
+
 	public void bookRoom(Room room, long startTime, long endTime, long entryID) throws RoomAlreadyBookedException{
 		if(checkIfFree(room, startTime, endTime)){
 			RoomReservation rr = new RoomReservation(room, startTime, endTime, entryID);

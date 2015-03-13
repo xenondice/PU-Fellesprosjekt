@@ -6,6 +6,8 @@ import java.net.Socket;
 import java.util.HashSet;
 import java.util.Set;
 
+import room_booking.Room;
+import room_booking.RoomBookingHandler;
 import calendar.Calendar;
 import calendar.CalendarEntry;
 import calendar.Notification;
@@ -15,6 +17,7 @@ import exceptions.GroupAlreadyExistsException;
 import exceptions.GroupDoesNotExistException;
 import exceptions.HasNotTheRightsException;
 import exceptions.InvitationDoesNotExistException;
+import exceptions.RoomAlreadyBookedException;
 import exceptions.SessionExpiredException;
 import exceptions.UserDoesNotExistException;
 import exceptions.UserInGroupDoesNotExistsException;
@@ -30,6 +33,8 @@ public class RequestHandler{
 	private static DataBaseManager dbm;
 	private static ServerSocket server;
 	private static Set<ServerClientHandler> currently_connected;
+	private static RoomBookingHandler rbh;
+
 	
 	public static final int PORT = 80;
 	public static final long CHECK_FOR_EXPECTED_INPUT_INTERVAL = 100;
@@ -48,6 +53,7 @@ public class RequestHandler{
 			currently_connected = new HashSet<>();
 			dbm = new DataBaseManager();
 			server = new ServerSocket(PORT);
+			rbh = new RoomBookingHandler(dbm);
 		} catch (IOException e) {
 			System.out.println("Couldn't start server! Is the port available?");
 			dispose();
@@ -230,17 +236,45 @@ public class RequestHandler{
 	
 	public synchronized static boolean addUserToGroup(User requestor, String username, String groupname) throws UserDoesNotExistException, GroupDoesNotExistException, SessionExpiredException, HasNotTheRightsException {
 		validate(requestor);
-		if (!dbm.isMemberOf(groupname, requestor.getUsername()))
-			throw new HasNotTheRightsException();
 		return dbm.addUserToGroup(username, groupname);
+	}
+	
+	public synchronized static boolean addGroupToGroup(User requestor, Group invitedGroup, String inviteeGroupname) throws UserDoesNotExistException, GroupDoesNotExistException, SessionExpiredException, HasNotTheRightsException {
+		for (User user : invitedGroup.getUsers()) {
+			if (! addUserToGroup(requestor, user.getUsername(), inviteeGroupname))
+				return false;
+		}
+		return true;
 	}
 	
 	public synchronized static boolean removeUserFromGroup(User requestor, String username, String groupname) throws GroupDoesNotExistException, SessionExpiredException, HasNotTheRightsException, UserDoesNotExistException {
 		validate(requestor);
-		if (!dbm.isMemberOf(groupname, requestor.getUsername()))
-			throw new HasNotTheRightsException();
 		return dbm.removeUserFromGroup(username, groupname);
 	}
+	
+	public synchronized static boolean removeGroupFromGroup(User requestor, Group kickedGroup, String groupname) throws GroupDoesNotExistException, SessionExpiredException, HasNotTheRightsException, UserDoesNotExistException {
+		for (User user : kickedGroup.getUsers()) {
+			if (! removeUserFromGroup(requestor, user.getUsername(), groupname))
+				return false;
+		}
+		return true;
+	}
+	
+	
+
+	/* ===============
+	 * Room functions
+	 *================*/ 
+	
+	public synchronized static void bookRoom(Room room, long startTime, long endTime, long entryID) throws RoomAlreadyBookedException{
+		rbh.bookRoom(room, startTime, endTime, entryID);
+	}
+	
+	public synchronized static void releaseRoom(Room room, long startTime, long endTime){
+		rbh.releaseRoom(room, startTime, endTime);
+	}
+	
+	
 	
 	
 	/* ===============
