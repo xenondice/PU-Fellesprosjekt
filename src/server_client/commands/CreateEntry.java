@@ -34,10 +34,10 @@ public class CreateEntry extends Command {
 	public Argument[] getArguments() {
 		return new Argument[]{
 			new Argument(false, "description", ArgumentType.text),
-			new Argument(false, "end time", ArgumentType.date),
 			new Argument(false, "location", ArgumentType.text),
-			new Argument(false, "roomID", ArgumentType.text),
 			new Argument(false, "start time", ArgumentType.date),
+			new Argument(false, "end time", ArgumentType.date),
+			new Argument(false, "roomID", ArgumentType.text)
 		};
 	}
 
@@ -51,24 +51,29 @@ public class CreateEntry extends Command {
 		
 		CalendarEntryBuilder entry_builder = new CalendarEntryBuilder();
 		entry_builder.setDescription(arguments.get(0));
-		entry_builder.setEndTime(Long.parseLong(arguments.get(1)));
-		entry_builder.setLocation(arguments.get(2));
+		entry_builder.setLocation(arguments.get(1));
+		entry_builder.setStartTime(Long.parseLong(arguments.get(2)));
+		entry_builder.setEndTime(Long.parseLong(arguments.get(3)));
 		
-		String roomId = arguments.get(3);
-		if(roomId == "" || roomId == "null"){
+		
+		String roomId = arguments.get(4);
+		if(roomId != null && (roomId.equals("") || roomId.equalsIgnoreCase("null"))){
 			roomId = null;
 		}
 		entry_builder.setRoomID(roomId);
 		entry_builder.setCreator(handler.getUser().getUsername());
-		entry_builder.setStartTime(Long.parseLong(arguments.get(4)));
+		
 		CalendarEntry calendarEntry = entry_builder.build();
 		
 		try {
-			if (RequestHandler.createEntry(handler.getUser(), calendarEntry))
+			if (RequestHandler.createEntry(handler.getUser(), calendarEntry)){
 				return "Calendar entry successfully created!";
-			else
+			}
+			else{
 				return "Calendar entry couldn't be created!";
+			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			return "Could not create calendar entry!";
 		}
 	}

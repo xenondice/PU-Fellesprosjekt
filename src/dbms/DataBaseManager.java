@@ -657,6 +657,10 @@ public class DataBaseManager implements Closeable {
 		if(e == null){
 			throw new IllegalArgumentException("entry is null");
 		}
+		String roomID = e.getRoomID();
+		if(roomID != null && roomID.equals("")){
+			roomID = null;
+		}
 		
 		String insert_entry = "INSERT INTO CalendarEntry (startTime, endTime, location, description, roomID, creator) "
 				+ "VALUES (?, ?, ?, ?, ?, ?)"; // without setting entryID -> default value
@@ -670,7 +674,8 @@ public class DataBaseManager implements Closeable {
 			addEntry_stmt.setTimestamp(++i,new Timestamp(e.getEndTime()));
 			addEntry_stmt.setString(++i, e.getLocation());
 			addEntry_stmt.setString(++i, e.getDescription());
-			addEntry_stmt.setString(++i, e.getRoomID());
+			System.out.println("-->"+roomID);
+			addEntry_stmt.setString(++i, roomID);
 			addEntry_stmt.setString(++i, e.getCreator());
 	
 			addEntry_stmt.executeUpdate();
@@ -2245,6 +2250,12 @@ public class DataBaseManager implements Closeable {
 		
 		// drops the database and add it again. also inserts standard data
 		DataBaseManager dbm = new DataBaseManager();
+//		CalendarEntry e = new CalendarEntry(10, 10000, 100000, "park", "chilling", "k5-208", "lukasap");
+//		try {
+//			dbm.addEntry(e);
+//		} catch (UserDoesNotExistException e1) {
+//			e1.printStackTrace();
+//		}
 		try {
 			dbm.addSQL("addtables.sql");
 			dbm.addSQL("insertintotables.sql");

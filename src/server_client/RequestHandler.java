@@ -43,7 +43,7 @@ public class RequestHandler{
 	private static RoomBookingHandler rbh;
 
 	
-	public static final int PORT = 80;
+	public static int PORT = 56692;
 	public static final long CHECK_FOR_EXPECTED_INPUT_INTERVAL = 100;
 	public static final long WAIT_BEFORE_TIMOUT = 1440000;
 	
@@ -62,7 +62,7 @@ public class RequestHandler{
 			currently_connected = new HashSet<>();
 			dbm = new DataBaseManager();
 			server = new ServerSocket(PORT);
-			System.out.println(server.getLocalSocketAddress());
+			System.out.println(PORT);
 			rbh = new RoomBookingHandler(dbm);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -271,9 +271,10 @@ public class RequestHandler{
 					sendToInvitedIfLoggedIn("You have just been invited to a newly created entry! Type \"inbox\" to see.",entry.getEntryID());
 					dbm.addInvitation(new Invitation(true, true, entry
 							.getCreator(), entry_id));
-					
+					return true;
+				}else{
+					return false;
 				}
-				return true;
 			}
 		} catch (EntryDoesNotExistException | InvitationAlreadyExistsException e) {
 			e.printStackTrace();

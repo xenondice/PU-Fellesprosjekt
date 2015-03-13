@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 	 */
 public class Client {
 	public static final String DEFAULT_SERVER_ADDRESS = "127.0.0.1";
-	public static final int DEFAULT_SERVER_PORT = 80;
+	public static final int DEFAULT_SERVER_PORT = 56692;
 	public static final long SERVER_LISTENER_CHECK_INTERVAL = 100;
 	public static final long WAIT_BEFORE_TIMEOUT = 15000;
 	public static final String ESCAPE_SENTENCE = "\\c";
@@ -68,7 +68,8 @@ public class Client {
 		try {
 			server_connection = new Socket(address, port);
 		} catch (IOException e) {
-			error("Couldn't connect to server!", true);
+			e.printStackTrace();
+			error("Couldn't connect to server (port "+port+")!", true);
 		}
 		
 		connected = true;

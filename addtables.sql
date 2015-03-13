@@ -21,13 +21,13 @@ CREATE TABLE User (
 );
 
 CREATE TABLE CalendarEntry (
-    entryID    BIGINT   NOT NULL AUTO_INCREMENT,
-    startTime    TIMESTAMP    NOT NULL,
-    endTime        TIMESTAMP    NOT NULL,
-    location    VARCHAR(20),
-    description    VARCHAR(100)    NOT NULL,
-    roomID    VARCHAR(10),
-    creator    VARCHAR(30)    NOT NULL,
+    entryID    	BIGINT   	NOT NULL AUTO_INCREMENT,
+    startTime  	TIMESTAMP    	NOT NULL,
+    endTime     TIMESTAMP    	NOT NULL,
+    location   	VARCHAR(20)	DEFAULT NULL,
+    description VARCHAR(100)    NOT NULL,
+    roomID    	VARCHAR(10) 	DEFAULT NULL,
+    creator    	VARCHAR(30)    	NOT NULL,
     PRIMARY KEY (entryID),
     FOREIGN KEY (roomID) REFERENCES Room (roomID)
         ON UPDATE CASCADE,
