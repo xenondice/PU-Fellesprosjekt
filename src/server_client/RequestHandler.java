@@ -1,4 +1,4 @@
-package server_client; //make notififactions and send messages, remove sync and make blocks, change int to long, space out, overhaul commands
+package server_client;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -50,7 +50,7 @@ public class RequestHandler{
 	public static final long CHECK_FOR_EXPECTED_INPUT_INTERVAL = 100;
 	public static final long WAIT_BEFORE_TIMOUT = 1440000;
 	
-	public static final Object ADD_ENTRY_LOCK = new Object();
+	public static final Object ADD_DB_LOCK = new Object();
 	
 	public static void main(String[] args) {
 		init();
@@ -173,7 +173,7 @@ public class RequestHandler{
 	public static void provideUpdate(long entry_id, String message) {
 		
 		Set<String> usernames;
-		synchronized (ADD_ENTRY_LOCK) {
+		synchronized (ADD_DB_LOCK) {
 			usernames = dbm.getInvitedUsersForEntry(entry_id);
 		}
 		
@@ -200,7 +200,7 @@ public class RequestHandler{
 		notification_builder.setUsername(username);
 		
 		boolean result;
-		synchronized (ADD_ENTRY_LOCK) {
+		synchronized (ADD_DB_LOCK) {
 			try {
 				result = dbm.addNotification(notification_builder.build());
 			} catch (EntryDoesNotExistException | UserDoesNotExistException e) {
@@ -228,7 +228,7 @@ public class RequestHandler{
 		invitation_builder.setShowing(true);
 		
 		boolean result;
-		synchronized (ADD_ENTRY_LOCK) {
+		synchronized (ADD_DB_LOCK) {
 			try {
 				result = dbm.addInvitation(invitation_builder.build());
 			} catch (EntryDoesNotExistException | UserDoesNotExistException | InvitationAlreadyExistsException e) {
@@ -251,7 +251,7 @@ public class RequestHandler{
 	public static User logIn(String username, String password) throws UserDoesNotExistException, WrongPasswordException {
 		
 		User existing_user;
-		synchronized (ADD_ENTRY_LOCK) {
+		synchronized (ADD_DB_LOCK) {
 			existing_user = dbm.getUser(username);
 		}
 			
@@ -271,7 +271,7 @@ public class RequestHandler{
 	 */
 	private static void validate(User requestor) throws SessionExpiredException {
 		
-		synchronized (ADD_ENTRY_LOCK) {
+		synchronized (ADD_DB_LOCK) {
 			try {
 				dbm.getUser(requestor.getUsername());
 			} catch (UserDoesNotExistException e) {
@@ -302,7 +302,7 @@ public class RequestHandler{
 			return false;
 		}
 		
-		synchronized (ADD_ENTRY_LOCK) {
+		synchronized (ADD_DB_LOCK) {
 			return dbm.addUser(user);
 		}
 	}
@@ -326,7 +326,7 @@ public class RequestHandler{
 			return false;
 		}
 		
-		synchronized (ADD_ENTRY_LOCK) {
+		synchronized (ADD_DB_LOCK) {
 			return dbm.editUser(updated_user);
 		}
 	}
@@ -346,7 +346,7 @@ public class RequestHandler{
 		
 		validate(requestor);
 		
-		synchronized (ADD_ENTRY_LOCK) {
+		synchronized (ADD_DB_LOCK) {
 			if (!dbm.isAdmin(requestor.getUsername(), entry_id)) {
 				throw new HasNotTheRightsException();
 			}
@@ -375,7 +375,7 @@ public class RequestHandler{
 		if (entry == null) return false;
 		
 		try {
-			synchronized (ADD_ENTRY_LOCK) {
+			synchronized (ADD_DB_LOCK) {
 				long entry_id = dbm.addEntry(entry);
 				
 				if (entry_id > -1) {
@@ -408,7 +408,7 @@ public class RequestHandler{
 		validate(requestor);
 		
 		boolean result;
-		synchronized (ADD_ENTRY_LOCK) {
+		synchronized (ADD_DB_LOCK) {
 			if (!dbm.isAdmin(requestor.getUsername(), entry_id)){
 				throw new HasNotTheRightsException();
 			}
@@ -440,7 +440,7 @@ public class RequestHandler{
 		}
 		
 		boolean result;
-		synchronized (ADD_ENTRY_LOCK) {
+		synchronized (ADD_DB_LOCK) {
 			dbm.checkIfisAdmin(requestor.getUsername(), new_entry.getEntryID());
 			
 			result = dbm.editEntry(new_entry, requestor.getUsername());
@@ -473,7 +473,7 @@ public class RequestHandler{
 		}
 		
 		boolean result;
-		synchronized (ADD_ENTRY_LOCK) {
+		synchronized (ADD_DB_LOCK) {
 			if (!dbm.isAllowedToEdit(requestor.getUsername(), entry_id)) {
 				throw new HasNotTheRightsException();
 			}
@@ -503,7 +503,7 @@ public class RequestHandler{
 	public static boolean kickGroupFromEntry(User requestor, String groupname, long entry_id) throws GroupDoesNotExistException, UserInGroupDoesNotExistsException, EntryDoesNotExistException, SessionExpiredException, UserDoesNotExistException, HasNotTheRightsException, InvitationDoesNotExistException {
 		
 		Group group;
-		synchronized (ADD_ENTRY_LOCK) {
+		synchronized (ADD_DB_LOCK) {
 			group = dbm.getGroup(groupname);
 		}
 		
@@ -533,7 +533,7 @@ public class RequestHandler{
 		
 		validate(requestor);
 		
-		synchronized (ADD_ENTRY_LOCK) {
+		synchronized (ADD_DB_LOCK) {
 			if (!dbm.isAllowedToEdit(requestor.getUsername(), entry_id)){
 				throw new HasNotTheRightsException();
 			}
@@ -560,7 +560,7 @@ public class RequestHandler{
 		validate(requestor);
 		
 		Group group;
-		synchronized (ADD_ENTRY_LOCK) {
+		synchronized (ADD_DB_LOCK) {
 			if (!dbm.isAllowedToEdit(requestor.getUsername(), entry_id)){
 				throw new HasNotTheRightsException();
 			}
@@ -594,7 +594,7 @@ public class RequestHandler{
 		
 		validate(requestor);
 		
-		synchronized (ADD_ENTRY_LOCK) {
+		synchronized (ADD_DB_LOCK) {
 			return dbm.addGroup(group);
 		}
 	}
@@ -614,7 +614,7 @@ public class RequestHandler{
 		
 		validate(requestor);
 		
-		synchronized (ADD_ENTRY_LOCK) {
+		synchronized (ADD_DB_LOCK) {
 			return dbm.addUserToGroup(username, groupname);
 		}
 	}
@@ -655,7 +655,7 @@ public class RequestHandler{
 		
 		validate(requestor);
 		
-		synchronized (ADD_ENTRY_LOCK) {
+		synchronized (ADD_DB_LOCK) {
 			return dbm.removeUserFromGroup(username, groupname);
 		}
 	}
@@ -699,7 +699,7 @@ public class RequestHandler{
 		
 		validate(requestor);
 		
-		synchronized (ADD_ENTRY_LOCK) {
+		synchronized (ADD_DB_LOCK) {
 			return rbh.bookRoom(room, start_time, end_time, entry_id);
 		}
 	}
@@ -715,7 +715,7 @@ public class RequestHandler{
 		
 		validate(requestor);
 		
-		synchronized (ADD_ENTRY_LOCK) {
+		synchronized (ADD_DB_LOCK) {
 			return rbh.releaseRoom(room, start_time, end_time);
 		}
 	}
@@ -735,7 +735,7 @@ public class RequestHandler{
 		
 		validate(requestor);
 		
-		synchronized (ADD_ENTRY_LOCK) {
+		synchronized (ADD_DB_LOCK) {
 			return dbm.createCalendar(requestor.getUsername());
 		}
 	}
@@ -756,7 +756,7 @@ public class RequestHandler{
 		
 		// return answer? dbm.going(requestor.getUsername(), entry_id) : dbm.notGoing(requestor.getUsername(), entry_id);
 		
-		synchronized (ADD_ENTRY_LOCK) {
+		synchronized (ADD_DB_LOCK) {
 			if (answer)
 				return dbm.going(requestor.getUsername(), entry_id);
 			else
@@ -775,7 +775,7 @@ public class RequestHandler{
 		
 		validate(requestor);
 		
-		synchronized (ADD_ENTRY_LOCK) {
+		synchronized (ADD_DB_LOCK) {
 			return dbm.getNotificationsForUser(requestor.getUsername());
 		}
 	}
@@ -791,7 +791,7 @@ public class RequestHandler{
 		
 		validate(requestor);
 		
-		synchronized (ADD_ENTRY_LOCK) {
+		synchronized (ADD_DB_LOCK) {
 			return dbm.getInvitationsForUser(requestor.getUsername());
 		}
 	}
