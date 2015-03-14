@@ -18,7 +18,7 @@ import server_client.Argument.ArgumentType;
 public class AddUserToGroup extends Command {
 	
 	@Override
-	public String getCommand() {
+	public String get() {
 		return "add-user-to-group";
 	}
 
@@ -29,14 +29,20 @@ public class AddUserToGroup extends Command {
 
 	@Override
 	public String getManual() {
-		return getDescription();
+		return ""
+				+ "In order to use this command, you must first have created a group.\n"
+				+ "You can do so with the create-group function. When a group is created\n"
+				+ "it's completly empty, If you want that group to contain yourself,\n"
+				+ "you must therefore add yourself to the group manually using this command.";
 	}
 
 	@Override
-	public Argument[] getArguments() {
-		return new Argument[]{
-			new Argument(false, "username", ArgumentType.text),
-			new Argument(false, "groupname", ArgumentType.text),
+	public Argument[][] getArguments() {
+		return new Argument[][]{
+			{
+				new Argument(false, "username of user to add", ArgumentType.text),
+				new Argument(false, "name of group", ArgumentType.text),
+			}
 		};
 	}
 
@@ -46,21 +52,11 @@ public class AddUserToGroup extends Command {
 	}
 
 	@Override
-	public String run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+	public String run(ServerClientHandler handler, List<Object> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, SessionExpiredException, HasNotTheRightsException, UserDoesNotExistException, GroupDoesNotExistException {
 		
-		try {
-			if (RequestHandler.addUserToGroup(handler.getUser(), arguments.get(0), arguments.get(1)))
-				return "User successfully added to group!";
-			else
-				return "User couldn't be added!";
-		} catch (GroupDoesNotExistException e) {
-			return "User couldn't be added - Group does not exist!";
-		} catch (UserDoesNotExistException e) {
-			return "User couldn't be added - User does not exist!";
-		} catch (HasNotTheRightsException e) {
-			return "User couldn't be added - User does not have the rights to add!";
-		} catch (SessionExpiredException e) {
-			return "User couldn't be added - Session expired!";
-		}
+		if (RequestHandler.addUserToGroup(handler.getUser(),(String) arguments.get(0),(String) arguments.get(1)))
+			return "User successfully added to group!";
+		else
+			return "User couldn't be added!";
 	}
 }

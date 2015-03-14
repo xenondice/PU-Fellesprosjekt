@@ -6,8 +6,6 @@ import java.net.Socket;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.print.attribute.standard.MediaSize.Other;
-
 import room_booking.Room;
 import room_booking.RoomBookingHandler;
 import calendar.Calendar;
@@ -500,7 +498,7 @@ public class RequestHandler{
 	 * @throws HasNotTheRightsException
 	 * @throws InvitationDoesNotExistException
 	 */
-	public static boolean kickGroupFromEntry(User requestor, String groupname, long entry_id) throws GroupDoesNotExistException, UserInGroupDoesNotExistsException, EntryDoesNotExistException, SessionExpiredException, UserDoesNotExistException, HasNotTheRightsException, InvitationDoesNotExistException {
+	public static boolean kickGroupFromEntry(User requestor, String groupname, long entry_id) throws GroupDoesNotExistException, UserInGroupDoesNotExistsException, EntryDoesNotExistException, SessionExpiredException, UserDoesNotExistException, HasNotTheRightsException {
 		
 		Group group;
 		synchronized (ADD_DB_LOCK) {
@@ -529,7 +527,7 @@ public class RequestHandler{
 	 * @throws SessionExpiredException
 	 * @throws InvitationAlreadyExistsException
 	 */
-	public static boolean inviteUserToEntry(User requestor, String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException, SessionExpiredException, InvitationAlreadyExistsException {
+	public static boolean inviteUserToEntry(User requestor, String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException, SessionExpiredException {
 		
 		validate(requestor);
 		
@@ -555,7 +553,7 @@ public class RequestHandler{
 	 * @throws SessionExpiredException
 	 * @throws InvitationAlreadyExistsException
 	 */
-	public static boolean inviteGroupToEntry(User requestor, String groupname, long entry_id) throws GroupDoesNotExistException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException, SessionExpiredException, InvitationAlreadyExistsException {
+	public static boolean inviteGroupToEntry(User requestor, String groupname, long entry_id) throws GroupDoesNotExistException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException, SessionExpiredException {
 		
 		validate(requestor);
 		
@@ -610,7 +608,7 @@ public class RequestHandler{
 	 * @throws SessionExpiredException
 	 * @throws HasNotTheRightsException
 	 */
-	public static boolean addUserToGroup(User requestor, String username, String groupname) throws UserDoesNotExistException, GroupDoesNotExistException, SessionExpiredException, HasNotTheRightsException {
+	public static boolean addUserToGroup(User requestor, String username, String groupname) throws UserDoesNotExistException, GroupDoesNotExistException, SessionExpiredException {
 		
 		validate(requestor);
 		

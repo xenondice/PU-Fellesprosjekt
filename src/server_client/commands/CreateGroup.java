@@ -5,19 +5,22 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import exceptions.ForcedReturnException;
+import exceptions.GroupAlreadyExistsException;
+import exceptions.SessionExpiredException;
+import exceptions.UserDoesNotExistException;
+import exceptions.UserInGroupDoesNotExistsException;
 import server_client.Argument;
 import server_client.Argument.ArgumentType;
 import server_client.Command;
 import server_client.RequestHandler;
 import server_client.ServerClientHandler;
-import user.Group;
 import user.GroupBuilder;
 
 
 public class CreateGroup extends Command {
 	
 	@Override
-	public String getCommand() {
+	public String get() {
 		return "create-group";
 	}
 
@@ -32,9 +35,11 @@ public class CreateGroup extends Command {
 	}
 
 	@Override
-	public Argument[] getArguments() {
-		return new Argument[]{
-			new Argument(false, "groupname", ArgumentType.text),
+	public Argument[][] getArguments() {
+		return new Argument[][]{
+			{
+				new Argument(false, "name of group", ArgumentType.text),
+			}
 		};
 	}
 
@@ -44,20 +49,15 @@ public class CreateGroup extends Command {
 	}
 
 	@Override
-	public String run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+	public String run(ServerClientHandler handler, List<Object> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, UserDoesNotExistException, GroupAlreadyExistsException, UserInGroupDoesNotExistsException, SessionExpiredException {
 		
 		GroupBuilder group_builder = new GroupBuilder();
-		group_builder.setName(arguments.get(0));
-		Group group = group_builder.build();
+		group_builder.setName((String) arguments.get(0));
 		
-		try {
-			if (RequestHandler.createGroup(handler.getUser(), group))
-				return "Group successfully created!";
-			else
-				return "Group couldn't be created!";
-		} catch (Exception e) {
+		if (RequestHandler.createGroup(handler.getUser(), group_builder.build()))
+			return "Group successfully created!";
+		else
 			return "Group couldn't be created!";
-		}
 	}
 }
 

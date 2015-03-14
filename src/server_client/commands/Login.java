@@ -17,7 +17,7 @@ import user.User;
 public class Login extends Command {
 
 	@Override
-	public String getCommand() {
+	public String get() {
 		return "login";
 	}
 
@@ -28,14 +28,18 @@ public class Login extends Command {
 
 	@Override
 	public String getManual() {
-		return getDescription();
+		return ""
+				+ "Login with an existing user.\n"
+				+ "Preferably use wiz login as this will hide your password when you type it in!";
 	}
 
 	@Override
-	public Argument[] getArguments() {
-		return new Argument[]{
-			new Argument(false, "username", ArgumentType.text),
-			new Argument(false, "password", ArgumentType.text),
+	public Argument[][] getArguments() {
+		return new Argument[][]{
+			{
+				new Argument(false, "username", ArgumentType.text),
+				new Argument(false, "password", ArgumentType.password),
+			}
 		};
 	}
 
@@ -45,10 +49,10 @@ public class Login extends Command {
 	}
 
 	@Override
-	public String run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+	public String run(ServerClientHandler handler, List<Object> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		
 		try {
-			User user = RequestHandler.logIn(arguments.get(0), arguments.get(1));
+			User user = RequestHandler.logIn((String) arguments.get(0), (String) arguments.get(1));
 			if (user != null) {
 				handler.setUser(user);
 				return "Successfully logged in!";

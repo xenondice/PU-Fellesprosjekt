@@ -4,7 +4,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
+import exceptions.EntryDoesNotExistException;
 import exceptions.ForcedReturnException;
+import exceptions.HasNotTheRightsException;
+import exceptions.SessionExpiredException;
+import exceptions.UserDoesNotExistException;
 import server_client.Argument;
 import server_client.Argument.ArgumentType;
 import server_client.Command;
@@ -14,7 +18,7 @@ import server_client.ServerClientHandler;
 public class DeleteEntry extends Command {
 	
 	@Override
-	public String getCommand() {
+	public String get() {
 		return "delete-entry";
 	}
 
@@ -29,9 +33,11 @@ public class DeleteEntry extends Command {
 	}
 
 	@Override
-	public Argument[] getArguments() {
-		return new Argument[]{
-			new Argument(false, "entryID", ArgumentType.long_number),
+	public Argument[][] getArguments() {
+		return new Argument[][]{
+			{
+				new Argument(false, "ID of entry", ArgumentType.long_number),
+			}
 		};
 	}
 
@@ -41,15 +47,11 @@ public class DeleteEntry extends Command {
 	}
 
 	@Override
-	public String run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+	public String run(ServerClientHandler handler, List<Object> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, SessionExpiredException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException {
 		
-		try {
-			if (RequestHandler.deleteEntry(handler.getUser(), Integer.parseInt(arguments.get(0))))
-				return "Calendar entry successfully deleted!";
-			else
-				return "Calendar entry couldn't be deleted!";
-		} catch (Exception e) {
-			return "Could not delete calendar entry!";
-		}
+		if (RequestHandler.deleteEntry(handler.getUser(), (long) arguments.get(0)))
+			return "Calendar entry successfully deleted!";
+		else
+			return "Calendar entry couldn't be deleted!";
 	}
 }

@@ -35,7 +35,6 @@ public class ClientServerListener implements Runnable {
 						console_output.write(server_input.read());
 						console_output.flush();
 						if (status != Client.STATUS_NOTIFICATION) client_thread.interrupt();
-						Thread.sleep(10);
 					}
 					
 					if (!Client.ready() || status == Client.STATUS_NOTIFICATION) {

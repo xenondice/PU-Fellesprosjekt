@@ -13,7 +13,7 @@ import server_client.ServerClientHandler;
 public class Manual extends Command {
 
 	@Override
-	public String getCommand() {
+	public String get() {
 		return "man";
 	}
 
@@ -28,9 +28,11 @@ public class Manual extends Command {
 	}
 
 	@Override
-	public Argument[] getArguments() {
-		return new Argument[]{
-				new Argument(false, "command", ArgumentType.text),
+	public Argument[][] getArguments() {
+		return new Argument[][]{
+				{
+					new Argument(false, "command", ArgumentType.command),
+				}
 		};
 	}
 
@@ -40,22 +42,21 @@ public class Manual extends Command {
 	}
 
 	@Override
-	public String run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+	public String run(ServerClientHandler handler, List<Object> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		
-		Command command = Command.getCommand(arguments.get(0));
-		if (command == null) {
-			return "Not a command!";
-		}
+		Command command = (Command) arguments.get(0);
 		
 		String message = ""
-				+ "Manual for " + command.getCommand() + ":\n"
+				+ "Manual for " + command.get() + ":\n"
 				+ "\n"
 				+ command.getManual() + "\n"
-				+ "\n"
-				+ "Syntax: " + command.getCommand();
+				+ "\n";
 		
-		for (Argument argument : command.getArguments())
-			message += " " + argument;
+		for (Argument[] syntaxes : command.getArguments()) {
+			message += "Syntax: " + command.get();
+			for (Argument argument : syntaxes)
+				message += " " + argument;
+		}
 		
 		int i = 0;
 		for (String example : command.getExamples()) {

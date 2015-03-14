@@ -1,11 +1,19 @@
 package server_client.commands;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
+import exceptions.EntryDoesNotExistException;
 import exceptions.ForcedReturnException;
+import exceptions.GroupAlreadyExistsException;
+import exceptions.GroupDoesNotExistException;
+import exceptions.HasNotTheRightsException;
+import exceptions.InvitationDoesNotExistException;
+import exceptions.SessionExpiredException;
+import exceptions.UserDoesNotExistException;
+import exceptions.UserInGroupDoesNotExistsException;
+import exceptions.UsernameAlreadyExistsException;
 import server_client.Argument;
 import server_client.Argument.ArgumentType;
 import server_client.Command;
@@ -15,7 +23,7 @@ import server_client.Wizard;
 public class RunWizard extends Command {
 
 	@Override
-	public String getCommand() {
+	public String get() {
 		return "wiz";
 	}
 
@@ -26,13 +34,26 @@ public class RunWizard extends Command {
 
 	@Override
 	public String getManual() {
-		return getDescription();
+		return ""
+				+ "Makes a wizard that ensures everyting is written correctly.\n"
+				+ "It's recommended to use this if you have to write in a password.\n"
+				+ "\"create-user\", \"edit-user\" and \"login\" are examples of commands\n"
+				+ "that should always be used with wiz.\n"
+				+ "\n"
+				+ "For functions with more that one syntax, you can write at the end\n"
+				+ "which syntax you want to use. If you want to use the first, type 1.";
 	}
 
 	@Override
-	public Argument[] getArguments() {
-		return new Argument[]{
-				new Argument(false, "command", ArgumentType.text),
+	public Argument[][] getArguments() {
+		return new Argument[][]{
+				{
+					new Argument(false, "command", ArgumentType.command),
+				},
+				{
+					new Argument(false, "command", ArgumentType.command),
+					new Argument(false, "what syntax to use", ArgumentType.number),
+				}
 		};
 	}
 
@@ -42,26 +63,26 @@ public class RunWizard extends Command {
 	}
 
 	@Override
-	public String run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+	public String run(ServerClientHandler handler, List<Object> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, SessionExpiredException, HasNotTheRightsException, UserDoesNotExistException, GroupDoesNotExistException, EntryDoesNotExistException, GroupAlreadyExistsException, UserInGroupDoesNotExistsException, UsernameAlreadyExistsException, InvitationDoesNotExistException {
 		
-		Command command = Command.getCommand(arguments.get(0));
-		if (command == null)
-			return "Not a command!";
+		Command command = (Command) arguments.get(0);
 		
+		Argument[] syntax;
+		if (arguments.size() == 1)
+			syntax = command.getArguments()[0];
+		else {
+			if ((int) arguments.get(1) > command.getArguments().length || (int) arguments.get(1) < 1)
+				throw new ForcedReturnException("Invalid syntax number!");
+			syntax = command.getArguments()[((int) arguments.get(1)) - 1];
+		}
+			
 		Wizard wizard = new Wizard();
-		for (Argument argument : command.getArguments()) {
+		for (Argument argument : syntax) {
 			wizard.add(argument);
 		}
 		
 		List<Object> results = handler.runWizard(wizard);
-		List<String> string_results = new ArrayList<>();
 		
-		for (Object result : results)
-			if (result == null)
-				string_results.add("");
-			else
-				string_results.add(result.toString());
-		
-		return command.run(handler, string_results);
+		return command.run(handler, results);
 	}
 }

@@ -13,13 +13,12 @@ import server_client.Argument.ArgumentType;
 import server_client.Command;
 import server_client.RequestHandler;
 import server_client.ServerClientHandler;
-import user.User;
 import user.UserBuilder;
 
 public class EditUser extends Command {
 	
 	@Override
-	public String getCommand() {
+	public String get() {
 		return "edit-user";
 	}
 
@@ -34,12 +33,14 @@ public class EditUser extends Command {
 	}
 
 	@Override
-	public Argument[] getArguments() {
-		return new Argument[]{
-			new Argument(false, "username", ArgumentType.text),
-			new Argument(false, "password", ArgumentType.text),
-			new Argument(false, "name", ArgumentType.text),
-			new Argument(false, "email", ArgumentType.text),
+	public Argument[][] getArguments() {
+		return new Argument[][]{
+			{
+				new Argument(false, "exisiting username", ArgumentType.text),
+				new Argument(true, "password", ArgumentType.password),
+				new Argument(true, "name", ArgumentType.text),
+				new Argument(true, "email", ArgumentType.text),
+			}
 		};
 	}
 
@@ -49,26 +50,17 @@ public class EditUser extends Command {
 	}
 
 	@Override
-	public String run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+	public String run(ServerClientHandler handler, List<Object> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, UserDoesNotExistException, SessionExpiredException, HasNotTheRightsException {
 		
 		UserBuilder user_builder = new UserBuilder();
-		user_builder.setUsername(arguments.get(0));
-		user_builder.setPassword(arguments.get(1));
-		user_builder.setName(arguments.get(2));
-		user_builder.setEmail(arguments.get(3));
-		User user = user_builder.build();
+		user_builder.setUsername((String) arguments.get(0));
+		user_builder.setPassword((String) arguments.get(1));
+		user_builder.setName((String) arguments.get(2));
+		user_builder.setEmail((String) arguments.get(3));
 		
-		try {
-			if (RequestHandler.editUser(handler.getUser(), user)) {
-				return "User successfully edited!";
-			} else {
-				return "User could not be edited!";
-			}
-		} catch (UserDoesNotExistException | HasNotTheRightsException e) {
-			return "Could not edit user!";
-		} catch (SessionExpiredException e) {
-			return "Session expired!";
-		}
-		
+		if (RequestHandler.editUser(handler.getUser(), user_builder.build()))
+			return "User successfully edited!";
+		else
+			return "User could not be edited!";
 	}
 }

@@ -18,7 +18,7 @@ import server_client.ServerClientHandler;
 public class RemoveUserFromGroup extends Command {
 	
 	@Override
-	public String getCommand() {
+	public String get() {
 		return "remove-user-from-group";
 	}
 
@@ -33,10 +33,12 @@ public class RemoveUserFromGroup extends Command {
 	}
 
 	@Override
-	public Argument[] getArguments() {
-		return new Argument[]{
-			new Argument(false, "username", ArgumentType.text),
-			new Argument(false, "groupname", ArgumentType.text),
+	public Argument[][] getArguments() {
+		return new Argument[][]{
+			{
+				new Argument(false, "username", ArgumentType.text),
+				new Argument(false, "name of group", ArgumentType.text),
+			}
 		};
 	}
 
@@ -46,21 +48,11 @@ public class RemoveUserFromGroup extends Command {
 	}
 
 	@Override
-	public String run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+	public String run(ServerClientHandler handler, List<Object> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, GroupDoesNotExistException, SessionExpiredException, HasNotTheRightsException, UserDoesNotExistException {
 		
-		try {
-			if (RequestHandler.removeUserFromGroup(handler.getUser(), arguments.get(0), arguments.get(1)))
-				return "User successfully removed from group!";
-			else
-				return "User couldn't be removed!";
-		} catch (GroupDoesNotExistException e) {
-			return "User couldn't be removed - Group does not exist!";
-		} catch (UserDoesNotExistException e) {
-			return "User couldn't be removed - User does not exist!";
-		} catch (HasNotTheRightsException e) {
-			return "User couldn't be removed - User does not have the rights to remove!";
-		} catch (SessionExpiredException e) {
-			return "User couldn't be removed - Session expired!";
-		}
+		if (RequestHandler.removeUserFromGroup(handler.getUser(), (String) arguments.get(0), (String) arguments.get(1)))
+			return "User successfully removed from group!";
+		else
+			return "User couldn't be removed!";
 	}
 }

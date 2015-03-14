@@ -842,7 +842,7 @@ public class DataBaseManager implements Closeable {
 	 * @throws EntryDoesNotExistException 
 	 * @throws InvitationDoesNotExistException 
 	 */
-	private boolean setIsShowing(String username, int entry_id, boolean newValue) throws EntryDoesNotExistException, UserDoesNotExistException, InvitationDoesNotExistException{
+	private boolean setIsShowing(String username, long entry_id, boolean newValue) throws EntryDoesNotExistException, UserDoesNotExistException, InvitationDoesNotExistException{
 		
 		checkUserAndEntry(username, entry_id);
 		checkIfInvitationExists(username, entry_id);
@@ -858,7 +858,7 @@ public class DataBaseManager implements Closeable {
 			
 			set_stmt.setBoolean(++i, newValue);
 			set_stmt.setString(++i, username);
-			set_stmt.setInt(++i, entry_id);
+			set_stmt.setLong(++i, entry_id);
 			
 			set_stmt.executeUpdate();
 			set_stmt.close();
@@ -881,7 +881,7 @@ public class DataBaseManager implements Closeable {
 	 * @throws UserDoesNotExistException 
 	 * @throws EntryDoesNotExistException 
 	 */
-	private boolean setIsGoing(String username, int entry_id, boolean newValue) throws EntryDoesNotExistException, UserDoesNotExistException{
+	private boolean setIsGoing(String username, long entry_id, boolean newValue) throws EntryDoesNotExistException, UserDoesNotExistException{
 		
 		checkUserAndEntry(username, entry_id);
 		
@@ -895,7 +895,7 @@ public class DataBaseManager implements Closeable {
 			
 			set_stmt.setBoolean(++i, newValue);
 			set_stmt.setString(++i, username);
-			set_stmt.setInt(++i, entry_id);
+			set_stmt.setLong(++i, entry_id);
 			
 			set_stmt.executeUpdate();
 			set_stmt.close();
@@ -1795,14 +1795,16 @@ public class DataBaseManager implements Closeable {
 				+ "SET name = ?, password = ?, salt = ?, email = ?"
 				+ "WHERE username = ?; ";
 		
+		User existingUser = getUser(u.getUsername());
+		
 		try {
 			PreparedStatement editUser_stmt = connection.prepareStatement(edit_entry);
 			int i = 0;
 			
-			editUser_stmt.setString(++i, u.getName());
-			editUser_stmt.setString(++i, u.getPassword());
-			editUser_stmt.setString(++i, u.getSalt());
-			editUser_stmt.setString(++i, u.getEmail());
+			editUser_stmt.setString(++i, u.getName()==null?existingUser.getName():u.getName());
+			editUser_stmt.setString(++i, u.getPassword()==null?existingUser.getPassword():u.getPassword());
+			editUser_stmt.setString(++i, u.getSalt()==null?existingUser.getSalt():u.getSalt());
+			editUser_stmt.setString(++i, u.getEmail()==null?existingUser.getEmail():u.getEmail());
 			editUser_stmt.setString(++i, u.getUsername());
 			
 			editUser_stmt.executeUpdate();
@@ -1835,14 +1837,16 @@ public class DataBaseManager implements Closeable {
 				+ "SET startTime = ?, endTime = ?, location = ?, description = ?, roomID = ? "
 				+ "WHERE entryID = ?; ";
 		
+		CalendarEntry existingEntry = getEntry(newEntry.getEntryID());
+		
 		try {
 			PreparedStatement editEntry_stmt = connection.prepareStatement(edit_entry);
 			int i = 0;
-			editEntry_stmt.setTimestamp(++i, new java.sql.Timestamp(newEntry.getStartTime()));
-			editEntry_stmt.setTimestamp(++i, new java.sql.Timestamp(newEntry.getEndTime()));
-			editEntry_stmt.setString(++i, newEntry.getLocation());
-			editEntry_stmt.setString(++i, newEntry.getDescription());
-			editEntry_stmt.setString(++i, newEntry.getRoomID());
+			editEntry_stmt.setTimestamp(++i, new java.sql.Timestamp(newEntry.getStartTime()==0?existingEntry.getStartTime():newEntry.getStartTime()));
+			editEntry_stmt.setTimestamp(++i, new java.sql.Timestamp(newEntry.getEndTime()==0?existingEntry.getEndTime():newEntry.getEndTime()));
+			editEntry_stmt.setString(++i, newEntry.getLocation()==null?existingEntry.getLocation():newEntry.getLocation());
+			editEntry_stmt.setString(++i, newEntry.getDescription()==null?existingEntry.getDescription():newEntry.getDescription());
+			editEntry_stmt.setString(++i, newEntry.getRoomID()==null?existingEntry.getRoomID():newEntry.getRoomID());
 			editEntry_stmt.setLong(++i, newEntry.getEntryID());
 			
 			editEntry_stmt.executeUpdate();
@@ -1891,7 +1895,7 @@ public class DataBaseManager implements Closeable {
 	 * @throws EntryDoesNotExistException 
 	 * @throws InvitationDoesNotExistException 
 	 */
-	public boolean allowToSee(String username, int entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, InvitationDoesNotExistException{
+	public boolean allowToSee(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, InvitationDoesNotExistException{
 		return setIsShowing(username, entry_id, true);
 	}
 	
@@ -1905,7 +1909,7 @@ public class DataBaseManager implements Closeable {
 	 * @throws EntryDoesNotExistException 
 	 * @throws InvitationDoesNotExistException 
 	 */
-	public boolean allowToSeeGroup(String groupname, int entry_id) throws GroupDoesNotExistException, UserInGroupDoesNotExistsException, EntryDoesNotExistException, InvitationDoesNotExistException{
+	public boolean allowToSeeGroup(String groupname, long entry_id) throws GroupDoesNotExistException, UserInGroupDoesNotExistsException, EntryDoesNotExistException, InvitationDoesNotExistException{
 		checkIfEntryExists(entry_id); // to discover an exception early.
 		
 		for(User u : getGroup(groupname).getUsers()){
@@ -1929,7 +1933,7 @@ public class DataBaseManager implements Closeable {
 	 * @throws EntryDoesNotExistException 
 	 * @throws InvitationDoesNotExistException 
 	 */
-	public boolean hideEvent(String username, int entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, InvitationDoesNotExistException{
+	public boolean hideEvent(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, InvitationDoesNotExistException{
 		return setIsShowing(username, entry_id, false);
 	}
 	
@@ -1943,7 +1947,7 @@ public class DataBaseManager implements Closeable {
 	 * @throws EntryDoesNotExistException 
 	 * @throws InvitationDoesNotExistException 
 	 */
-	public boolean hideEventGroup(String groupname, int entry_id) throws GroupDoesNotExistException, UserInGroupDoesNotExistsException, EntryDoesNotExistException, InvitationDoesNotExistException{
+	public boolean hideEventGroup(String groupname, long entry_id) throws GroupDoesNotExistException, UserInGroupDoesNotExistsException, EntryDoesNotExistException, InvitationDoesNotExistException{
 		checkIfEntryExists(entry_id); // to detect an exception early.
 		checkIfGroupExists(groupname);
 		
@@ -1968,7 +1972,7 @@ public class DataBaseManager implements Closeable {
 	 * @throws UserDoesNotExistException 
 	 * @throws EntryDoesNotExistException 
 	 */
-	public boolean going(String username, int entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
+	public boolean going(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
 		return setIsGoing(username, entry_id, true);
 	}
 	
@@ -1980,7 +1984,7 @@ public class DataBaseManager implements Closeable {
 	 * @throws UserDoesNotExistException 
 	 * @throws EntryDoesNotExistException 
 	 */
-	public boolean notGoing(String username, int entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
+	public boolean notGoing(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
 		return setIsGoing(username, entry_id, false);
 	}
 	

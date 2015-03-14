@@ -15,7 +15,16 @@ import java.util.regex.Pattern;
 
 import server_client.Argument.ArgumentType;
 import user.User;
+import exceptions.EntryDoesNotExistException;
 import exceptions.ForcedReturnException;
+import exceptions.GroupAlreadyExistsException;
+import exceptions.GroupDoesNotExistException;
+import exceptions.HasNotTheRightsException;
+import exceptions.InvitationDoesNotExistException;
+import exceptions.SessionExpiredException;
+import exceptions.UserDoesNotExistException;
+import exceptions.UserInGroupDoesNotExistsException;
+import exceptions.UsernameAlreadyExistsException;
 
 public class ServerClientHandler implements Runnable, Closeable {
 	private BufferedReader client_input;
@@ -50,7 +59,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 	 * @param Request string to be formatted.
 	 * @return A list over the words in the string divided by spaces, and grouped by quotes and all in lower case.
 	 */
-	private List<String> formatRequest(String request) {
+	public List<String> formatRequest(String request) {
 		List<String> splitted_answer = new ArrayList<>();
 		
 		Pattern regex_pattern = Pattern.compile(FORMATTING_RULES);
@@ -105,28 +114,6 @@ public class ServerClientHandler implements Runnable, Closeable {
 	private synchronized void send(int status, String message) throws IOException {
 		client_output.write(((char) status) + message + '\n');
 		client_output.flush();
-	}
-	
-	/**
-	 * Asks the user a question.
-	 * @param Question to be asked.
-	 * @param How many arguments that are accepted.
-	 * @return The arguments given by the user.
-	 * @throws IOException
-	 * @throws TimeoutException
-	 * @throws InterruptedException
-	 * @throws ForcedReturnException
-	 */
-	public List<String> ask(String question, int number_of_arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
-		
-		send(STATUS_AWAIT_MORE, question);
-		
-		List<String> response = formatRequest(expectInput());
-		
-		if (response.size() != number_of_arguments)
-			throw new ForcedReturnException("Please provide " + number_of_arguments + " number of argument(s)!");
-		
-		return response;
 	}
 	
 	/**
@@ -203,6 +190,17 @@ public class ServerClientHandler implements Runnable, Closeable {
 					} catch (NumberFormatException e) {
 						question = "Answer is not a long! Please try again.";
 					} //TODO: Make it read the format DD/MM/YYYY and DD/MM/YYYY MM:SS
+				} else if (argument.type == ArgumentType.password) {
+					result = answer;
+					break;
+					//TODO: Make it send a header for password and hide input
+				} else if (argument.type == ArgumentType.command) {
+					Command command = Command.get(answer);
+					if (command != null) {
+						result = command;
+						break;
+					}
+					question = "Answer is not a valid command! Please try again.";
 				} else {
 					throw new ForcedReturnException("Internal error!");
 				}
@@ -220,6 +218,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 	 * @throws TimeoutException
 	 * @throws InterruptedException
 	 * @throws ForcedReturnException
+	 * @throws SessionExpiredException 
 	 */
 	private void handleRequest(List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		
@@ -230,67 +229,115 @@ public class ServerClientHandler implements Runnable, Closeable {
 		
 		String command = arguments.remove(0);
 		
-		Command command_type = Command.getCommand(command);
+		Command command_type = Command.get(command);
 		if (command_type == null) {
 			send(STATUS_DONE, "Unrecognized command! Type \"commands\" for a list over commands.");
 			return;
 		}
 		
-		if (!checkArguments(command_type, arguments)) {
+		List<Object> formatted_arguments = formatArguments(command_type, arguments);
+		if (formatted_arguments == null) {
 			send(STATUS_DONE, "Command syntax is wrong! Type \"help command\" or \"man command\" for information about the command.");
 			return;
 		}
 		
-		send(STATUS_DONE, command_type.run(this, arguments));
+		try {
+			send(STATUS_DONE, command_type.run(this, formatted_arguments));
+		} catch (SessionExpiredException e) {
+			throw new ForcedReturnException("Invalid session, use of command denied! Please login.");
+		} catch (HasNotTheRightsException e) {
+			throw new ForcedReturnException("You are not authorized to do this!");
+		} catch (UserDoesNotExistException e) {
+			throw new ForcedReturnException("User doesn't exist!");
+		} catch (GroupDoesNotExistException e) {
+			throw new ForcedReturnException("Group doesn't exist!");
+		} catch (EntryDoesNotExistException e) {
+			throw new ForcedReturnException("Entry doesn't exist!");
+		} catch (GroupAlreadyExistsException e) {
+			throw new ForcedReturnException("Group already exists!");
+		} catch (UserInGroupDoesNotExistsException e) {
+			throw new ForcedReturnException("User is not in group!");
+		} catch (UsernameAlreadyExistsException e) {
+			throw new ForcedReturnException("Username already taken!");
+		} catch (InvitationDoesNotExistException e) {
+			throw new ForcedReturnException("User is not invited to entry!");
+		}
 	}
 	
 	/**
-	 * Verifies that the arguments given are of the right type and amount
+	 * Verifies that the arguments given are of the right type and amount. Returns null if not.
 	 * @param command
 	 * @param arguments
 	 * @return
 	 */
-	private boolean checkArguments(Command command, List<String> arguments) {
-		Argument[] command_arguments = command.getArguments();
+	private List<Object> formatArguments(Command command, List<String> arguments) {
+		Argument[][] command_syntaxes = command.getArguments();
 		
-		if (arguments.size() != command_arguments.length)
-			return false;
-		
-		for (int i = 0; i < command_arguments.length; i++) {
-			if (arguments.get(i) == null) {
-				if (!command_arguments[i].optional)
-					return false;
-			} else if (command_arguments[i].type == ArgumentType.number) {
-				try {
-					Integer.parseInt(arguments.get(i));
-				} catch (NumberFormatException e) {
-					return false;
+		for (Argument[] command_arguments : command_syntaxes) {
+			boolean syntax_correct = true;
+			List<Object> formatted_arguments = new ArrayList<>();
+			
+			if (arguments.size() != command_arguments.length)
+				syntax_correct = false;
+			else
+				for (int i = 0; i < command_arguments.length; i++) {
+					Object argument = null;
+					
+					if (arguments.get(i) == null) {
+						if (!command_arguments[i].optional)
+							syntax_correct = false;
+					} else if (command_arguments[i].type == ArgumentType.number) {
+						try {
+							argument = Integer.parseInt(arguments.get(i));
+						} catch (NumberFormatException e) {
+							syntax_correct = false;
+						}
+					} else if (command_arguments[i].type == ArgumentType.long_number) {
+						try {
+							argument = Long.parseLong(arguments.get(i));
+						} catch (NumberFormatException e) {
+							syntax_correct = false;
+						}
+					} else if (command_arguments[i].type == ArgumentType.text) {
+						argument = arguments.get(i);
+					} else if (command_arguments[i].type == ArgumentType.logic) {
+						if (arguments.get(i).equals("yes") || arguments.get(i).equals("y"))
+							argument = true;
+						else if (arguments.get(i).equals("no") || arguments.get(i).equals("n"))
+							argument = false;
+						else
+							syntax_correct = false;
+					} else if (command_arguments[i].type == ArgumentType.date) {
+						try {
+							argument = Long.parseLong(arguments.get(i));
+						} catch (NumberFormatException e) {
+							syntax_correct = false;
+						}
+					} else if (command_arguments[i].type == ArgumentType.password) {
+						argument = arguments.get(i);
+					} else if (command_arguments[i].type == ArgumentType.command) {
+						Command temp_command = Command.get(arguments.get(i));
+						if (temp_command == null)
+							syntax_correct = false;
+						else
+							argument = temp_command;
+					} else {
+						syntax_correct = false;
+					}
+					
+					if (syntax_correct) {
+						formatted_arguments.add(argument);
+					} else
+						break;
 				}
-			} else if (command_arguments[i].type == ArgumentType.long_number) {
-				try {
-					Long.parseLong(arguments.get(i));
-				} catch (NumberFormatException e) {
-					return false;
-				}
-			} else if (command_arguments[i].type == ArgumentType.text) {
-				
-			} else if (command_arguments[i].type == ArgumentType.logic) {
-				try {
-					Boolean.parseBoolean(arguments.get(i));
-				} catch (NumberFormatException e) {
-					return false;
-				}
-			} else if (command_arguments[i].type == ArgumentType.date) {
-				try {
-					Long.parseLong(arguments.get(i));
-				} catch (NumberFormatException e) {
-					return false;
-				}
-			} else {
-				return false;
-			}
+			
+			if (syntax_correct)
+				return formatted_arguments;
+			else
+				formatted_arguments.clear();
 		}
-		return true;
+		
+		return null;
 	}
 	
 	/**
@@ -313,7 +360,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 	 * Send a instant message to the user this handler is listening to.
 	 * @param message
 	 */
-	public synchronized void sendNotification(String message) {
+	public void sendNotification(String message) {
 		try {
 			send(STATUS_NOTIFICATION, message);
 		} catch (IOException e) {

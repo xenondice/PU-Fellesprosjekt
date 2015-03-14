@@ -4,7 +4,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
+import exceptions.EntryDoesNotExistException;
 import exceptions.ForcedReturnException;
+import exceptions.HasNotTheRightsException;
+import exceptions.SessionExpiredException;
+import exceptions.UserDoesNotExistException;
 import server_client.Argument;
 import server_client.Argument.ArgumentType;
 import server_client.Command;
@@ -14,7 +18,7 @@ import server_client.ServerClientHandler;
 public class InviteUser extends Command {
 	
 	@Override
-	public String getCommand() {
+	public String get() {
 		return "invite-user";
 	}
 
@@ -29,10 +33,12 @@ public class InviteUser extends Command {
 	}
 
 	@Override
-	public Argument[] getArguments() {
-		return new Argument[]{
-			new Argument(false, "username", ArgumentType.text),
-			new Argument(false, "entryID", ArgumentType.long_number),
+	public Argument[][] getArguments() {
+		return new Argument[][]{
+			{
+				new Argument(false, "username", ArgumentType.text),
+				new Argument(false, "ID of existing entry", ArgumentType.long_number),
+			}
 		};
 	}
 
@@ -44,15 +50,11 @@ public class InviteUser extends Command {
 	}
 
 	@Override
-	public String run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+	public String run(ServerClientHandler handler, List<Object> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException, SessionExpiredException {
 		
-		try {
-			if (RequestHandler.inviteUserToEntry(handler.getUser(), arguments.get(0), Integer.parseInt(arguments.get(1))))
-				return "User successfully invited to calendar entry!";
-			else
-				return "User couldn't be invited!";
-		} catch (Exception e) {
+		if (RequestHandler.inviteUserToEntry(handler.getUser(), (String) arguments.get(0), (long) arguments.get(1)))
+			return "User successfully invited to calendar entry!";
+		else
 			return "User couldn't be invited!";
-		}
 	}
 }

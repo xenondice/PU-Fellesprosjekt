@@ -11,6 +11,8 @@ public class Argument {
 		text,
 		logic,
 		date,
+		password,
+		command,
 	}
 	
 	public Argument(boolean optional, String description, ArgumentType type) {

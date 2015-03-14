@@ -1,5 +1,7 @@
 package calendar;
 
+import java.util.Date;
+
 public class Notification {
 	private final long notificationID;
 	private final String description;
@@ -90,22 +92,14 @@ public class Notification {
 		}
 		return true;
 	}
+	
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("Notification [notificationID=");
-		builder.append(notificationID);
-		builder.append(", description=");
-		builder.append(description);
-		builder.append(", isOpened=");
-		builder.append(isOpened);
-		builder.append(", time=");
-		builder.append(time);
-		builder.append(", username=");
-		builder.append(username);
-		builder.append(", entry_id=");
-		builder.append(entry_id);
-		builder.append("]");
-		return builder.toString();
+		String str = "(" + new Date(time) + ") ID " + notificationID + " for entry " + entry_id + ": "
+				+ description;
+		
+		if (!isOpened) str += " *";
+		
+		return str;
 	}
 }

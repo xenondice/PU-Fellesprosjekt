@@ -4,7 +4,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
+import exceptions.EntryDoesNotExistException;
 import exceptions.ForcedReturnException;
+import exceptions.HasNotTheRightsException;
+import exceptions.InvitationDoesNotExistException;
+import exceptions.SessionExpiredException;
+import exceptions.UserDoesNotExistException;
 import server_client.Argument;
 import server_client.Argument.ArgumentType;
 import server_client.Command;
@@ -14,7 +19,7 @@ import server_client.ServerClientHandler;
 public class KickUser extends Command {
 	
 	@Override
-	public String getCommand() {
+	public String get() {
 		return "kick-user";
 	}
 
@@ -25,14 +30,18 @@ public class KickUser extends Command {
 
 	@Override
 	public String getManual() {
-		return getDescription();
+		return ""
+				+ "If you are an admin for an entry, you can make specific users unable to see the entry\n"
+				+ "by using this command. They will then also stop getting notifications about updates.";
 	}
 
 	@Override
-	public Argument[] getArguments() {
-		return new Argument[]{
-			new Argument(false, "username", ArgumentType.text),
-			new Argument(false, "entryID", ArgumentType.long_number),
+	public Argument[][] getArguments() {
+		return new Argument[][]{
+			{
+				new Argument(false, "username", ArgumentType.text),
+				new Argument(false, "ID of entry", ArgumentType.long_number),
+			}
 		};
 	}
 
@@ -42,16 +51,11 @@ public class KickUser extends Command {
 	}
 
 	@Override
-	public String run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+	public String run(ServerClientHandler handler, List<Object> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException, HasNotTheRightsException, InvitationDoesNotExistException {
 		
-		
-		try {
-			if (RequestHandler.kickUserFromEntry(handler.getUser(), arguments.get(0), Integer.parseInt(arguments.get(1))))
-				return "User successfully kicked from calendar entry!";
-			else
-				return "User could not be kicked from calendar entry!";
-		} catch (Exception e) {
-			return "Could not kick user from calendar entry!";
-		}
+		if (RequestHandler.kickUserFromEntry(handler.getUser(), (String) arguments.get(0), (long) arguments.get(1)))
+			return "User successfully kicked from calendar entry!";
+		else
+			return "User could not be kicked from calendar entry!";
 	}
 }

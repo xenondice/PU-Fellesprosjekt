@@ -23,9 +23,18 @@ import server_client.commands.MakeAdmin;
 import server_client.commands.Manual;
 import server_client.commands.RemoveUserFromGroup;
 import server_client.commands.RunWizard;
-import server_client.commands.ShowCommands;
+import server_client.commands.ShowCalendar;
 import server_client.commands.ShowNotifications;
+import exceptions.EntryDoesNotExistException;
 import exceptions.ForcedReturnException;
+import exceptions.GroupAlreadyExistsException;
+import exceptions.GroupDoesNotExistException;
+import exceptions.HasNotTheRightsException;
+import exceptions.InvitationDoesNotExistException;
+import exceptions.SessionExpiredException;
+import exceptions.UserDoesNotExistException;
+import exceptions.UserInGroupDoesNotExistsException;
+import exceptions.UsernameAlreadyExistsException;
 
 /**
  * All the commands that a client can use once connected and verified. The classes that extend this interface needs to be
@@ -35,16 +44,15 @@ public abstract class Command {
 	
 	public static final Command[] commands = {
 		
-		// Essential
+		// Core
 		new Help(),
 		new Manual(),
-		new ShowCommands(),
 		new Login(),
 		new Logout(),
 		new CreateUser(),
 		new RunWizard(),
 		
-		// Arbitrary
+		// Additional
 		new AddUserToGroup(),
 		new AnswerInvitation(),
 		new CreateEntry(),
@@ -59,6 +67,7 @@ public abstract class Command {
 		new MakeAdmin(),
 		new RemoveUserFromGroup(),
 		new ShowNotifications(),
+		new ShowCalendar(),
 	};
 	
 	/**
@@ -66,10 +75,9 @@ public abstract class Command {
 	 * @param command
 	 * @return
 	 */
-	public static Command getCommand(String command) {
-		// TODO can be written shorter as commands.get(command) or something like that.
+	public static Command get(String command) {
 		for (Command command_type : commands)
-			if (command.equals(command_type.getCommand()))
+			if (command.equals(command_type.get()))
 				return command_type;
 		return null;
 	}
@@ -77,7 +85,7 @@ public abstract class Command {
 	/**
 	 * Get the one-word command.
 	 */
-	public abstract String getCommand();
+	public abstract String get();
 	
 	/**
 	 * Get a short, one-line description of the command.
@@ -90,17 +98,32 @@ public abstract class Command {
 	public abstract String getManual();
 	
 	/**
-	 * Get an descriptive array of the arguments required by the command
+	 * Get an descriptive array of arrays of the arguments required by the command. Returns an empty array if there are no arguments.
+	 * Each array of arrays describes an alternate syntax for the command. The first one is user by Wizard by default, so it is the most complete.
 	 */
-	public abstract Argument[] getArguments();
+	public abstract Argument[][] getArguments();
 	
 	/**
-	 * Get an array with examples of how the command might be used.
+	 * Get an array with examples of how the command might be used. Returns an empty array of there are no examples.
 	 */
 	public abstract String[] getExamples();
 	
 	/**
 	 * Run the command. Returns true if the command was run successful and false otherwise.
+	 * @param The handler the command should use, and a list of commands that can be casted directly to what is specified in getArguments.
 	 */
-	public abstract String run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException;
+	public abstract String run(ServerClientHandler handler, List<Object> arguments) throws
+		IOException,
+		TimeoutException,
+		InterruptedException,
+		ForcedReturnException,
+		SessionExpiredException,
+		HasNotTheRightsException,
+		UserDoesNotExistException,
+		GroupDoesNotExistException,
+		EntryDoesNotExistException,
+		GroupAlreadyExistsException,
+		UserInGroupDoesNotExistsException,
+		UsernameAlreadyExistsException,
+		InvitationDoesNotExistException;
 }

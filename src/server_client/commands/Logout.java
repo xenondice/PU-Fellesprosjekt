@@ -12,7 +12,7 @@ import server_client.ServerClientHandler;
 public class Logout extends Command {
 
 	@Override
-	public String getCommand() {
+	public String get() {
 		return "logout";
 	}
 
@@ -27,8 +27,8 @@ public class Logout extends Command {
 	}
 
 	@Override
-	public Argument[] getArguments() {
-		return new Argument[0];
+	public Argument[][] getArguments() {
+		return new Argument[0][0];
 	}
 
 	@Override
@@ -37,7 +37,7 @@ public class Logout extends Command {
 	}
 
 	@Override
-	public String run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+	public String run(ServerClientHandler handler, List<Object> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		handler.setUser(null);
 		return "Logged out!";
 	}

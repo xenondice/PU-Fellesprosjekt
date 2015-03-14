@@ -4,9 +4,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-import calendar.CalendarEntry;
 import calendar.CalendarEntryBuilder;
+import exceptions.EntryDoesNotExistException;
 import exceptions.ForcedReturnException;
+import exceptions.HasNotTheRightsException;
+import exceptions.SessionExpiredException;
+import exceptions.UserDoesNotExistException;
 import server_client.Argument;
 import server_client.Argument.ArgumentType;
 import server_client.Command;
@@ -16,7 +19,7 @@ import server_client.ServerClientHandler;
 public class EditEntry extends Command {
 	
 	@Override
-	public String getCommand() {
+	public String get() {
 		return "edit-entry";
 	}
 
@@ -31,14 +34,16 @@ public class EditEntry extends Command {
 	}
 
 	@Override
-	public Argument[] getArguments() {
-		return new Argument[]{
-			new Argument(false, "description", ArgumentType.text),
-			new Argument(false, "end time", ArgumentType.date),
-			new Argument(false, "eventID", ArgumentType.long_number),
-			new Argument(false, "location", ArgumentType.text),
-			new Argument(false, "roomID", ArgumentType.text),
-			new Argument(false, "start time", ArgumentType.date),
+	public Argument[][] getArguments() {
+		return new Argument[][]{
+			{
+				new Argument(true, "description of event", ArgumentType.text),
+				new Argument(true, "time of end", ArgumentType.date),
+				new Argument(false, "ID of existing entry", ArgumentType.long_number),
+				new Argument(true, "description of location", ArgumentType.text),
+				new Argument(true, "name of room", ArgumentType.text),
+				new Argument(true, "time of start", ArgumentType.date),
+			}
 		};
 	}
 
@@ -48,25 +53,20 @@ public class EditEntry extends Command {
 	}
 
 	@Override
-	public String run(ServerClientHandler handler, List<String> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+	public String run(ServerClientHandler handler, List<Object> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException, SessionExpiredException {
 		
 		CalendarEntryBuilder entry_builder = new CalendarEntryBuilder();
-		entry_builder.setDescription(arguments.get(0));
-		entry_builder.setEndTime(Integer.parseInt(arguments.get(1)));
-		entry_builder.setEntryID(Integer.parseInt(arguments.get(2)));
-		entry_builder.setLocation(arguments.get(2));
-		entry_builder.setRoomID(arguments.get(3));
+		entry_builder.setDescription((String) arguments.get(0));
+		entry_builder.setEndTime((long) arguments.get(1));
+		entry_builder.setEntryID((long) arguments.get(2));
+		entry_builder.setLocation((String) arguments.get(2));
+		entry_builder.setRoomID((String) arguments.get(3));
 		entry_builder.setCreator(handler.getUser().getUsername());
-		entry_builder.setStartTime(Integer.parseInt(arguments.get(4)));
-		CalendarEntry calendarEntry = entry_builder.build();
+		entry_builder.setStartTime((long) arguments.get(4));
 		
-		try {
-			if (RequestHandler.editEntry(handler.getUser(), calendarEntry))
-				return "Calendar entry successfully edited!";
-			else
-				return "Calendar entry couldn't be edited!";
-		} catch (Exception e) {
-			return "Could not edit calendar entry!";
-		}
+		if (RequestHandler.editEntry(handler.getUser(), entry_builder.build()))
+			return "Calendar entry successfully edited!";
+		else
+			return "Calendar entry couldn't be edited!";
 	}
 }

@@ -71,4 +71,10 @@ public class Invitation {
 		}
 		return true;
 	}
+	
+	@Override
+	public String toString() {
+		String str = "Invitation to entry " + entry_id + ", current answer: " + (isGoing?"Attending":"Not attending");
+		return str;
+	}
 }
