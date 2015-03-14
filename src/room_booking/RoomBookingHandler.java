@@ -15,10 +15,10 @@ public class RoomBookingHandler {
 
 
 
-	public void bookRoom(Room room, long startTime, long endTime, long entryID) throws RoomAlreadyBookedException{
+	public boolean bookRoom(Room room, long startTime, long endTime, long entryID) throws RoomAlreadyBookedException{
 		if(checkIfFree(room, startTime, endTime)){
 			RoomReservation rr = new RoomReservation(room, startTime, endTime, entryID);
-			dbm.addRoomReservation(rr);
+			return dbm.addRoomReservation(rr);
 		}else{
 			throw new IllegalArgumentException("Room is not available");
 		}
@@ -46,14 +46,17 @@ public class RoomBookingHandler {
 	}
 	
 	
-	public void releaseRoom(Room room, long startTime, long endTime){
+	public boolean releaseRoom(Room room, long startTime, long endTime){
+		boolean could_release_all = true;
 		if (dbm.getReservationsForRoom(room) != null){
 			HashSet<RoomReservation> rr = dbm.getReservationsForRoom(room);
 			for(RoomReservation res : rr){
 				if ( isInbetween(startTime, res.getStartTime(),  endTime, res.getEndTime())){
-					dbm.deleteRoomReservation(res);
+					if (!dbm.deleteRoomReservation(res))
+						could_release_all = false;
 				}
 			}
 		}
+		return could_release_all;
 	}
 }
