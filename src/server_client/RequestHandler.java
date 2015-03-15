@@ -37,6 +37,8 @@ public class RequestHandler{
 	
 	// TODO how to answer an invitation? 
 	
+	// TODO add functions for 'get all rooms' 'get all events' 'get all notifications' (for user) etc.
+	
 	private static DataBaseManager dbm;
 	private static ServerSocket server;
 	private static Set<ServerClientHandler> currently_connected;
