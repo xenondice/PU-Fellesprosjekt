@@ -756,6 +756,23 @@ public class RequestHandler{
 	 *================*/ 
 	
 	/**
+	 * Gets the specified entry
+	 * @param requestor
+	 * @param entry_id
+	 * @return
+	 * @throws SessionExpiredException
+	 * @throws EntryDoesNotExistException
+	 */
+	public static CalendarEntry getEntry(User requestor, long entry_id) throws SessionExpiredException, EntryDoesNotExistException {
+		
+		validate(requestor);
+		
+		synchronized (ADD_DB_LOCK) {
+			return dbm.getEntry(entry_id);
+		}
+	}
+	
+	/**
 	 * Get the calendar of a given user
 	 * @param requestor
 	 * @return a calendar containing all entries the suer can see

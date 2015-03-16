@@ -1,14 +1,12 @@
 package calendar;
 
-import java.util.GregorianCalendar;
-
 /**
  * This class provides some basic calendar informations.
  *
  */
 public class GenericCalendar {
 
-	public int daysInMonth(int nr, int year) {
+	public static int daysInMonth(int nr, int year) {
 		int days;
 
 		if (nr == 1 || nr == 3 || nr == 5 || nr == 7 || nr == 8 || nr == 10
@@ -28,7 +26,7 @@ public class GenericCalendar {
 		return days;
 	}
 
-	public int getYearStartDay(int year) {
+	public static int getYearStartDay(int year) {
 		int startDay = 0;
 
 		for (int j = 1900; j < year + 1; j++) {
@@ -44,7 +42,7 @@ public class GenericCalendar {
 
 	}
 
-	private boolean isLeapYear(int year) {
+	private static boolean isLeapYear(int year) {
 		if (year % 100 == 0 && year % 400 == 0) {
 			return true;
 		} else if (year % 4 == 0) {
@@ -53,7 +51,7 @@ public class GenericCalendar {
 		return false;
 	}
 
-	public int getMonthStartDay(int year, int month) {
+	public static int getMonthStartDay(int year, int month) {
 		if (month > 12 || month < 1) {
 			throw new IllegalArgumentException();
 		}
@@ -65,7 +63,7 @@ public class GenericCalendar {
 		return day;
 	}
 
-	public String getMonthName(int month) {
+	public static String getMonthName(int month) {
 		if (month == 1) {
 			return "January";
 		} else if (month == 2) {
@@ -95,7 +93,7 @@ public class GenericCalendar {
 		}
 	}
 
-	public String getDayName(int day) {
+	public static String getDayName(int day) {
 		if (day == 1) {
 			return "Monday";
 		} else if (day == 2) {
@@ -114,10 +112,4 @@ public class GenericCalendar {
 			throw new IllegalArgumentException(day + " is not a valid day!");
 		}
 	}
-
-	public String toString() {
-		String string = "";
-		return string;
-	}
-
 }
