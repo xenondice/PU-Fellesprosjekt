@@ -1663,13 +1663,13 @@ public class DataBaseManager implements Closeable {
 		checkUserAndEntry(username, entry_id);
 		
 		
-		String getIsShowing = ""
+		String getIsGoing = ""
 				+ "SELECT isGoing "
 				+ "FROM Invitation "
 				+ "WHERE username = ? AND entryID = ?; ";
 		
 		try {
-			PreparedStatement stmt = connection.prepareStatement(getIsShowing);
+			PreparedStatement stmt = connection.prepareStatement(getIsGoing);
 		
 			int i = 0;
 			stmt.setString(++i, username);

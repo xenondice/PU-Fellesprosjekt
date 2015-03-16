@@ -776,10 +776,11 @@ public class RequestHandler{
 		// return answer? dbm.going(requestor.getUsername(), entry_id) : dbm.notGoing(requestor.getUsername(), entry_id);
 		
 		synchronized (ADD_DB_LOCK) {
-			if (answer)
+			if (answer){
 				return dbm.going(requestor.getUsername(), entry_id);
-			else
+			}else{
 				return dbm.notGoing(requestor.getUsername(), entry_id);
+			}
 		}
 	}
 	
