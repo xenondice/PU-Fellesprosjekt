@@ -263,9 +263,7 @@ public class RequestHandler{
 	public static User logIn(String username, String password) throws UserDoesNotExistException, WrongPasswordException {
 		
 		User existing_user;
-		synchronized (ADD_DB_LOCK) {
-			existing_user = dbm.getUser(username);
-		}
+		existing_user = dbm.getUser(username);
 			
 		if (password.equals(existing_user.getPassword())) {
 			System.out.println("New user verified as " + existing_user.getUsername());
@@ -282,7 +280,7 @@ public class RequestHandler{
 	 * @return
 	 */
 	private static boolean isValidUsername(String username){
-		return username == null ||  username.equals("");
+		return ! (username == null ||  username.equals(""));
 	}
 	
 	/**
@@ -294,7 +292,7 @@ public class RequestHandler{
 	private static void validate(User requestor) throws SessionExpiredException {
 		
 		if (requestor == null || ! isValidUsername(requestor.getUsername())) {
-			System.out.println("Request from unverified user denied");
+			System.out.println("Request from unverified user denied (not valid name "+requestor+")");
 			throw new SessionExpiredException();
 		}
 		
@@ -302,7 +300,7 @@ public class RequestHandler{
 			try {
 				dbm.getUser(requestor.getUsername());
 			} catch (UserDoesNotExistException e) {
-				System.out.println("Request from unverified user denied");
+				System.out.println("Request from unverified user denied (user not in DB)");
 				throw new SessionExpiredException();
 			}
 		}

@@ -7,6 +7,7 @@ import java.util.concurrent.TimeoutException;
 import exceptions.EntryDoesNotExistException;
 import exceptions.ForcedReturnException;
 import exceptions.HasNotTheRightsException;
+import exceptions.InvitationDoesNotExistException;
 import exceptions.SessionExpiredException;
 import exceptions.UserDoesNotExistException;
 import server_client.Argument;
@@ -61,9 +62,15 @@ public class AnswerInvitation extends Command {
 
 	@Override
 	public String run(ServerClientHandler handler, List<Object> arguments, int syntax) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, SessionExpiredException, HasNotTheRightsException, EntryDoesNotExistException, UserDoesNotExistException {
-		if (RequestHandler.invitationAnswer(handler.getUser(), (long) arguments.get(0), (boolean) arguments.get(1)))
-			return "Your answer is recorded!";
-		else
+		try {
+			if (RequestHandler.invitationAnswer(handler.getUser(), (long) arguments.get(0), (boolean) arguments.get(1))){
+				return "Your answer is recorded!";
+			}else{
+				return "Couldn't answer invitation!";
+			}
+		} catch (InvitationDoesNotExistException e) {
+			e.printStackTrace();
 			return "Couldn't answer invitation!";
+		}
 	}
 }

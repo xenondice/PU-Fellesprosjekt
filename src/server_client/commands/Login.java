@@ -62,12 +62,16 @@ public class Login extends Command {
 				handler.setUser(user);
 				Set<Invitation> invitations = RequestHandler.getInvitations(user);
 				Set<Notification> notifications = RequestHandler.getNotifications(user);
-				if ((invitations != null && invitations.size() > 0) || (notifications != null && notifications.size() > 0))
+				if ((invitations != null && invitations.size() > 0) || (notifications != null && notifications.size() > 0)){
 					return "Successfully logged in, and you have something in your inbox! Type \"inbox\" to see.";
+				}
 				return "Successfully logged in!";
+			}else{
+				return "could not log in";
 			}
 		} catch (UserDoesNotExistException | WrongPasswordException e) {
+			e.printStackTrace();
+			return "Invalid password and/or username!";
 		}
-		return "Invalid password and/or username!";
 	}
 }
