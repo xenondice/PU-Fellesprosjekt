@@ -191,6 +191,8 @@ public class RequestHandler{
 	 */
 	public static boolean notify(String username, long entry_id, String message) {
 		
+		// TODO give other name? (the function notify exists).
+		
 		NotificationBuilder notification_builder = new NotificationBuilder();
 		notification_builder.setDescription(message);
 		notification_builder.setOpened(false);
@@ -274,6 +276,7 @@ public class RequestHandler{
 			System.out.println("Request from unverified user denied");
 			throw new SessionExpiredException();
 		}
+		// TODO create function 'isValidUsername' that does this check (not null, not "").
 		
 		synchronized (ADD_DB_LOCK) {
 			try {
@@ -349,7 +352,7 @@ public class RequestHandler{
 			if (!dbm.isAdmin(requestor.getUsername(), entry_id)) {
 				throw new HasNotTheRightsException();
 			}
-		
+			// TODO notify?
 			return dbm.makeAdmin(username, entry_id);
 		}
 	}
@@ -421,9 +424,11 @@ public class RequestHandler{
 			result = dbm.deleteEntry(requestor.getUsername(), entry_id);
 		}
 		
-		if (result && invited_users != null)
-			for (String username : invited_users)
+		if (result && invited_users != null){
+			for (String username : invited_users){
 				notify(username, entry_id, "The entry has just been deleted!");
+			}
+		}
 		
 		return result;
 	}
@@ -444,7 +449,7 @@ public class RequestHandler{
 		
 		if(new_entry == null || new_entry.getEntryID() <= 0){
 			return false;
-		}
+		} // TODO create function that does this check.
 		
 		boolean result;
 		synchronized (ADD_DB_LOCK) {
@@ -518,7 +523,8 @@ public class RequestHandler{
 			try {
 				kickUserFromEntry(requestor, user.getUsername(), entry_id);
 			} catch (InvitationDoesNotExistException e) {
-			}
+				
+			}	
 		}
 		
 		return true;
@@ -576,9 +582,11 @@ public class RequestHandler{
 		}
 		
 		boolean could_add_all = true;
-		for (User user : group.getUsers())
-			if (!invite(user.getUsername(), entry_id, false))
+		for (User user : group.getUsers()){
+			if (!invite(user.getUsername(), entry_id, false)){
 				could_add_all = false;
+			}
+		}
 		
 		return could_add_all;
 	}
@@ -640,9 +648,11 @@ public class RequestHandler{
 	public static boolean addGroupToGroup(User requestor, Group invited_group, String invitee_groupname) throws UserDoesNotExistException, GroupDoesNotExistException, SessionExpiredException, HasNotTheRightsException {
 		
 		boolean could_add_all = true;
-		for (User user : invited_group.getUsers())
-			if (!addUserToGroup(requestor, user.getUsername(), invitee_groupname))
+		for (User user : invited_group.getUsers()){
+			if (!addUserToGroup(requestor, user.getUsername(), invitee_groupname)){
 				could_add_all = false;
+			}
+		}
 		
 		return could_add_all;
 	}
@@ -681,9 +691,11 @@ public class RequestHandler{
 	public static boolean removeGroupFromGroup(User requestor, Group kickedGroup, String groupname) throws GroupDoesNotExistException, SessionExpiredException, HasNotTheRightsException, UserDoesNotExistException {
 		
 		boolean could_add_all = true;
-		for (User user : kickedGroup.getUsers())
-			if (!removeUserFromGroup(requestor, user.getUsername(), groupname))
+		for (User user : kickedGroup.getUsers()){
+			if (!removeUserFromGroup(requestor, user.getUsername(), groupname)){
 				could_add_all = false;
+			}
+		}
 		
 		return could_add_all;
 	}
@@ -781,10 +793,11 @@ public class RequestHandler{
 		// return answer? dbm.going(requestor.getUsername(), entry_id) : dbm.notGoing(requestor.getUsername(), entry_id);
 		
 		synchronized (ADD_DB_LOCK) {
-			if (answer)
+			if (answer){
 				return dbm.going(requestor.getUsername(), entry_id);
-			else
+			}else{
 				return dbm.notGoing(requestor.getUsername(), entry_id);
+			}
 		}
 	}
 	

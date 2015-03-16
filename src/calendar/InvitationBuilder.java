@@ -4,8 +4,8 @@ import interfaces.Builder;
 
 public class InvitationBuilder implements Builder<Invitation> {
 	
-	private boolean isGoing;
-	private boolean isShowing;
+	private boolean isGoing = true;
+	private boolean isShowing = true;
 	private String username;
 	private long entry_id;
 	

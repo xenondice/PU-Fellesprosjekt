@@ -1392,10 +1392,11 @@ public class DataBaseManager implements Closeable {
 				InvitationBuilder ib = new InvitationBuilder();
 				ib.setEntry_id(rset.getLong("entryID"));
 				ib.setGoing(rset.getBoolean("isGoing"));
-				ib.setGoing(rset.getBoolean("isShowing"));
+				ib.setShowing(rset.getBoolean("isShowing"));
 				ib.setUsername(rset.getString("username"));
 				invis.add(ib.build());
 			}
+			
 			
 			return invis;
 			
@@ -1663,13 +1664,13 @@ public class DataBaseManager implements Closeable {
 		checkUserAndEntry(username, entry_id);
 		
 		
-		String getIsShowing = ""
+		String getIsGoing = ""
 				+ "SELECT isGoing "
 				+ "FROM Invitation "
 				+ "WHERE username = ? AND entryID = ?; ";
 		
 		try {
-			PreparedStatement stmt = connection.prepareStatement(getIsShowing);
+			PreparedStatement stmt = connection.prepareStatement(getIsGoing);
 		
 			int i = 0;
 			stmt.setString(++i, username);
