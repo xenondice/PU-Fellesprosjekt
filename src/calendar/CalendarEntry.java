@@ -9,15 +9,15 @@ import java.util.Date;
 */
 public class CalendarEntry {
 	
-	private final  Long entryID;
-	private final  Long startTime; 
-	private final  Long endTime; 
+	private final  long entryID;
+	private final  long startTime; 
+	private final  long endTime; 
 	private final  String location; 
 	private final  String description; 
 	private final  String roomID; 
 	private final  String creator; // username of the creator of the entry
 	
-	public CalendarEntry(Long entryID, Long startTime, Long endTime, String location,
+	public CalendarEntry(long entryID, long startTime, long endTime, String location,
 			String description, String roomID, String creator){
 		this.entryID = entryID; 
 		this.startTime = startTime; 

@@ -33,14 +33,15 @@ import user.User;
 public class RequestHandler{
 	
 	// TODO which methods must be synchronized?
-	
-	// TODO add notification feature where it is needed!
+	// TODO synchronize all DatabaseManager functions.
 	
 	// TODO add functions for 'get all rooms' 'get all events' 'get all notifications' (for user) etc.
 	
-	// TODO add command 'add-group-to-group'
+	// TODO add command 'add-group-to-group' (in server_client commands)
 	
 	// TODO make entryID in the notification Table an optional argument. (And update the java code accordingly).
+	
+	// TODO if neccessary: implement alarm stuff (change entry -> change alarm; command change alarm)
 	
 	private static DataBaseManager dbm;
 	private static ServerSocket server;
@@ -148,8 +149,6 @@ public class RequestHandler{
 		else System.out.println(client.getUser().getUsername());
 		
 		currently_connected.remove(client);
-		
-		// TODO does the request handler have to make sure that the client really disconnects? -- lukas
 	}
 	
 	/**
@@ -221,10 +220,10 @@ public class RequestHandler{
 	 * @param entry_id
 	 * @param is_going
 	 * @return
+	 * @throws UserDoesNotExistException 
+	 * @throws EntryDoesNotExistException
 	 */
-	private static boolean invite(String username, long entry_id, boolean is_going) {
-
-		// TODO check if the invitation already exists. If so, just change the isShowing and isGoing.-> can be done in the catch.
+	private static boolean invite(String username, long entry_id, boolean is_going) throws EntryDoesNotExistException, UserDoesNotExistException{
 		
 		InvitationBuilder invitation_builder = new InvitationBuilder();
 		invitation_builder.setEntry_id(entry_id);
@@ -236,8 +235,16 @@ public class RequestHandler{
 		synchronized (ADD_DB_LOCK) {
 			try {
 				result = dbm.addInvitation(invitation_builder.build());
-			} catch (EntryDoesNotExistException | UserDoesNotExistException | InvitationAlreadyExistsException e) {
+			} catch (EntryDoesNotExistException | UserDoesNotExistException e) {
 				result = false;
+			} catch (InvitationAlreadyExistsException e){
+				try {
+				result = dbm.going(username, entry_id);
+				result = dbm.allowToSee(username, entry_id) && result;
+				} catch (InvitationDoesNotExistException e1) {
+					// should never happen!
+					result = false;
+				}
 			}
 		}
 		
@@ -262,10 +269,20 @@ public class RequestHandler{
 			
 		if (password.equals(existing_user.getPassword())) {
 			System.out.println("New user verified as " + existing_user.getUsername());
-			return existing_user; //TODO: Make better login
+			return existing_user; 
+			//TODO: Make better login
 		}
 			
 		throw new WrongPasswordException();
+	}
+	
+	/**
+	 * checks whether the username is "legal". (not null and not empty)
+	 * @param username
+	 * @return
+	 */
+	private static boolean isValidUsername(String username){
+		return username == null ||  username.equals("");
 	}
 	
 	/**
@@ -276,11 +293,10 @@ public class RequestHandler{
 	 */
 	private static void validate(User requestor) throws SessionExpiredException {
 		
-		if (requestor == null || requestor.getUsername() == null || requestor.getUsername().equals("")) {
+		if (requestor == null || ! isValidUsername(requestor.getUsername())) {
 			System.out.println("Request from unverified user denied");
 			throw new SessionExpiredException();
 		}
-		// TODO create function 'isValidUsername' that does this check (not null, not "").
 		
 		synchronized (ADD_DB_LOCK) {
 			try {
@@ -292,8 +308,6 @@ public class RequestHandler{
 		}
 		
 		System.out.println("Request from user " + requestor.getUsername() + " validated");
-		
-		//TODO: Make validation function.
 	}
 	
 	/**
@@ -356,8 +370,11 @@ public class RequestHandler{
 			if (!dbm.isAdmin(requestor.getUsername(), entry_id)) {
 				throw new HasNotTheRightsException();
 			}
-			// TODO notify?
-			return dbm.makeAdmin(username, entry_id);
+			
+			if(dbm.makeAdmin(username, entry_id)){
+				notify(username, entry_id, "You are now admin to the entry with the id "+entry_id);
+				return true;
+			}else{ return false;}
 		}
 	}
 	
@@ -449,14 +466,11 @@ public class RequestHandler{
 	 */
 	public static boolean editEntry(User requestor, CalendarEntry new_entry) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException, SessionExpiredException {
 		
-	
-		
 		validate(requestor);
-		// TODO handle alarm change
 		
 		if(new_entry == null || new_entry.getEntryID() <= 0){
 			return false;
-		} // TODO create function that does this check.
+		}
 		
 		boolean result;
 		synchronized (ADD_DB_LOCK) {
@@ -485,11 +499,9 @@ public class RequestHandler{
 	 */
 	public static boolean kickUserFromEntry(User requestor, String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException, HasNotTheRightsException, InvitationDoesNotExistException {
 		
-		// TODO set isGoing and isShowing to false. -> in dbm.hide event!
-		// TODO if the kicked user is admin, remove his admin rights.
 		validate(requestor);
 		
-		if(requestor.equals(username)) {
+		if(requestor.equals(username) || dbm.isCreator(username, entry_id)) {
 			return false;
 		}
 		
@@ -499,7 +511,12 @@ public class RequestHandler{
 				throw new HasNotTheRightsException();
 			}
 			
-			result = dbm.hideEvent(username, entry_id);
+			result = dbm.hideEvent(username, entry_id) && dbm.notGoing(username, entry_id);
+			
+			// remove adminrights if he is admin.
+			if(dbm.isAdmin(username, entry_id)){
+				result = dbm.revokeAdmin(username, entry_id) && result;
+			}
 		}
 		
 		if (result) notify(username, entry_id, "You have just been kicked from the entry!");
@@ -638,11 +655,16 @@ public class RequestHandler{
 	 */
 	public static boolean addUserToGroup(User requestor, String username, String groupname) throws UserDoesNotExistException, GroupDoesNotExistException, SessionExpiredException {
 		
-		// TODO send notification to user
+		
 		validate(requestor);
 		
 		synchronized (ADD_DB_LOCK) {
-			return dbm.addUserToGroup(username, groupname);
+			if(dbm.addUserToGroup(username, groupname)){
+				notify(username, -1, "You have been added to the group "+groupname);
+				return true;
+			}else{
+				return false;
+			}
 		}
 	}
 	
@@ -797,18 +819,21 @@ public class RequestHandler{
 	 * @throws EntryDoesNotExistException
 	 * @throws UserDoesNotExistException
 	 * @throws SessionExpiredException
+	 * @throws InvitationDoesNotExistException 
 	 */
-	public static boolean invitationAnswer(User requestor, long entry_id, boolean answer) throws EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException {
+	public static boolean invitationAnswer(User requestor, long entry_id, boolean answer) throws EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException, InvitationDoesNotExistException {
 		
 		validate(requestor);
-		// TODO notify the creator of the entry
 		
+		// shorter version:
 		// return answer? dbm.going(requestor.getUsername(), entry_id) : dbm.notGoing(requestor.getUsername(), entry_id);
 		
 		synchronized (ADD_DB_LOCK) {
 			if (answer){
 				return dbm.going(requestor.getUsername(), entry_id);
 			}else{
+				String creator = dbm.getEntry(entry_id).getCreator();
+				notify(creator, entry_id, requestor+" refused to participate in the event with id "+entry_id);
 				return dbm.notGoing(requestor.getUsername(), entry_id);
 			}
 		}

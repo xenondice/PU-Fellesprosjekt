@@ -293,7 +293,7 @@ public class DataBaseManager implements Closeable {
 	 * @throws EntryDoesNotExistException
 	 * @throws UserDoesNotExistException
 	 */
-	private boolean isCreator(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
+	public boolean isCreator(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
 	
 		checkUserAndEntry(username, entry_id);
 		try {
@@ -880,10 +880,12 @@ public class DataBaseManager implements Closeable {
 	 * @return true iff the action was successful. false otherwise
 	 * @throws UserDoesNotExistException 
 	 * @throws EntryDoesNotExistException 
+	 * @throws InvitationDoesNotExistException 
 	 */
-	private boolean setIsGoing(String username, long entry_id, boolean newValue) throws EntryDoesNotExistException, UserDoesNotExistException{
+	private boolean setIsGoing(String username, long entry_id, boolean newValue) throws EntryDoesNotExistException, UserDoesNotExistException, InvitationDoesNotExistException{
 		
 		checkUserAndEntry(username, entry_id);
+		checkIfInvitationExists(username, entry_id);
 		
 		String setValue = "UPDATE Invitation "
 				+ "SET isGoing = ? "
@@ -1972,8 +1974,9 @@ public class DataBaseManager implements Closeable {
 	 * @return true iff the action was successful. false otherwise
 	 * @throws UserDoesNotExistException 
 	 * @throws EntryDoesNotExistException 
+	 * @throws InvitationDoesNotExistException 
 	 */
-	public boolean going(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
+	public boolean going(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, InvitationDoesNotExistException{
 		return setIsGoing(username, entry_id, true);
 	}
 	
@@ -1984,8 +1987,9 @@ public class DataBaseManager implements Closeable {
 	 * @return true iff the action was successful. false otherwise
 	 * @throws UserDoesNotExistException 
 	 * @throws EntryDoesNotExistException 
+	 * @throws InvitationDoesNotExistException 
 	 */
-	public boolean notGoing(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
+	public boolean notGoing(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, InvitationDoesNotExistException{
 		return setIsGoing(username, entry_id, false);
 	}
 	
@@ -2012,6 +2016,9 @@ public class DataBaseManager implements Closeable {
 	}
 	
 	public boolean revokeAdmin(String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException{
+		if(isCreator(username, entry_id)){ // The creator can not be removed as admin.
+			return false;
+		}
 		
 		try {
 			PreparedStatement stm = connection.prepareStatement("DELETE FROM IsAdmin WHERE entryID = ? AND username = ?");
