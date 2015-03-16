@@ -48,12 +48,12 @@ public class Argument {
 					SimpleDateFormat format_time = new SimpleDateFormat("dd/MM/yyyy HH:mm");
 					
 					try {
-						return format.parse(text).getTime();
+						return format_time.parse(text).getTime();
 					} catch (ParseException e1) {
 					}
 					
 					try {
-						return format_time.parse(text).getTime();
+						return format.parse(text).getTime();
 					} catch (ParseException e1) {
 					}
 					
