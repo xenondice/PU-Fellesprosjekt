@@ -59,7 +59,7 @@ public class Client {
 		String address = DEFAULT_SERVER_ADDRESS;
 		int port = DEFAULT_SERVER_PORT;
 		
-		if (!askYesOrNo("Use default address and port?")) {
+		if (!askYesOrNo("Use address " + DEFAULT_SERVER_ADDRESS + " and port " + DEFAULT_SERVER_PORT + "?")) {
 			List<String> response = ask("Enter server ip-address and port:", 2);
 			address = response.get(0);
 			port = verifyInt(response.get(1));

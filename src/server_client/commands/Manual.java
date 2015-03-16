@@ -49,11 +49,11 @@ public class Manual extends Command {
 		String message = ""
 				+ "Manual for " + command.get() + ":\n"
 				+ "\n"
-				+ command.getManual() + "\n"
-				+ "\n";
+				+ command.getManual() + "\n";
 		
 		for (Argument[] syntaxes : command.getArguments()) {
-			message += "Syntax: " + command.get();
+			message += "\n"
+					+ "Syntax: " + command.get();
 			for (Argument argument : syntaxes)
 				message += " " + argument;
 		}

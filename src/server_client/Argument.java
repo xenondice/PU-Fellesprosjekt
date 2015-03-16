@@ -76,7 +76,11 @@ public class Argument {
 				case text:
 					return text;
 				case argument_type:
-					return ArgumentType.valueOf(text);
+					try {
+						return ArgumentType.valueOf(text.replace(' ', '_'));
+					} catch (IllegalArgumentException e) {
+						return null;
+					}
 				default:
 					return null;
 			}
