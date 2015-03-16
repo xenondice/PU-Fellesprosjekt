@@ -205,8 +205,11 @@ public class RequestHandler{
 		synchronized (ADD_DB_LOCK) {
 			try {
 				result = dbm.addNotification(notification_builder.build());
-			} catch (EntryDoesNotExistException | UserDoesNotExistException e) {
+			} catch (UserDoesNotExistException e) {
 				result = false;
+			} catch(EntryDoesNotExistException e){
+				// TODO this is only a small hack so that it will work. 
+				result = notify(username, entry_id+1, message); // TODO make entryid optional in notification.
 			}
 		}
 		
@@ -655,10 +658,11 @@ public class RequestHandler{
 		
 		
 		validate(requestor);
+		// TODO make the entry optional for a notification.
 		
 		synchronized (ADD_DB_LOCK) {
 			if(dbm.addUserToGroup(username, groupname)){
-				notify(username, -1, "You have been added to the group "+groupname);
+				notify(username, 1, "You have been added to the group "+groupname);
 				return true;
 			}else{
 				return false;
