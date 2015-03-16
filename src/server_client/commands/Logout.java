@@ -37,7 +37,7 @@ public class Logout extends Command {
 	}
 
 	@Override
-	public String run(ServerClientHandler handler, List<Object> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+	public String run(ServerClientHandler handler, List<Object> arguments, int syntax) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		handler.setUser(null);
 		return "Logged out!";
 	}

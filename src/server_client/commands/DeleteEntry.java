@@ -47,7 +47,7 @@ public class DeleteEntry extends Command {
 	}
 
 	@Override
-	public String run(ServerClientHandler handler, List<Object> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, SessionExpiredException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException {
+	public String run(ServerClientHandler handler, List<Object> arguments, int syntax) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, SessionExpiredException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException {
 		
 		if (RequestHandler.deleteEntry(handler.getUser(), (long) arguments.get(0)))
 			return "Calendar entry successfully deleted!";

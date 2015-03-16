@@ -27,7 +27,8 @@ public class Help extends Command {
 		return ""
 				+ "If you write this command without any arguments it will return a list\n"
 				+ "over valid commands. If you provide a command, it will return a short\n"
-				+ "description of the command together with a list over syntaxes.";
+				+ "description of the command together with a list over syntaxes. If you\n"
+				+ "provide a type of argument, it will explain how it's written.";
 	}
 
 	@Override
@@ -38,6 +39,10 @@ public class Help extends Command {
 			
 			{
 				new Argument(false, "command", ArgumentType.command),
+			},
+			
+			{
+				new Argument(false, "type of argument", ArgumentType.argument_type),
 			}
 		};
 	}
@@ -48,24 +53,18 @@ public class Help extends Command {
 	}
 
 	@Override
-	public String run(ServerClientHandler handler, List<Object> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+	public String run(ServerClientHandler handler, List<Object> arguments, int syntax) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		
-		if (arguments.isEmpty()) {
+		if (syntax == 0) {
 			String message = ""
-					+ "Valid commands:\n";
+					+ "Valid commands (type \"help command\" for the correct syntax):\n";
 			
-			for (Command command : Command.commands) {
-				message += " * ";
-				for (Argument[] syntaxes : command.getArguments()) {
-					message += command.get();
-					for (Argument argument : syntaxes)
-						message += " " + argument;
-					message += " / ";
-				}
-				message = message.substring(0, message.length()-3) + "\n";
-			}
+			for (Command command : Command.commands)
+				message += " * " + command.get() + "\n";
 			
-			return message.substring(0, message.length()-1);
+			return message;
+		} else if (syntax == 2) {
+			return ((ArgumentType) arguments.get(0)).getHelp();
 		}
 		
 		Command command = (Command) arguments.get(0);
@@ -77,6 +76,8 @@ public class Help extends Command {
 		
 			for (Argument argument : syntaxes)
 				message += " " + argument;
+			
+			message += "\n";
 		}
 		
 		return message;

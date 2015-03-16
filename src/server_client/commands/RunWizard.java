@@ -63,26 +63,24 @@ public class RunWizard extends Command {
 	}
 
 	@Override
-	public String run(ServerClientHandler handler, List<Object> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, SessionExpiredException, HasNotTheRightsException, UserDoesNotExistException, GroupDoesNotExistException, EntryDoesNotExistException, GroupAlreadyExistsException, UserInGroupDoesNotExistsException, UsernameAlreadyExistsException, InvitationDoesNotExistException {
+	public String run(ServerClientHandler handler, List<Object> arguments, int syntax) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, SessionExpiredException, HasNotTheRightsException, UserDoesNotExistException, GroupDoesNotExistException, EntryDoesNotExistException, GroupAlreadyExistsException, UserInGroupDoesNotExistsException, UsernameAlreadyExistsException, InvitationDoesNotExistException {
 		
 		Command command = (Command) arguments.get(0);
 		
-		Argument[] syntax;
-		if (arguments.size() == 1)
-			syntax = command.getArguments()[0];
-		else {
+		int syntax_choice = 0;
+		if (syntax == 1) {
 			if ((int) arguments.get(1) > command.getArguments().length || (int) arguments.get(1) < 1)
-				throw new ForcedReturnException("Invalid syntax number!");
-			syntax = command.getArguments()[((int) arguments.get(1)) - 1];
+				return "Invalid syntax number!";
+			syntax_choice = ((int) arguments.get(1)) - 1;
 		}
 			
 		Wizard wizard = new Wizard();
-		for (Argument argument : syntax) {
+		for (Argument argument : command.getArguments()[syntax_choice]) {
 			wizard.add(argument);
 		}
 		
 		List<Object> results = handler.runWizard(wizard);
-		
-		return command.run(handler, results);
+
+		return command.run(handler, results, 0);
 	}
 }

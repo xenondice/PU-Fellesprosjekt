@@ -43,22 +43,33 @@ public class ShowNotifications extends Command {
 	}
 
 	@Override
-	public String run(ServerClientHandler handler, List<Object> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, UserDoesNotExistException, SessionExpiredException {
+	public String run(ServerClientHandler handler, List<Object> arguments, int syntax) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, UserDoesNotExistException, SessionExpiredException {
 		
 		HashSet<Notification> notifications = RequestHandler.getNotifications(handler.getUser());
 		HashSet<Invitation> invitations = RequestHandler.getInvitations(handler.getUser());
 		
-		String message = "Notifications:\n";
-		for (Notification notification : notifications) {
-			message += " * " + notification +"\n";
+		if (notifications == null || invitations == null) return "Couldn't get inbox!";
+		
+		String message = "";
+		
+		if (!notifications.isEmpty()) {
+			message += "Notifications:\n";
+			for (Notification notification : notifications) {
+				message += " * " + notification +"\n";
+			}
+			message += "\n";
 		}
 		
-		message += "\n"
-				+ "Invitations:\n";
-		for (Invitation invitation : invitations) {
-			message += " * " + invitation +"\n";
+		if (!invitations.isEmpty()) {
+			message += "Invitations:\n";
+			for (Invitation invitation : invitations) {
+				message += " * " + invitation +"\n";
+			}
 		}
 		
-		return message;
+		if (message.isEmpty())
+			return "Empty inbox!";
+		else
+			return message;
 	}
 }

@@ -9,15 +9,15 @@ import java.util.Date;
 */
 public class CalendarEntry {
 	
-	private final  long entryID;
-	private final  long startTime; 
-	private final  long endTime; 
+	private final  Long entryID;
+	private final  Long startTime; 
+	private final  Long endTime; 
 	private final  String location; 
 	private final  String description; 
 	private final  String roomID; 
 	private final  String creator; // username of the creator of the entry
 	
-	public CalendarEntry(long entryID, long startTime, long endTime, String location,
+	public CalendarEntry(Long entryID, Long startTime, Long endTime, String location,
 			String description, String roomID, String creator){
 		this.entryID = entryID; 
 		this.startTime = startTime; 
@@ -58,10 +58,10 @@ public class CalendarEntry {
 	public String getDescription() {
 		return description;
 	}
-	public long getEndTime() {
+	public Long getEndTime() {
 		return endTime;
 	}
-	public long getEntryID() {
+	public Long getEntryID() {
 		return entryID;
 	}
 	public String getLocation() {
@@ -70,7 +70,7 @@ public class CalendarEntry {
 	public String getRoomID() {
 		return roomID;
 	}
-	public long getStartTime() {
+	public Long getStartTime() {
 		return startTime;
 	}
 	public String getCreator(){

@@ -50,7 +50,7 @@ public class InviteUser extends Command {
 	}
 
 	@Override
-	public String run(ServerClientHandler handler, List<Object> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException, SessionExpiredException {
+	public String run(ServerClientHandler handler, List<Object> arguments, int syntax) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException, SessionExpiredException {
 		
 		if (RequestHandler.inviteUserToEntry(handler.getUser(), (String) arguments.get(0), (long) arguments.get(1)))
 			return "User successfully invited to calendar entry!";

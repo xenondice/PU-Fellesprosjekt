@@ -66,7 +66,6 @@ public class RequestHandler{
 			currently_connected = new HashSet<>();
 			dbm = new DataBaseManager();
 			server = new ServerSocket(PORT);
-			System.out.println(PORT);
 			rbh = new RoomBookingHandler(dbm);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -107,7 +106,7 @@ public class RequestHandler{
 				
 				Socket new_client = server.accept();
 				
-				System.out.println("New client connected, awaiting identification...");
+				System.out.println("New client connected");
 				
 				ServerClientHandler client_handler = new ServerClientHandler(new_client);
 				currently_connected.add(client_handler);
@@ -256,7 +255,7 @@ public class RequestHandler{
 		}
 			
 		if (password.equals(existing_user.getPassword())) {
-			System.out.println("New user verified as " + existing_user.getUsername());		
+			System.out.println("New user verified as " + existing_user.getUsername());
 			return existing_user; //TODO: Make better login
 		}
 			
@@ -408,16 +407,24 @@ public class RequestHandler{
 		validate(requestor);
 		
 		boolean result;
+		Set<String> invited_users = null;
 		synchronized (ADD_DB_LOCK) {
 			if (!dbm.isAdmin(requestor.getUsername(), entry_id)){
 				throw new HasNotTheRightsException();
 			}
 			
+			try {
+				invited_users = dbm.getInvitedUsersForEntry(entry_id);
+			} catch (Exception e) {
+			}
+			
 			result = dbm.deleteEntry(requestor.getUsername(), entry_id);
 		}
 		
-		if (result) provideUpdate(entry_id, "The entry has just been deleted!");
-			
+		if (result && invited_users != null)
+			for (String username : invited_users)
+				notify(username, entry_id, "The entry has just been deleted!");
+		
 		return result;
 	}
 	

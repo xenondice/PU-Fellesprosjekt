@@ -66,8 +66,8 @@ public abstract class Command {
 		new KickUser(),
 		new MakeAdmin(),
 		new RemoveUserFromGroup(),
-		new ShowNotifications(),
 		new ShowCalendar(),
+		new ShowNotifications(),
 	};
 	
 	/**
@@ -111,8 +111,9 @@ public abstract class Command {
 	/**
 	 * Run the command. Returns true if the command was run successful and false otherwise.
 	 * @param The handler the command should use, and a list of commands that can be casted directly to what is specified in getArguments.
+	 * Also the 0-indexed syntax to use.
 	 */
-	public abstract String run(ServerClientHandler handler, List<Object> arguments) throws
+	public abstract String run(ServerClientHandler handler, List<Object> arguments, int sytax) throws
 		IOException,
 		TimeoutException,
 		InterruptedException,

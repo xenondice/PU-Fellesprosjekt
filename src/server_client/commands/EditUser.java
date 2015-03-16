@@ -50,7 +50,7 @@ public class EditUser extends Command {
 	}
 
 	@Override
-	public String run(ServerClientHandler handler, List<Object> arguments) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, UserDoesNotExistException, SessionExpiredException, HasNotTheRightsException {
+	public String run(ServerClientHandler handler, List<Object> arguments, int syntax) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, UserDoesNotExistException, SessionExpiredException, HasNotTheRightsException {
 		
 		UserBuilder user_builder = new UserBuilder();
 		user_builder.setUsername((String) arguments.get(0));

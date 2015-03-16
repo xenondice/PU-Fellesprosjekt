@@ -1380,7 +1380,7 @@ public class DataBaseManager implements Closeable {
 		
 		PreparedStatement getInvis_stm;
 		try {
-			getInvis_stm = connection.prepareStatement("SELECT * FROM Invitations WHERE username=?; ");
+			getInvis_stm = connection.prepareStatement("SELECT * FROM Invitation WHERE username=?; ");
 	
 			int i = 0;
 			getInvis_stm.setString(++i, username);
@@ -1842,8 +1842,8 @@ public class DataBaseManager implements Closeable {
 		try {
 			PreparedStatement editEntry_stmt = connection.prepareStatement(edit_entry);
 			int i = 0;
-			editEntry_stmt.setTimestamp(++i, new java.sql.Timestamp(newEntry.getStartTime()==0?existingEntry.getStartTime():newEntry.getStartTime()));
-			editEntry_stmt.setTimestamp(++i, new java.sql.Timestamp(newEntry.getEndTime()==0?existingEntry.getEndTime():newEntry.getEndTime()));
+			editEntry_stmt.setTimestamp(++i, new java.sql.Timestamp(newEntry.getStartTime()==null?existingEntry.getStartTime():newEntry.getStartTime()));
+			editEntry_stmt.setTimestamp(++i, new java.sql.Timestamp(newEntry.getEndTime()==null?existingEntry.getEndTime():newEntry.getEndTime()));
 			editEntry_stmt.setString(++i, newEntry.getLocation()==null?existingEntry.getLocation():newEntry.getLocation());
 			editEntry_stmt.setString(++i, newEntry.getDescription()==null?existingEntry.getDescription():newEntry.getDescription());
 			editEntry_stmt.setString(++i, newEntry.getRoomID()==null?existingEntry.getRoomID():newEntry.getRoomID());
@@ -2209,7 +2209,7 @@ public class DataBaseManager implements Closeable {
 			while(rset.next()){
 				CalendarEntryBuilder entryB = new CalendarEntryBuilder();
 				
-				entryB.setEntryID(rset.getInt("entryID"));
+				entryB.setEntryID(rset.getLong("entryID"));
 				entryB.setStartTime(rset.getLong("startTime"));
 				entryB.setEndTime(rset.getLong("endTime"));
 				entryB.setLocation(rset.getString("location"));

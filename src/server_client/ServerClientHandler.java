@@ -13,7 +13,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import server_client.Argument.ArgumentType;
 import user.User;
 import exceptions.EntryDoesNotExistException;
 import exceptions.ForcedReturnException;
@@ -112,6 +111,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 	 * @throws IOException
 	 */
 	private synchronized void send(int status, String message) throws IOException {
+		message = message.trim();
 		client_output.write(((char) status) + message + '\n');
 		client_output.flush();
 	}
@@ -146,65 +146,24 @@ public class ServerClientHandler implements Runnable, Closeable {
 		for (int i = 0; i < wizard.size(); i++) {
 			Argument argument = wizard.get(i);
 			
-			String answer = ask("Enter " + (argument.optional?"optional ":"") + argument.type.name().replace('_', ' ') + " " + argument.description + " (" + (i+1) + "/" + wizard.size() + ")");
+			String answer = ask("Enter " + argument.description + (argument.optional?" (optional) [":" [") + argument.type.name().replace('_', ' ') + "] (" + (i+1) + "/" + wizard.size() + ")");
 			Object result = null;
 			
 			boolean repeat = true;
 			
 			while (repeat) {
-				String question;
 				
-				if (answer.isEmpty() && argument.optional) {
+				if (answer.isEmpty() && argument.optional)
 					break;
-				} else if (argument.type == ArgumentType.number) {
-					try {
-						result = Integer.parseInt(answer);
-						break;
-					} catch (NumberFormatException e) {
-						question = "Answer is not an integer! Please try again.";
-					}
-					question = "";
-				} else if (argument.type == ArgumentType.long_number) {
-					try {
-						result = Long.parseLong(answer);
-						break;
-					} catch (NumberFormatException e) {
-						question = "Answer is not a long! Please try again.";
-					}
-				} else if (argument.type == ArgumentType.text) {
-					result = answer;
+				
+				Object temp_result = argument.type.getValue(answer);
+				
+				if (temp_result != null) {
+					result = temp_result;
 					break;
-				} else if (argument.type == ArgumentType.logic) {
-					if (answer.equals("yes") || answer.equals("y")) {
-						result = true;
-						break;
-					} else if (answer.equals("no") || answer.equals("n")) {
-						result = false;
-						break;
-					}
-					question = "Please answer with yes[y] or no[n]!";
-				} else if (argument.type == ArgumentType.date) {
-					try {
-						result = Long.parseLong(answer);
-						break;
-					} catch (NumberFormatException e) {
-						question = "Answer is not a long! Please try again.";
-					} //TODO: Make it read the format DD/MM/YYYY and DD/MM/YYYY MM:SS
-				} else if (argument.type == ArgumentType.password) {
-					result = answer;
-					break;
-					//TODO: Make it send a header for password and hide input
-				} else if (argument.type == ArgumentType.command) {
-					Command command = Command.get(answer);
-					if (command != null) {
-						result = command;
-						break;
-					}
-					question = "Answer is not a valid command! Please try again.";
-				} else {
-					throw new ForcedReturnException("Internal error!");
 				}
-				answer = ask(question);
+				
+				answer = ask("Please try again (" + argument.type.getHelp() + ")");
 			}	
 			results.add(result);
 		}
@@ -231,18 +190,18 @@ public class ServerClientHandler implements Runnable, Closeable {
 		
 		Command command_type = Command.get(command);
 		if (command_type == null) {
-			send(STATUS_DONE, "Unrecognized command! Type \"commands\" for a list over commands.");
+			send(STATUS_DONE, "Unrecognized command! Type \"help\" for a list over commands.");
 			return;
 		}
 		
-		List<Object> formatted_arguments = formatArguments(command_type, arguments);
+		Pair<List<Object>, Integer> formatted_arguments = formatArguments(command_type, arguments);
 		if (formatted_arguments == null) {
 			send(STATUS_DONE, "Command syntax is wrong! Type \"help command\" or \"man command\" for information about the command.");
 			return;
 		}
 		
 		try {
-			send(STATUS_DONE, command_type.run(this, formatted_arguments));
+			send(STATUS_DONE, command_type.run(this, formatted_arguments.arg1, formatted_arguments.arg2));
 		} catch (SessionExpiredException e) {
 			throw new ForcedReturnException("Invalid session, use of command denied! Please login.");
 		} catch (HasNotTheRightsException e) {
@@ -270,72 +229,46 @@ public class ServerClientHandler implements Runnable, Closeable {
 	 * @param arguments
 	 * @return
 	 */
-	private List<Object> formatArguments(Command command, List<String> arguments) {
+	private Pair<List<Object>, Integer> formatArguments(Command command, List<String> arguments) {
+		
 		Argument[][] command_syntaxes = command.getArguments();
-		if (command_syntaxes.length == 0 && arguments.isEmpty()) return new ArrayList<Object>();
+		
+		if (command_syntaxes.length == 0 && arguments.isEmpty())
+			return new Pair<List<Object>, Integer>(new ArrayList<Object>(),0);
+		
+		int syntax_number = 0;
 		
 		for (Argument[] command_arguments : command_syntaxes) {
+			
 			boolean syntax_correct = true;
 			List<Object> formatted_arguments = new ArrayList<>();
 			
 			if (arguments.size() != command_arguments.length)
 				syntax_correct = false;
-			else
-				for (int i = 0; i < command_arguments.length; i++) {
-					Object argument = null;
+			else for (int i = 0; i < command_arguments.length; i++) {
+				Object argument = null;
 					
-					if (arguments.get(i) == null) {
-						if (!command_arguments[i].optional)
-							syntax_correct = false;
-					} else if (command_arguments[i].type == ArgumentType.number) {
-						try {
-							argument = Integer.parseInt(arguments.get(i));
-						} catch (NumberFormatException e) {
-							syntax_correct = false;
-						}
-					} else if (command_arguments[i].type == ArgumentType.long_number) {
-						try {
-							argument = Long.parseLong(arguments.get(i));
-						} catch (NumberFormatException e) {
-							syntax_correct = false;
-						}
-					} else if (command_arguments[i].type == ArgumentType.text) {
-						argument = arguments.get(i);
-					} else if (command_arguments[i].type == ArgumentType.logic) {
-						if (arguments.get(i).equals("yes") || arguments.get(i).equals("y"))
-							argument = true;
-						else if (arguments.get(i).equals("no") || arguments.get(i).equals("n"))
-							argument = false;
-						else
-							syntax_correct = false;
-					} else if (command_arguments[i].type == ArgumentType.date) {
-						try {
-							argument = Long.parseLong(arguments.get(i));
-						} catch (NumberFormatException e) {
-							syntax_correct = false;
-						}
-					} else if (command_arguments[i].type == ArgumentType.password) {
-						argument = arguments.get(i);
-					} else if (command_arguments[i].type == ArgumentType.command) {
-						Command temp_command = Command.get(arguments.get(i));
-						if (temp_command == null)
-							syntax_correct = false;
-						else
-							argument = temp_command;
-					} else {
+				if (arguments.get(i) == null) {
+					if (!command_arguments[i].optional)
 						syntax_correct = false;
-					}
-					
-					if (syntax_correct) {
-						formatted_arguments.add(argument);
-					} else
-						break;
+				} else {
+					Object unchecked_argument = command_arguments[i].type.getValue(arguments.get(i));
+					if (unchecked_argument == null)
+						syntax_correct = false;
+					else
+						argument = unchecked_argument;
 				}
+					
+				if (syntax_correct)
+					formatted_arguments.add(argument);
+				else
+					break;
+			}
 			
 			if (syntax_correct)
-				return formatted_arguments;
-			else
-				formatted_arguments.clear();
+				return new Pair<>(formatted_arguments, syntax_number);
+			
+			syntax_number++;
 		}
 		
 		return null;
