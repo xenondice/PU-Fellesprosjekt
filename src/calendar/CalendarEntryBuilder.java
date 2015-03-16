@@ -7,9 +7,9 @@ import interfaces.Builder;
  *
  */
 public class CalendarEntryBuilder implements Builder<CalendarEntry>{
-	private Long entryID = null;
-	private Long startTime = null;
-	private Long endTime = null;
+	private long entryID = -1;
+	private long startTime = System.currentTimeMillis();
+	private long endTime = System.currentTimeMillis();
 	private String location = null;
 	private String description = null;
 	private String roomID = null;
