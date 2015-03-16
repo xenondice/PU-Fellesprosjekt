@@ -17,6 +17,8 @@ import server_client.ServerClientHandler;
 
 public class CreateEntry extends Command {
 	
+	// TODO if room does not exist, return a text that says so.
+	
 	@Override
 	public String get() {
 		return "create-entry";

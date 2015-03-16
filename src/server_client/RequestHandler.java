@@ -36,9 +36,11 @@ public class RequestHandler{
 	
 	// TODO add notification feature where it is needed!
 	
-	// TODO how to answer an invitation? 
-	
 	// TODO add functions for 'get all rooms' 'get all events' 'get all notifications' (for user) etc.
+	
+	// TODO add command 'add-group-to-group'
+	
+	// TODO make entryID in the notification Table an optional argument. (And update the java code accordingly).
 	
 	private static DataBaseManager dbm;
 	private static ServerSocket server;
@@ -221,6 +223,8 @@ public class RequestHandler{
 	 * @return
 	 */
 	private static boolean invite(String username, long entry_id, boolean is_going) {
+
+		// TODO check if the invitation already exists. If so, just change the isShowing and isGoing.-> can be done in the catch.
 		
 		InvitationBuilder invitation_builder = new InvitationBuilder();
 		invitation_builder.setEntry_id(entry_id);
@@ -445,7 +449,10 @@ public class RequestHandler{
 	 */
 	public static boolean editEntry(User requestor, CalendarEntry new_entry) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException, SessionExpiredException {
 		
+	
+		
 		validate(requestor);
+		// TODO handle alarm change
 		
 		if(new_entry == null || new_entry.getEntryID() <= 0){
 			return false;
@@ -478,6 +485,8 @@ public class RequestHandler{
 	 */
 	public static boolean kickUserFromEntry(User requestor, String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException, HasNotTheRightsException, InvitationDoesNotExistException {
 		
+		// TODO set isGoing and isShowing to false. -> in dbm.hide event!
+		// TODO if the kicked user is admin, remove his admin rights.
 		validate(requestor);
 		
 		if(requestor.equals(username)) {
@@ -518,6 +527,8 @@ public class RequestHandler{
 		synchronized (ADD_DB_LOCK) {
 			group = dbm.getGroup(groupname);
 		}
+		
+		// TODO cast long to integer somewhere. fix it.
 		
 		for (User user : group.getUsers()) {
 			try {
@@ -627,6 +638,7 @@ public class RequestHandler{
 	 */
 	public static boolean addUserToGroup(User requestor, String username, String groupname) throws UserDoesNotExistException, GroupDoesNotExistException, SessionExpiredException {
 		
+		// TODO send notification to user
 		validate(requestor);
 		
 		synchronized (ADD_DB_LOCK) {
@@ -789,6 +801,7 @@ public class RequestHandler{
 	public static boolean invitationAnswer(User requestor, long entry_id, boolean answer) throws EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException {
 		
 		validate(requestor);
+		// TODO notify the creator of the entry
 		
 		// return answer? dbm.going(requestor.getUsername(), entry_id) : dbm.notGoing(requestor.getUsername(), entry_id);
 		
