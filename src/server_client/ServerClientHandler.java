@@ -30,7 +30,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 	private BufferedReader client_input;
 	private BufferedWriter client_output;
 	private Socket client;
-	private User user;
+	private User user; // TODO would it be better only to store username?
 	
 	// Protocol declaration (headers to messages)
 	public static final int STATUS_DONE =			0;
