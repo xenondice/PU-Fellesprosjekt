@@ -269,6 +269,11 @@ public class RequestHandler{
 	 */
 	private static void validate(User requestor) throws SessionExpiredException {
 		
+		if (requestor == null || requestor.getUsername() == null || requestor.getUsername().equals("")) {
+			System.out.println("Request from unverified user denied");
+			throw new SessionExpiredException();
+		}
+		
 		synchronized (ADD_DB_LOCK) {
 			try {
 				dbm.getUser(requestor.getUsername());
@@ -276,11 +281,6 @@ public class RequestHandler{
 				System.out.println("Request from unverified user denied");
 				throw new SessionExpiredException();
 			}
-		}
-		
-		if (requestor == null || requestor.getUsername() == null || requestor.getUsername().equals("")) {
-			System.out.println("Request from unverified user denied");
-			throw new SessionExpiredException();
 		}
 		
 		System.out.println("Request from user " + requestor.getUsername() + " validated");

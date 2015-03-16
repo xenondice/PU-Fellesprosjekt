@@ -272,6 +272,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 	 */
 	private List<Object> formatArguments(Command command, List<String> arguments) {
 		Argument[][] command_syntaxes = command.getArguments();
+		if (command_syntaxes.length == 0 && arguments.isEmpty()) return new ArrayList<Object>();
 		
 		for (Argument[] command_arguments : command_syntaxes) {
 			boolean syntax_correct = true;
