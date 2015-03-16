@@ -58,7 +58,7 @@ public class GenericCalendar {
 		int day = getYearStartDay(year);
 		for (int j = 1; j < month; j++) {
 			day = +daysInMonth(j, year);
-			day = day % 7;
+			day = (day+1) % 7;
 		}
 		return day;
 	}
