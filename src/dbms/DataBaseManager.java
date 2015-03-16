@@ -1392,10 +1392,11 @@ public class DataBaseManager implements Closeable {
 				InvitationBuilder ib = new InvitationBuilder();
 				ib.setEntry_id(rset.getLong("entryID"));
 				ib.setGoing(rset.getBoolean("isGoing"));
-				ib.setGoing(rset.getBoolean("isShowing"));
+				ib.setShowing(rset.getBoolean("isShowing"));
 				ib.setUsername(rset.getString("username"));
 				invis.add(ib.build());
 			}
+			
 			
 			return invis;
 			
