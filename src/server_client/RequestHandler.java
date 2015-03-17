@@ -41,6 +41,10 @@ public class RequestHandler{
 	
 	// TODO make entryID in the notification Table an optional argument. (And update the java code accordingly).
 	
+	// TODO check colisions of entries???
+	
+	// TODO should not be able to use commands when not logged in!
+	
 	// TODO if neccessary: implement alarm stuff (change entry -> change alarm; command change alarm)
 	
 	private static DataBaseManager dbm;
@@ -209,7 +213,11 @@ public class RequestHandler{
 				result = false;
 			} catch(EntryDoesNotExistException e){
 				// TODO this is only a small hack so that it will work. 
+				if(entry_id < 100000){
 				result = notify(username, entry_id+1, message); // TODO make entryid optional in notification.
+				}else{
+					return false;
+				}
 			}
 		}
 		
@@ -466,7 +474,7 @@ public class RequestHandler{
 	 * @throws SessionExpiredException
 	 */
 	public static boolean editEntry(User requestor, CalendarEntry new_entry) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException, SessionExpiredException {
-		
+		// TODO update with the edit-entry in DBM!
 		validate(requestor);
 		
 		if(new_entry == null || new_entry.getEntryID() <= 0){
@@ -624,6 +632,8 @@ public class RequestHandler{
 	 * Group functions
 	 *================*/
 	
+	// TODO make it more consistant to use the groups. Eg new table in DB linking groups to other groups.
+	
 	/**
 	 * adds the group to the DB
 	 * @param requestor
@@ -658,7 +668,7 @@ public class RequestHandler{
 		
 		
 		validate(requestor);
-		// TODO make the entry optional for a notification.
+		// TODO make the entry_id optional for a notification.
 		
 		synchronized (ADD_DB_LOCK) {
 			if(dbm.addUserToGroup(username, groupname)){

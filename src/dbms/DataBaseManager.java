@@ -1831,8 +1831,8 @@ public class DataBaseManager implements Closeable {
 	public boolean editEntry(CalendarEntry newEntry, String username) throws EntryDoesNotExistException, UserDoesNotExistException{
 		// TODO entry = null. what to do?
 		// TODO update with alarm etc...
+		// TODO change back as it was before and make the null comparison in the request handler.
 		
-		// checks
 		checkUserAndEntry(username, newEntry.getEntryID());
 		checkIfUserExists(newEntry.getCreator());
 		
