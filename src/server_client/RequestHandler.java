@@ -834,17 +834,26 @@ public class RequestHandler{
 	 * @throws SessionExpiredException
 	 * @throws InvitationDoesNotExistException 
 	 */
-	public static boolean invitationAnswer(User requestor, long entry_id, boolean answer) throws EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException, InvitationDoesNotExistException {
+	public static boolean invitationAnswer(User requestor, long entry_id, boolean going, boolean showing) throws EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException, InvitationDoesNotExistException {
 		
 		validate(requestor);
-
-		if (answer) {
-			return dbm.going(requestor.getUsername(), entry_id); 
-		} else {
+		
+		boolean allOk = true;
+		if(going){
+			allOk = dbm.going(requestor.getUsername(), entry_id);
+		}else{
+			allOk = dbm.notGoing(requestor.getUsername(), entry_id);
 			String creator = dbm.getEntry(entry_id).getCreator();
 			notify(creator, requestor+"refused to participate in the event with id "+ entry_id);
-			return dbm.notGoing(requestor.getUsername(), entry_id);
 		}
+		
+		if(showing){
+			allOk = dbm.allowToSee(requestor.getUsername(), entry_id) && allOk;
+		}else{
+			allOk = dbm.hideEvent(requestor.getUsername(), entry_id) && allOk;
+		}
+		
+		return allOk;
 	}
 	
 	/**

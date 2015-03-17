@@ -36,7 +36,7 @@ public class Notification {
 	
 	@Override
 	public String toString() {
-		String str = "(" + new Date(time) + ") ID =" + notificationID +" message: "+ description;
+		String str = "(" + new Date(time) + ") ID=" + notificationID +"; message: "+ description;
 		
 		if (!isOpened) str += " *";
 		

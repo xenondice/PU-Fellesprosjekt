@@ -21,8 +21,8 @@ VALUES ("MaMo", "Magnus Moan", "Kombinert", "", "mamo@stud.ntnu.no");
 INSERT INTO Invitation (username, entryID)
 VALUES ("MaMo", 1);
 
-INSERT INTO Notification (description, username, entryID)
-VALUES ("Invitasjon til fellesprosjekt", "MaMo", 1);
+INSERT INTO Notification (description, username)
+VALUES ("Invitasjon til fellesprosjekt", "MaMo");
 
 INSERT INTO IsAdmin (entryID, username)
 VALUES (1, "xXx69xXx");
