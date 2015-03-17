@@ -22,10 +22,14 @@ public class RoomBookingHandler {
 
 	/**
 	 * This method books rooms. Input arguments are the Room, starttime (long), endtime (long) and entryID
-	 * of the entry you want the room booked for. 
-	 *
+	 * of the entry you want the room booked for.
+	 * @param room
+	 * @param startTime
+	 * @param endTime
+	 * @param entryID
+	 * @return true if the Room is successfully booked.
+	 * @throws RoomAlreadyBookedException
 	 */
-
 	public boolean bookRoom(Room room, long startTime, long endTime, long entryID) throws RoomAlreadyBookedException{
 		if(checkIfFree(room, startTime, endTime)){
 			RoomReservation rr = new RoomReservation(room, startTime, endTime, entryID);
@@ -42,7 +46,7 @@ public class RoomBookingHandler {
 	 * @param start2
 	 * @param end1
 	 * @param end2
-	 * @return
+	 * @return true if the input timespan overlaps with the other timespan.
 	 */
 	private boolean isInbetween(long start1, long start2, long end1, long end2){
 	
@@ -57,6 +61,13 @@ public class RoomBookingHandler {
 	}
 	
 	// sjekke om det finnes RoomReservation rr;
+	/**
+	 * checks if there already is a RoomReservation at the given Room at the given timespan 
+	 * @param room
+	 * @param startTime
+	 * @param endTime
+	 * @return true if the Room is available
+	 */
 	public boolean checkIfFree(Room room, long startTime, long endTime){
 		HashSet<RoomReservation> rr = dbm.getReservationsForRoom(room);
 		for(RoomReservation res : rr){
@@ -65,7 +76,13 @@ public class RoomBookingHandler {
 		return true;
 	}
 	
-	
+	/**
+	 * cancels a RoomReservation
+	 * @param room
+	 * @param startTime
+	 * @param endTime
+	 * @return true if the Room is successfully released.
+	 */
 	public boolean releaseRoom(Room room, long startTime, long endTime){
 		boolean could_release_all = true;
 		if (dbm.getReservationsForRoom(room) != null){
