@@ -6,6 +6,8 @@ import java.net.Socket;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.mysql.jdbc.UpdatableResultSet;
+
 import room_booking.Room;
 import room_booking.RoomBookingHandler;
 import calendar.Calendar;
@@ -391,24 +393,28 @@ public class RequestHandler{
 	 * @throws UserDoesNotExistException
 	 * @throws SessionExpiredException
 	 * @throws RoomDoesNotExistException 
+	 * @throws RoomAlreadyBookedException 
 	 */
-	public static boolean createEntry(String requestor, CalendarEntry entry) throws UserDoesNotExistException, SessionExpiredException, RoomDoesNotExistException {
+	public synchronized static boolean createEntry(String requestor, CalendarEntry entry) throws UserDoesNotExistException, SessionExpiredException, RoomDoesNotExistException, RoomAlreadyBookedException {
 		
 		validate(requestor);
-		
-		if (entry == null) return false;
-		
+
+		if (entry == null)
+			return false;
+
 		try {
-			synchronized (ADD_DB_LOCK) {
-				long entry_id = dbm.addEntry(entry);
-				
-				if (entry_id > -1) {
-					dbm.makeAdmin(entry.getCreator(), entry_id);
-					invite(requestor, entry_id, true);
-					return true;
-				} else {
-					return false;
+			long entry_id = dbm.addEntry(entry);
+
+			if (entry_id > 0) {
+				dbm.makeAdmin(entry.getCreator(), entry_id);
+				invite(requestor, entry_id, true);
+				if(entry.getRoomID() != null && ! entry.getRoomID().equals("")){
+					rbh.bookRoom(dbm.getRoom(entry.getRoomID()), entry.getStartTime(), entry.getEndTime(), entry_id);
 				}
+				
+				return true;
+			} else {
+				return false;
 			}
 		} catch (EntryDoesNotExistException e) {
 			e.printStackTrace();
@@ -477,9 +483,8 @@ public class RequestHandler{
 		
 		synchronized (ADD_DB_LOCK) {
 			dbm.checkIfisAdmin(requestor, new_entry.getEntryID());
-			
-			CalendarEntryBuilder eb = new CalendarEntryBuilder(dbm.getEntry(new_entry.getEntryID()));
-			
+			CalendarEntry old_entry = dbm.getEntry(new_entry.getEntryID());
+			CalendarEntryBuilder eb = new CalendarEntryBuilder(old_entry);
 			// update the entry
 			if(new_entry.getStartTime() > 0){ eb.setStartTime(new_entry.getStartTime());}
 			if(new_entry.getEndTime() > 0){ eb.setEndTime(new_entry.getEndTime());}
@@ -488,11 +493,38 @@ public class RequestHandler{
 			if(new_entry.getRoomID() != null){eb.setRoomID(new_entry.getRoomID());}
 			
 			CalendarEntry new_entry_final = eb.build();
+			
+			updateRoomReservation(old_entry, new_entry);
+			
 						
 			if(dbm.editEntry(new_entry_final, requestor)){
 				provideUpdate(new_entry_final.getEntryID(), "The entry information has changed!");
 				return true;
 			}else{
+				return false;
+			}
+		}
+	}
+	
+	private static boolean updateRoomReservation(CalendarEntry old_entry, CalendarEntry new_entry){
+		boolean change_room_reservation = false;
+		
+		// TODO
+		
+		if(change_room_reservation){
+			try {
+				rbh.releaseRoomEntry(dbm.getRoom(old_entry.getRoomID()), old_entry.getEntryID());
+			} catch (RoomDoesNotExistException e) {
+				// should never happen!!
+				e.printStackTrace();
+				return false;
+			}
+			
+			try {
+				rbh.bookRoom(dbm.getRoom(new_entry.getRoomID()), new_entry.getStartTime(), new_entry.getEndTime(), new_entry.getEntryID());
+			} catch (RoomDoesNotExistException e) {
+				// should never happen!!
+				e.printStackTrace();
 				return false;
 			}
 		}
@@ -684,15 +716,14 @@ public class RequestHandler{
 	 * @throws SessionExpiredException
 	 * @throws HasNotTheRightsException
 	 */
-	public static boolean addGroupToGroup(String requestor, Group invited_group, String invitee_groupname) throws UserDoesNotExistException, GroupDoesNotExistException, SessionExpiredException, HasNotTheRightsException {
+	public static boolean addGroupToGroup(String requestor, String invited_groupname, String invitee_groupname) throws UserDoesNotExistException, GroupDoesNotExistException, SessionExpiredException, HasNotTheRightsException {
 		
 		boolean could_add_all = true;
-		for (User user : invited_group.getUsers()){
+		for (User user : dbm.getGroup(invited_groupname).getUsers()){
 			if (!addUserToGroup(requestor, user.getUsername(), invitee_groupname)){
 				could_add_all = false;
 			}
 		}
-		
 		return could_add_all;
 	}
 	
@@ -758,19 +789,19 @@ public class RequestHandler{
 		return rbh.bookRoom(room, start_time, end_time, entry_id);
 	}
 	
-	/**
-	 * cancels a booking.
-	 * @param room
-	 * @param startTime
-	 * @param endTime
-	 * @throws SessionExpiredException 
-	 */
-	public synchronized static boolean releaseRoom(String requestor, Room room, long start_time, long end_time) throws SessionExpiredException {
-		
-		validate(requestor);
-		
-		return rbh.releaseRoom(room, start_time, end_time);
-	}
+//	/**
+//	 * cancels all bookings overlapping with the given timeperiod.
+//	 * @param room
+//	 * @param startTime
+//	 * @param endTime
+//	 * @throws SessionExpiredException 
+//	 */
+//	public static boolean releaseRoom(String requestor, Room room, long start_time, long end_time) throws SessionExpiredException {
+//		
+//		validate(requestor);
+//		
+//		return rbh.releaseRoom(room, start_time, end_time);
+//	}
 	
 	/* ===============
 	 * 'Calendar' functions

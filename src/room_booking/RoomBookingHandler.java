@@ -66,7 +66,8 @@ public class RoomBookingHandler {
 	public boolean doOverlap(long start1, long end1, long start2, long end2){
 
 		return isBetween(start1, start2, end2)	|| isBetween(end1, start2, end2) 
-				||isBetween(start2, start1, end1) || isBetween(end2, start1, end1) ;
+				||isBetween(start2, start1, end1) || isBetween(end2, start1, end1) 
+				|| start1 == start2 || end1 == end2;
 	}
 	
 	// sjekke om det finnes RoomReservation rr;
@@ -88,21 +89,13 @@ public class RoomBookingHandler {
 	}
 	
 	/**
-<<<<<<< HEAD
-	 * deletes all reservations that overlap with the given timespan
-	 * @param room
-	 * @param startTime
-	 * @param endTime
-	 * @return
-=======
-	 * cancels a RoomReservation
+	 * cancels all reservations for this room overlapping with the given timespan.
 	 * @param room
 	 * @param startTime
 	 * @param endTime
 	 * @return true if the Room is successfully released.
->>>>>>> adc89ab30bf70a52acb7192161f91b2582a24da2
 	 */
-	public boolean releaseRoom(Room room, long startTime, long endTime){
+	public boolean releaseRoomTime(Room room, long startTime, long endTime){
 		boolean could_release_all = true;
 		if (dbm.getReservationsForRoom(room) != null){
 			HashSet<RoomReservation> reservations = dbm.getReservationsForRoom(room);
@@ -121,6 +114,33 @@ public class RoomBookingHandler {
 			}
 		}
 		
+		return could_release_all;
+	}
+	
+	/**
+	 * releases all reservations connected to the given entry id
+	 * @param room
+	 * @param entry_id
+	 * @return
+	 */
+	public boolean releaseRoomEntry(Room room, long entry_id){
+		boolean could_release_all = true;
+		HashSet<RoomReservation> reservations = dbm.getReservationsForRoom(room);
+		if(reservations != null){
+			for(RoomReservation res : reservations){
+				if(res.getEntryID() == entry_id){
+					if (!dbm.deleteRoomReservation(res)){
+						could_release_all = false;
+					}else{
+						try {
+							RequestHandler.notify(dbm.getEntry(entry_id).getCreator(), "The reservation '"+res.toString()+"' was released.");
+						} catch (EntryDoesNotExistException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+			}
+		}
 		return could_release_all;
 	}
 	
@@ -154,6 +174,8 @@ public class RoomBookingHandler {
 		System.out.println(rbh.doOverlap(t2, t4, t1, t3)); // true
 		System.out.println(rbh.doOverlap(t2, t3, t1, t4)); // true
 		System.out.println(rbh.doOverlap(t2, t4, t3, t5)); // true
+		
+		System.out.println(rbh.doOverlap(t1, t2, t1, t2)); // true
 		
 		
 	}
