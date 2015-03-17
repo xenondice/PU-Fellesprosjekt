@@ -37,10 +37,10 @@ public class CalendarEntryBuilder implements Builder<CalendarEntry>{
 	public void setDescription(String description) {
 		this.description = description;
 	}
-	public void setEndTime(Long endTime) {
+	public void setEndTime(long endTime) {
 		this.endTime = endTime;
 	}
-	public void setEntryID(Long entryID) {
+	public void setEntryID(long entryID) {
 		this.entryID = entryID;
 	}
 	public void setLocation(String location) {
@@ -58,10 +58,6 @@ public class CalendarEntryBuilder implements Builder<CalendarEntry>{
 
 	public long getEndTime() {
 		return endTime;
-	}
-
-	public void setEndTime(long endTime) {
-		this.endTime = endTime;
 	}
 
 	public long getEntryID() {

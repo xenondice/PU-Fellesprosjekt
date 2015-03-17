@@ -6,10 +6,12 @@ import java.net.Socket;
 import java.util.HashSet;
 import java.util.Set;
 
+
 import room_booking.Room;
 import room_booking.RoomBookingHandler;
 import calendar.Calendar;
 import calendar.CalendarEntry;
+import calendar.CalendarEntryBuilder;
 import calendar.Invitation;
 import calendar.InvitationBuilder;
 import calendar.Notification;
@@ -464,7 +466,8 @@ public class RequestHandler{
 	}
 	
 	/**
-	 * edit an already existing entry
+	 * edit an already existing entry</br>
+	 * All attributes that are 'null' will be kept from the old entry.
 	 * @param requestor
 	 * @param newEntry
 	 * @return
@@ -474,23 +477,30 @@ public class RequestHandler{
 	 * @throws SessionExpiredException
 	 */
 	public static boolean editEntry(User requestor, CalendarEntry new_entry) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException, SessionExpiredException {
-		// TODO update with the edit-entry in DBM!
 		validate(requestor);
 		
 		if(new_entry == null || new_entry.getEntryID() <= 0){
 			return false;
 		}
+		dbm.checkIfisAdmin(requestor.getUsername(), new_entry.getEntryID());
 		
-		boolean result;
-		synchronized (ADD_DB_LOCK) {
-			dbm.checkIfisAdmin(requestor.getUsername(), new_entry.getEntryID());
-			
-			result = dbm.editEntry(new_entry, requestor.getUsername());
+		CalendarEntryBuilder eb = new CalendarEntryBuilder(dbm.getEntry(new_entry.getEntryID()));
+		
+		// update the entry
+		if(new_entry.getStartTime() > 0){ eb.setStartTime(new_entry.getStartTime());}
+		if(new_entry.getEndTime() > 0){ eb.setEndTime(new_entry.getEndTime());}
+		if(new_entry.getDescription() != null){eb.setDescription(new_entry.getDescription());}
+		if(new_entry.getLocation() != null){eb.setLocation(new_entry.getLocation());}
+		if(new_entry.getRoomID() != null){eb.setRoomID(new_entry.getRoomID());}
+		
+		CalendarEntry new_entry_final = eb.build();
+					
+		if(dbm.editEntry(new_entry_final, requestor.getUsername())){
+			provideUpdate(new_entry_final.getEntryID(), "The entry information has changed!");
+			return true;
+		}else{
+			return false;
 		}
-		
-		if (result) provideUpdate(new_entry.getEntryID(), "The entry information has changed!");
-		
-		return result;
 	}
 	
 	/**

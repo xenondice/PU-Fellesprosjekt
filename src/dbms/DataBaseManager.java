@@ -1831,7 +1831,6 @@ public class DataBaseManager implements Closeable {
 	public boolean editEntry(CalendarEntry newEntry, String username) throws EntryDoesNotExistException, UserDoesNotExistException{
 		// TODO entry = null. what to do?
 		// TODO update with alarm etc...
-		// TODO change back as it was before and make the null comparison in the request handler.
 		
 		checkUserAndEntry(username, newEntry.getEntryID());
 		checkIfUserExists(newEntry.getCreator());
@@ -1840,16 +1839,15 @@ public class DataBaseManager implements Closeable {
 				+ "SET startTime = ?, endTime = ?, location = ?, description = ?, roomID = ? "
 				+ "WHERE entryID = ?; ";
 		
-		CalendarEntry existingEntry = getEntry(newEntry.getEntryID());
-		
 		try {
 			PreparedStatement editEntry_stmt = connection.prepareStatement(edit_entry);
 			int i = 0;
-			editEntry_stmt.setTimestamp(++i, new java.sql.Timestamp(newEntry.getStartTime()==null?existingEntry.getStartTime():newEntry.getStartTime()));
-			editEntry_stmt.setTimestamp(++i, new java.sql.Timestamp(newEntry.getEndTime()==null?existingEntry.getEndTime():newEntry.getEndTime()));
-			editEntry_stmt.setString(++i, newEntry.getLocation()==null?existingEntry.getLocation():newEntry.getLocation());
-			editEntry_stmt.setString(++i, newEntry.getDescription()==null?existingEntry.getDescription():newEntry.getDescription());
-			editEntry_stmt.setString(++i, newEntry.getRoomID()==null?existingEntry.getRoomID():newEntry.getRoomID());
+			editEntry_stmt.setTimestamp(++i, new Timestamp(newEntry.getStartTime()));
+			editEntry_stmt.setTimestamp(++i, new Timestamp(newEntry.getEndTime()));
+			
+			editEntry_stmt.setString(++i, newEntry.getLocation());
+			editEntry_stmt.setString(++i, newEntry.getDescription());
+			editEntry_stmt.setString(++i, newEntry.getRoomID());
 			editEntry_stmt.setLong(++i, newEntry.getEntryID());
 			
 			editEntry_stmt.executeUpdate();
