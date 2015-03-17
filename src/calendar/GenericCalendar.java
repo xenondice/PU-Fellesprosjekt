@@ -1,69 +1,71 @@
 package calendar;
 
+import java.util.GregorianCalendar;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Calendar;
+
 /**
  * This class provides some basic calendar informations.
  *
  */
-public class GenericCalendar {
-
-	public static int daysInMonth(int nr, int year) {
-		int days;
-
-		if (nr == 1 || nr == 3 || nr == 5 || nr == 7 || nr == 8 || nr == 10
-				|| nr == 12) {
-			days = 31;
-		} else if (nr == 4 || nr == 6 || nr == 9 || nr == 11) {
-			days = 30;
-		} else if (nr == 2) {
-			if (isLeapYear(year)) {
-				days = 29;
-			} else {
-				days = 28;
-			}
-		} else {
-			throw new IllegalArgumentException(nr + " is not a valid day!");
-		}
-		return days;
-	}
-
-	public static int getYearStartDay(int year) {
-		int startDay = 0;
-
-		for (int j = 1900; j < year + 1; j++) {
-			startDay++;
-			if (isLeapYear(j - 1)) {
-				startDay++;
-			}
-			if (startDay > 7) {
-				startDay = startDay % 7;
-			}
-		}
-		return startDay;
+public abstract class GenericCalendar {
+	
+	/**
+	 * Returns a set over which of the given entries are not over yet.
+	 * @param entries
+	 * @return
+	 */
+	public static Set<CalendarEntry> getActiveEntries(Set<CalendarEntry> entries) {
+		long current_time = System.currentTimeMillis();
+		Set<CalendarEntry> active_entries = new HashSet<>();
 		
+		for (CalendarEntry entry : entries)
+			if (entry.getEndTime() >= current_time)
+				active_entries.add(entry);
+		
+		return active_entries;
+	}
+	
+	/**
+	 * Returns how many days there is in a given month.
+	 * @param time
+	 * @return
+	 */
+	public static int getDaysInMonth(long time) {
+		Calendar calendar = new GregorianCalendar();
+		calendar.setTimeInMillis(time);
+		return calendar.getActualMaximum(GregorianCalendar.DAY_OF_MONTH);
 	}
 
-	private static boolean isLeapYear(int year) {
-		if (year % 100 == 0 && year % 400 == 0) {
-			return true;
-		} else if (year % 4 == 0) {
-			return true;
-		}
-		return false;
+	/**
+	 * Return what day the month starts on, 1 = Monday, 2 = Tuesday, ...
+	 * @param time
+	 * @return
+	 */
+	public static int getMonthStartDay(long time) {
+		Calendar calendar = new GregorianCalendar();
+		calendar.setTimeInMillis(time);
+		calendar.set(GregorianCalendar.DAY_OF_MONTH, 1);
+		return weekStartAtMonday(calendar.get(GregorianCalendar.DAY_OF_WEEK));
+	}
+	
+	/**
+	 * Transform a week starting at Sunday to a week starting at Monday
+	 * @param week_day
+	 * @return
+	 */
+	public static int weekStartAtMonday(int week_day) {
+		week_day = (week_day - 2) % 7;							// Transform week starting at Sunday to Monday
+		week_day = (week_day < 0) ? (week_day + 7) : week_day;	// Stop modulo from allowing negative values
+		return week_day + 1;
 	}
 
-	public static int getMonthStartDay(int year, int month) {
-		if (month > 12 || month < 1) {
-			throw new IllegalArgumentException();
-		}
-		int day = getYearStartDay(year);
-		for (int j = 1; j < month; j++) {
-			day = +daysInMonth(j, year);
-			day = (day) % 7;
-		}
-		return day;
-	}
-
-
+	/**
+	 * Give the name of the day in the week.
+	 * @param day
+	 * @return
+	 */
 	public static String getDayName(int day) {
 		if (day == 1) {
 			return "Monday";
