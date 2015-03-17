@@ -137,7 +137,7 @@ public class RequestHandler{
 	public static ServerClientHandler getUserHandlerIfActive(String username) {
 		
 		for (ServerClientHandler handler : currently_connected) {
-			if (handler.getUser() != null && handler.getUser().getUsername().equals(username)) return handler;
+			if (handler.getUsername() != null && handler.getUsername().equals(username)) return handler;
 		}
 		
 		return null;
@@ -151,8 +151,8 @@ public class RequestHandler{
 		
 		System.out.print("Disconnecting ");
 		
-		if (client.getUser() == null ) System.out.println("not identified client");
-		else System.out.println(client.getUser().getUsername());
+		if (client.getUsername() == null ) System.out.println("not identified client");
+		else System.out.println(client.getUsername());
 		
 		currently_connected.remove(client);
 	}
@@ -166,7 +166,7 @@ public class RequestHandler{
 		
 		ServerClientHandler handler = getUserHandlerIfActive(username);
 		
-		if (handler != null && handler.getUser() != null) {
+		if (handler != null && handler.getUsername() != null) {
 			handler.sendNotification(message);
 		}
 	}
@@ -295,21 +295,21 @@ public class RequestHandler{
 	 * @throws SessionExpiredException
 	 * @throws UserDoesNotExistException 
 	 */
-	private static void validate(User requestor) throws SessionExpiredException {
+	private static void validate(String requestor) throws SessionExpiredException {
 		
-		if (requestor == null || ! isValidUsername(requestor.getUsername())) {
+		if (requestor == null || ! isValidUsername(requestor)) {
 			System.out.println("Request from unverified user denied (not valid name "+requestor+")");
 			throw new SessionExpiredException();
 		}
 		
 		try {
-			dbm.getUser(requestor.getUsername());
+			dbm.getUser(requestor);
 		} catch (UserDoesNotExistException e) {
 			System.out.println("Request from unverified user denied (user not in DB)");
 			throw new SessionExpiredException();
 		}
 		
-		System.out.println("Request from user " + requestor.getUsername() + " validated");
+		System.out.println("Request from user " + requestor + " validated");
 	}
 	
 	/**
@@ -338,11 +338,11 @@ public class RequestHandler{
 	 * @throws SessionExpiredException
 	 * @throws HasNotTheRightsException
 	 */
-	public static boolean editUser(User requestor, User updated_user) throws UserDoesNotExistException, SessionExpiredException, HasNotTheRightsException {
+	public static boolean editUser(String requestor, User updated_user) throws UserDoesNotExistException, SessionExpiredException, HasNotTheRightsException {
 		
 		validate(requestor);
 		
-		if (!updated_user.getUsername().equals(requestor.getUsername())) {
+		if (!updated_user.getUsername().equals(requestor)) {
 			throw new HasNotTheRightsException();
 		} else if (updated_user.getUsername() == null) {
 			return false;
@@ -362,12 +362,12 @@ public class RequestHandler{
 	 * @throws UserDoesNotExistException
 	 * @throws SessionExpiredException
 	 */
-	public static boolean makeAdmin(User requestor, String username, long entry_id) throws HasNotTheRightsException, EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException {
+	public static boolean makeAdmin(String requestor, String username, long entry_id) throws HasNotTheRightsException, EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException {
 		
 		validate(requestor);
 		
 		synchronized (ADD_DB_LOCK) {
-			if (!dbm.isAdmin(requestor.getUsername(), entry_id)) {
+			if (!dbm.isAdmin(requestor, entry_id)) {
 				throw new HasNotTheRightsException();
 			}
 			
@@ -392,7 +392,7 @@ public class RequestHandler{
 	 * @throws SessionExpiredException
 	 * @throws RoomDoesNotExistException 
 	 */
-	public static boolean createEntry(User requestor, CalendarEntry entry) throws UserDoesNotExistException, SessionExpiredException, RoomDoesNotExistException {
+	public static boolean createEntry(String requestor, CalendarEntry entry) throws UserDoesNotExistException, SessionExpiredException, RoomDoesNotExistException {
 		
 		validate(requestor);
 		
@@ -404,7 +404,7 @@ public class RequestHandler{
 				
 				if (entry_id > -1) {
 					dbm.makeAdmin(entry.getCreator(), entry_id);
-					invite(requestor.getUsername(), entry_id, true);
+					invite(requestor, entry_id, true);
 					return true;
 				} else {
 					return false;
@@ -427,7 +427,7 @@ public class RequestHandler{
 	 * @throws UserDoesNotExistException
 	 * @throws HasNotTheRightsException
 	 */
-	public static boolean deleteEntry(User requestor, long entry_id) throws SessionExpiredException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException {
+	public static boolean deleteEntry(String requestor, long entry_id) throws SessionExpiredException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException {
 		
 		validate(requestor);
 		
@@ -435,7 +435,7 @@ public class RequestHandler{
 		Set<String> invited_users = null;
 		
 		synchronized (ADD_DB_LOCK) {	
-			if (!dbm.isAdmin(requestor.getUsername(), entry_id)){
+			if (!dbm.isAdmin(requestor, entry_id)){
 				throw new HasNotTheRightsException();
 			}
 			
@@ -444,7 +444,7 @@ public class RequestHandler{
 			} catch (Exception e) {
 			}
 			
-			result = dbm.deleteEntry(requestor.getUsername(), entry_id);
+			result = dbm.deleteEntry(requestor, entry_id);
 		}
 		
 		if (result && invited_users != null){
@@ -467,7 +467,7 @@ public class RequestHandler{
 	 * @throws UserDoesNotExistException
 	 * @throws SessionExpiredException
 	 */
-	public static boolean editEntry(User requestor, CalendarEntry new_entry) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException, SessionExpiredException {
+	public static boolean editEntry(String requestor, CalendarEntry new_entry) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException, SessionExpiredException {
 		
 		validate(requestor);
 		
@@ -476,7 +476,7 @@ public class RequestHandler{
 		}
 		
 		synchronized (ADD_DB_LOCK) {
-			dbm.checkIfisAdmin(requestor.getUsername(), new_entry.getEntryID());
+			dbm.checkIfisAdmin(requestor, new_entry.getEntryID());
 			
 			CalendarEntryBuilder eb = new CalendarEntryBuilder(dbm.getEntry(new_entry.getEntryID()));
 			
@@ -489,7 +489,7 @@ public class RequestHandler{
 			
 			CalendarEntry new_entry_final = eb.build();
 						
-			if(dbm.editEntry(new_entry_final, requestor.getUsername())){
+			if(dbm.editEntry(new_entry_final, requestor)){
 				provideUpdate(new_entry_final.getEntryID(), "The entry information has changed!");
 				return true;
 			}else{
@@ -511,7 +511,7 @@ public class RequestHandler{
 	 * @throws HasNotTheRightsException
 	 * @throws InvitationDoesNotExistException
 	 */
-	public static boolean kickUserFromEntry(User requestor, String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException, HasNotTheRightsException, InvitationDoesNotExistException {
+	public static boolean kickUserFromEntry(String requestor, String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException, HasNotTheRightsException, InvitationDoesNotExistException {
 		
 		validate(requestor);
 		
@@ -519,10 +519,10 @@ public class RequestHandler{
 			if (dbm.isCreator(username, entry_id))
 				throw new HasNotTheRightsException();
 	
-			if (!dbm.isAllowedToEdit(requestor.getUsername(), entry_id))
+			if (!dbm.isAllowedToEdit(requestor, entry_id))
 				throw new HasNotTheRightsException();
 	
-			if (dbm.deleteInvitation(requestor.getUsername(), entry_id)) {
+			if (dbm.deleteInvitation(requestor, entry_id)) {
 				boolean allOk = true;
 
 				if (dbm.isAdmin(username, entry_id))
@@ -550,7 +550,7 @@ public class RequestHandler{
 	 * @throws HasNotTheRightsException
 	 * @throws InvitationDoesNotExistException
 	 */
-	public static boolean kickGroupFromEntry(User requestor, String groupname, long entry_id) throws GroupDoesNotExistException, UserInGroupDoesNotExistsException, EntryDoesNotExistException, SessionExpiredException, UserDoesNotExistException, HasNotTheRightsException {
+	public static boolean kickGroupFromEntry(String requestor, String groupname, long entry_id) throws GroupDoesNotExistException, UserInGroupDoesNotExistsException, EntryDoesNotExistException, SessionExpiredException, UserDoesNotExistException, HasNotTheRightsException {
 		
 		validate(requestor);
 		
@@ -581,11 +581,11 @@ public class RequestHandler{
 	 * @throws SessionExpiredException
 	 * @throws InvitationAlreadyExistsException
 	 */
-	public static boolean inviteUserToEntry(User requestor, String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException, SessionExpiredException {
+	public static boolean inviteUserToEntry(String requestor, String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException, SessionExpiredException {
 		
 		validate(requestor);
 		
-		if (!dbm.isAllowedToEdit(requestor.getUsername(), entry_id)){
+		if (!dbm.isAllowedToEdit(requestor, entry_id)){
 			throw new HasNotTheRightsException();
 		}
 		
@@ -605,13 +605,13 @@ public class RequestHandler{
 	 * @throws SessionExpiredException
 	 * @throws InvitationAlreadyExistsException
 	 */
-	public static boolean inviteGroupToEntry(User requestor, String groupname, long entry_id) throws GroupDoesNotExistException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException, SessionExpiredException {
+	public static boolean inviteGroupToEntry(String requestor, String groupname, long entry_id) throws GroupDoesNotExistException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException, SessionExpiredException {
 		
 		validate(requestor);
 		
 		Group group;
 		synchronized (ADD_DB_LOCK) {
-			if (!dbm.isAllowedToEdit(requestor.getUsername(), entry_id)){
+			if (!dbm.isAllowedToEdit(requestor, entry_id)){
 				throw new HasNotTheRightsException();
 			}
 			
@@ -644,7 +644,7 @@ public class RequestHandler{
 	 * @throws UserInGroupDoesNotExistsException
 	 * @throws SessionExpiredException
 	 */
-	public static boolean createGroup(User requestor, Group group) throws UserDoesNotExistException, GroupAlreadyExistsException, UserInGroupDoesNotExistsException, SessionExpiredException {
+	public static boolean createGroup(String requestor, Group group) throws UserDoesNotExistException, GroupAlreadyExistsException, UserInGroupDoesNotExistsException, SessionExpiredException {
 		
 		validate(requestor);
 		
@@ -662,7 +662,7 @@ public class RequestHandler{
 	 * @throws SessionExpiredException
 	 * @throws HasNotTheRightsException
 	 */
-	public static boolean addUserToGroup(User requestor, String username, String groupname) throws UserDoesNotExistException, GroupDoesNotExistException, SessionExpiredException {
+	public static boolean addUserToGroup(String requestor, String username, String groupname) throws UserDoesNotExistException, GroupDoesNotExistException, SessionExpiredException {
 		
 		validate(requestor);		
 
@@ -684,7 +684,7 @@ public class RequestHandler{
 	 * @throws SessionExpiredException
 	 * @throws HasNotTheRightsException
 	 */
-	public static boolean addGroupToGroup(User requestor, Group invited_group, String invitee_groupname) throws UserDoesNotExistException, GroupDoesNotExistException, SessionExpiredException, HasNotTheRightsException {
+	public static boolean addGroupToGroup(String requestor, Group invited_group, String invitee_groupname) throws UserDoesNotExistException, GroupDoesNotExistException, SessionExpiredException, HasNotTheRightsException {
 		
 		boolean could_add_all = true;
 		for (User user : invited_group.getUsers()){
@@ -707,7 +707,7 @@ public class RequestHandler{
 	 * @throws HasNotTheRightsException
 	 * @throws UserDoesNotExistException
 	 */
-	public static boolean removeUserFromGroup(User requestor, String username, String groupname) throws GroupDoesNotExistException, SessionExpiredException, HasNotTheRightsException, UserDoesNotExistException {
+	public static boolean removeUserFromGroup(String requestor, String username, String groupname) throws GroupDoesNotExistException, SessionExpiredException, HasNotTheRightsException, UserDoesNotExistException {
 		
 		validate(requestor);
 		
@@ -725,7 +725,7 @@ public class RequestHandler{
 	 * @throws HasNotTheRightsException
 	 * @throws UserDoesNotExistException
 	 */
-	public static boolean removeGroupFromGroup(User requestor, Group kickedGroup, String groupname) throws GroupDoesNotExistException, SessionExpiredException, HasNotTheRightsException, UserDoesNotExistException {
+	public static boolean removeGroupFromGroup(String requestor, Group kickedGroup, String groupname) throws GroupDoesNotExistException, SessionExpiredException, HasNotTheRightsException, UserDoesNotExistException {
 		
 		boolean could_add_all = true;
 		for (User user : kickedGroup.getUsers()){
@@ -751,7 +751,7 @@ public class RequestHandler{
 	 * @throws UserDoesNotExistException 
 	 * @throws SessionExpiredException 
 	 */
-	public static boolean bookRoom(User requestor, Room room, long start_time, long end_time, long entry_id) throws RoomAlreadyBookedException, SessionExpiredException {
+	public static boolean bookRoom(String requestor, Room room, long start_time, long end_time, long entry_id) throws RoomAlreadyBookedException, SessionExpiredException {
 		
 		validate(requestor);
 		
@@ -765,7 +765,7 @@ public class RequestHandler{
 	 * @param endTime
 	 * @throws SessionExpiredException 
 	 */
-	public synchronized static boolean releaseRoom(User requestor, Room room, long start_time, long end_time) throws SessionExpiredException {
+	public synchronized static boolean releaseRoom(String requestor, Room room, long start_time, long end_time) throws SessionExpiredException {
 		
 		validate(requestor);
 		
@@ -784,7 +784,7 @@ public class RequestHandler{
 	 * @throws SessionExpiredException
 	 * @throws EntryDoesNotExistException
 	 */
-	public static CalendarEntry getEntry(User requestor, long entry_id) throws SessionExpiredException, EntryDoesNotExistException {
+	public static CalendarEntry getEntry(String requestor, long entry_id) throws SessionExpiredException, EntryDoesNotExistException {
 		
 		validate(requestor);
 		
@@ -798,11 +798,11 @@ public class RequestHandler{
 	 * @throws UserDoesNotExistException
 	 * @throws SessionExpiredException
 	 */
-	public static HashSet<CalendarEntry> createCalendar(User requestor) throws UserDoesNotExistException, SessionExpiredException {
+	public static HashSet<CalendarEntry> createCalendar(String requestor) throws UserDoesNotExistException, SessionExpiredException {
 		
 		validate(requestor);
 		
-		return dbm.getAllEntriesForUser(requestor.getUsername());
+		return dbm.getAllEntriesForUser(requestor);
 	}
 	
 	/**
@@ -816,23 +816,23 @@ public class RequestHandler{
 	 * @throws SessionExpiredException
 	 * @throws InvitationDoesNotExistException 
 	 */
-	public static boolean invitationAnswer(User requestor, long entry_id, boolean going, boolean showing) throws EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException, InvitationDoesNotExistException {
+	public static boolean invitationAnswer(String requestor, long entry_id, boolean going, boolean showing) throws EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException, InvitationDoesNotExistException {
 		
 		validate(requestor);
 		
 		boolean allOk = true;
 		if(going){
-			allOk = dbm.going(requestor.getUsername(), entry_id);
+			allOk = dbm.going(requestor, entry_id);
 		}else{
-			allOk = dbm.notGoing(requestor.getUsername(), entry_id);
+			allOk = dbm.notGoing(requestor, entry_id);
 			String creator = dbm.getEntry(entry_id).getCreator();
 			notify(creator, requestor+"refused to participate in the event with id "+ entry_id);
 		}
 		
 		if(showing){
-			allOk = dbm.allowToSee(requestor.getUsername(), entry_id) && allOk;
+			allOk = dbm.allowToSee(requestor, entry_id) && allOk;
 		}else{
-			allOk = dbm.hideEvent(requestor.getUsername(), entry_id) && allOk;
+			allOk = dbm.hideEvent(requestor, entry_id) && allOk;
 		}
 		
 		return allOk;
@@ -845,11 +845,11 @@ public class RequestHandler{
 	 * @throws UserDoesNotExistException
 	 * @throws SessionExpiredException 
 	 */
-	public static HashSet<Notification> getNotifications(User requestor) throws UserDoesNotExistException, SessionExpiredException {
+	public static HashSet<Notification> getNotifications(String requestor) throws UserDoesNotExistException, SessionExpiredException {
 		
 		validate(requestor);
 		
-		return dbm.getNotificationsForUser(requestor.getUsername());
+		return dbm.getNotificationsForUser(requestor);
 	}
 	
 	/**
@@ -859,10 +859,10 @@ public class RequestHandler{
 	 * @throws UserDoesNotExistException
 	 * @throws SessionExpiredException 
 	 */
-	public static HashSet<Invitation> getInvitations(User requestor) throws UserDoesNotExistException, SessionExpiredException {
+	public static HashSet<Invitation> getInvitations(String requestor) throws UserDoesNotExistException, SessionExpiredException {
 		
 		validate(requestor);
 		
-		return dbm.getInvitationsForUser(requestor.getUsername());
+		return dbm.getInvitationsForUser(requestor);
 	}
 }

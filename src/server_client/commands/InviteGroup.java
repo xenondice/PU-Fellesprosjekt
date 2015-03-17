@@ -51,7 +51,7 @@ public class InviteGroup extends Command {
 	@Override
 	public String run(ServerClientHandler handler, List<Object> arguments, int syntax) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, GroupDoesNotExistException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException, SessionExpiredException {
 		
-		if (RequestHandler.inviteGroupToEntry(handler.getUser(), (String) arguments.get(0), (long) arguments.get(1)))
+		if (RequestHandler.inviteGroupToEntry(handler.getUsername(), (String) arguments.get(0), (long) arguments.get(1)))
 			return "Users in group successfully invited to calendar entry!";
 		else
 			return "Users in group couldn't be invited!";

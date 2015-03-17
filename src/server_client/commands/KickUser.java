@@ -53,7 +53,7 @@ public class KickUser extends Command {
 	@Override
 	public String run(ServerClientHandler handler, List<Object> arguments, int syntax) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException, HasNotTheRightsException, InvitationDoesNotExistException {
 		
-		if (RequestHandler.kickUserFromEntry(handler.getUser(), (String) arguments.get(0), (long) arguments.get(1)))
+		if (RequestHandler.kickUserFromEntry(handler.getUsername(), (String) arguments.get(0), (long) arguments.get(1)))
 			return "User successfully kicked from calendar entry!";
 		else
 			return "User could not be kicked from calendar entry!";

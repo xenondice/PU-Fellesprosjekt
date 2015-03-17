@@ -54,7 +54,7 @@ public class AddUserToGroup extends Command {
 	@Override
 	public String run(ServerClientHandler handler, List<Object> arguments, int syntax) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, SessionExpiredException, HasNotTheRightsException, UserDoesNotExistException, GroupDoesNotExistException {
 		
-		if (RequestHandler.addUserToGroup(handler.getUser(),(String) arguments.get(0),(String) arguments.get(1)))
+		if (RequestHandler.addUserToGroup(handler.getUsername(),(String) arguments.get(0),(String) arguments.get(1)))
 			return "User successfully added to group!";
 		else
 			return "User couldn't be added!";

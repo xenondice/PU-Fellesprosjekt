@@ -64,10 +64,10 @@ public class ShowCalendar extends Command {
 	@Override
 	public String run(ServerClientHandler handler, List<Object> arguments, int syntax) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, SessionExpiredException, HasNotTheRightsException, UserDoesNotExistException, GroupDoesNotExistException, EntryDoesNotExistException, GroupAlreadyExistsException, UserInGroupDoesNotExistsException, UsernameAlreadyExistsException, InvitationDoesNotExistException {
 		//Calendar user_calendar = RequestHandler.createCalendar(handler.getUser());
-		HashSet<Invitation> invitations = RequestHandler.getInvitations(handler.getUser());//user_calendar.getEntries();
+		HashSet<Invitation> invitations = RequestHandler.getInvitations(handler.getUsername());//user_calendar.getEntries();
 		HashSet<CalendarEntry> entries = new HashSet<>();
 		for (Invitation temp_entry : invitations)
-			entries.add(RequestHandler.getEntry(handler.getUser(), temp_entry.getEntry_id()));
+			entries.add(RequestHandler.getEntry(handler.getUsername(), temp_entry.getEntry_id()));
 		
 		GregorianCalendar calendar = new GregorianCalendar();
 		

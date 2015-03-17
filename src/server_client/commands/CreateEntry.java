@@ -65,10 +65,10 @@ public class CreateEntry extends Command {
 			entry_builder.setStartTime((long) arguments.get(2));
 			entry_builder.setEndTime(arguments.get(3)==null?(long) arguments.get(2):(long) arguments.get(3));
 			entry_builder.setRoomID((String) arguments.get(4));
-			entry_builder.setCreator(handler.getUser().getUsername());
+			entry_builder.setCreator(handler.getUsername());
 		
 		
-			if (RequestHandler.createEntry(handler.getUser(), entry_builder.build())){
+			if (RequestHandler.createEntry(handler.getUsername(), entry_builder.build())){
 				return "Calendar entry successfully created!";
 			}else{
 				return "Calendar entry couldn't be created!";
