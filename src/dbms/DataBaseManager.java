@@ -653,7 +653,6 @@ public class DataBaseManager implements Closeable {
 	 */
 	private synchronized long addIntoEntry(CalendarEntry e) {
 		
-		// TODO handle when roomId = null or "null" or ""
 		
 		if(e == null){
 			throw new IllegalArgumentException("entry is null");
@@ -975,11 +974,7 @@ public class DataBaseManager implements Closeable {
 	 * @see {@link DataBaseManager#editEntry(CalendarEntry, String)}
 	 */
 	public long addEntry(CalendarEntry e) throws UserDoesNotExistException{
-		
-		
-		// TODO update with alarm etc. 
-		// TODO should it handle the addIntoAdmin etc? -> only add into Entry. Request handler handels the is admin etc.
-		
+				
 		checkIfUserExists(e.getCreator());
 		
 		return addIntoEntry(e);
@@ -1720,7 +1715,6 @@ public class DataBaseManager implements Closeable {
 	 * @throws EntryDoesNotExistException 
 	 */
 	public boolean editAlarm(String username, long entry_id, long newAlarmTime) throws EntryDoesNotExistException, UserDoesNotExistException {
-		// TODO handle negative and illegal newAlarmtimes 
 		checkUserAndEntry(username, entry_id);
 		
 		try {
@@ -1833,9 +1827,9 @@ public class DataBaseManager implements Closeable {
 	 * @throws UserDoesNotExistException 
 	 */
 	public boolean editEntry(CalendarEntry newEntry, String username) throws EntryDoesNotExistException, UserDoesNotExistException{
-		// TODO entry = null. what to do?
-		// TODO update with alarm etc...
-		
+		if(newEntry == null){
+			return false;
+		}
 		checkUserAndEntry(username, newEntry.getEntryID());
 		checkIfUserExists(newEntry.getCreator());
 		
