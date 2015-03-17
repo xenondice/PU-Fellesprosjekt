@@ -179,9 +179,7 @@ public class RequestHandler{
 	public static void provideUpdate(long entry_id, String message) {
 		
 		Set<String> usernames;
-		synchronized (ADD_DB_LOCK) {
-			usernames = dbm.getInvitedUsersForEntry(entry_id);
-		}
+		usernames = dbm.getInvitedUsersForEntry(entry_id);
 		
 		if (usernames != null){
 			for (String username : usernames) {
@@ -304,13 +302,11 @@ public class RequestHandler{
 			throw new SessionExpiredException();
 		}
 		
-		synchronized (ADD_DB_LOCK) {
-			try {
-				dbm.getUser(requestor.getUsername());
-			} catch (UserDoesNotExistException e) {
-				System.out.println("Request from unverified user denied (user not in DB)");
-				throw new SessionExpiredException();
-			}
+		try {
+			dbm.getUser(requestor.getUsername());
+		} catch (UserDoesNotExistException e) {
+			System.out.println("Request from unverified user denied (user not in DB)");
+			throw new SessionExpiredException();
 		}
 		
 		System.out.println("Request from user " + requestor.getUsername() + " validated");
@@ -352,9 +348,7 @@ public class RequestHandler{
 			return false;
 		}
 		
-		synchronized (ADD_DB_LOCK) {
-			return dbm.editUser(updated_user);
-		}
+		return dbm.editUser(updated_user);
 	}
 	
 	/**
@@ -439,7 +433,8 @@ public class RequestHandler{
 		
 		boolean result;
 		Set<String> invited_users = null;
-		synchronized (ADD_DB_LOCK) {
+		
+		synchronized (ADD_DB_LOCK) {	
 			if (!dbm.isAdmin(requestor.getUsername(), entry_id)){
 				throw new HasNotTheRightsException();
 			}
@@ -473,29 +468,33 @@ public class RequestHandler{
 	 * @throws SessionExpiredException
 	 */
 	public static boolean editEntry(User requestor, CalendarEntry new_entry) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException, SessionExpiredException {
+		
 		validate(requestor);
 		
 		if(new_entry == null || new_entry.getEntryID() <= 0){
 			return false;
 		}
-		dbm.checkIfisAdmin(requestor.getUsername(), new_entry.getEntryID());
 		
-		CalendarEntryBuilder eb = new CalendarEntryBuilder(dbm.getEntry(new_entry.getEntryID()));
-		
-		// update the entry
-		if(new_entry.getStartTime() > 0){ eb.setStartTime(new_entry.getStartTime());}
-		if(new_entry.getEndTime() > 0){ eb.setEndTime(new_entry.getEndTime());}
-		if(new_entry.getDescription() != null){eb.setDescription(new_entry.getDescription());}
-		if(new_entry.getLocation() != null){eb.setLocation(new_entry.getLocation());}
-		if(new_entry.getRoomID() != null){eb.setRoomID(new_entry.getRoomID());}
-		
-		CalendarEntry new_entry_final = eb.build();
-					
-		if(dbm.editEntry(new_entry_final, requestor.getUsername())){
-			provideUpdate(new_entry_final.getEntryID(), "The entry information has changed!");
-			return true;
-		}else{
-			return false;
+		synchronized (ADD_DB_LOCK) {
+			dbm.checkIfisAdmin(requestor.getUsername(), new_entry.getEntryID());
+			
+			CalendarEntryBuilder eb = new CalendarEntryBuilder(dbm.getEntry(new_entry.getEntryID()));
+			
+			// update the entry
+			if(new_entry.getStartTime() > 0){ eb.setStartTime(new_entry.getStartTime());}
+			if(new_entry.getEndTime() > 0){ eb.setEndTime(new_entry.getEndTime());}
+			if(new_entry.getDescription() != null){eb.setDescription(new_entry.getDescription());}
+			if(new_entry.getLocation() != null){eb.setLocation(new_entry.getLocation());}
+			if(new_entry.getRoomID() != null){eb.setRoomID(new_entry.getRoomID());}
+			
+			CalendarEntry new_entry_final = eb.build();
+						
+			if(dbm.editEntry(new_entry_final, requestor.getUsername())){
+				provideUpdate(new_entry_final.getEntryID(), "The entry information has changed!");
+				return true;
+			}else{
+				return false;
+			}
 		}
 	}
 	
@@ -516,24 +515,24 @@ public class RequestHandler{
 		
 		validate(requestor);
 		
-		if(dbm.isCreator(username, entry_id)) {
-			return false;
-		}
+		synchronized (ADD_DB_LOCK) {
+			if (dbm.isCreator(username, entry_id))
+				throw new HasNotTheRightsException();
+	
+			if (!dbm.isAllowedToEdit(requestor.getUsername(), entry_id))
+				throw new HasNotTheRightsException();
+	
+			if (dbm.deleteInvitation(requestor.getUsername(), entry_id)) {
+				boolean allOk = true;
 
-		if (!dbm.isAllowedToEdit(requestor.getUsername(), entry_id)) {
-			throw new HasNotTheRightsException();
-		}
-
-		if(dbm.deleteInvitation(requestor.getUsername(), entry_id)){
-			boolean allOk = true;
-			// remove adminrights if he is admin.
-			if (dbm.isAdmin(username, entry_id)) {
-				allOk = dbm.revokeAdmin(username, entry_id);
-			}
-			notify(username, "You have just been kicked from the entry "+entry_id+"!");
-			return allOk;
-		}else{
-			return false;
+				if (dbm.isAdmin(username, entry_id))
+					allOk = dbm.revokeAdmin(username, entry_id);
+				
+				notify(username, "You have just been kicked from the entry "+entry_id+"!");
+				
+				return allOk;
+			} else
+				return false;
 		}
 	}
 	
@@ -553,17 +552,18 @@ public class RequestHandler{
 	 */
 	public static boolean kickGroupFromEntry(User requestor, String groupname, long entry_id) throws GroupDoesNotExistException, UserInGroupDoesNotExistsException, EntryDoesNotExistException, SessionExpiredException, UserDoesNotExistException, HasNotTheRightsException {
 		
-		Group group;
-		synchronized (ADD_DB_LOCK) {
-			group = dbm.getGroup(groupname);
-		}
+		validate(requestor);
 		
-		for (User user : group.getUsers()) {
-			try {
-				kickUserFromEntry(requestor, user.getUsername(), entry_id);
-			} catch (InvitationDoesNotExistException e) {
-				
-			}	
+		synchronized (ADD_DB_LOCK) {
+			Group group = dbm.getGroup(groupname);
+			
+			for (User user : group.getUsers()) {
+				try {
+					kickUserFromEntry(requestor, user.getUsername(), entry_id);
+				} catch (InvitationDoesNotExistException e) {
+					
+				}	
+			}
 		}
 		
 		return true;
@@ -585,10 +585,8 @@ public class RequestHandler{
 		
 		validate(requestor);
 		
-		synchronized (ADD_DB_LOCK) {
-			if (!dbm.isAllowedToEdit(requestor.getUsername(), entry_id)){
-				throw new HasNotTheRightsException();
-			}
+		if (!dbm.isAllowedToEdit(requestor.getUsername(), entry_id)){
+			throw new HasNotTheRightsException();
 		}
 		
 		return invite(username, entry_id, false);
@@ -650,9 +648,7 @@ public class RequestHandler{
 		
 		validate(requestor);
 		
-		synchronized (ADD_DB_LOCK) {
-			return dbm.addGroup(group);
-		}
+		return dbm.addGroup(group);
 	}
 	
 	/**
@@ -668,16 +664,13 @@ public class RequestHandler{
 	 */
 	public static boolean addUserToGroup(User requestor, String username, String groupname) throws UserDoesNotExistException, GroupDoesNotExistException, SessionExpiredException {
 		
-		
 		validate(requestor);		
-		synchronized (ADD_DB_LOCK) {
-			if(dbm.addUserToGroup(username, groupname)){
-				notify(username, "You have been added to the group "+groupname);
-				return true;
-			}else{
-				return false;
-			}
-		}
+
+		if(dbm.addUserToGroup(username, groupname)) {
+			notify(username, "You have been added to the group "+groupname);
+			return true;
+		} else
+			return false;
 	}
 	
 	/**
@@ -718,9 +711,7 @@ public class RequestHandler{
 		
 		validate(requestor);
 		
-		synchronized (ADD_DB_LOCK) {
-			return dbm.removeUserFromGroup(username, groupname);
-		}
+		return dbm.removeUserFromGroup(username, groupname);
 	}
 	
 	/**
@@ -764,9 +755,7 @@ public class RequestHandler{
 		
 		validate(requestor);
 		
-		synchronized (ADD_DB_LOCK) {
-			return rbh.bookRoom(room, start_time, end_time, entry_id);
-		}
+		return rbh.bookRoom(room, start_time, end_time, entry_id);
 	}
 	
 	/**
@@ -780,9 +769,7 @@ public class RequestHandler{
 		
 		validate(requestor);
 		
-		synchronized (ADD_DB_LOCK) {
-			return rbh.releaseRoom(room, start_time, end_time);
-		}
+		return rbh.releaseRoom(room, start_time, end_time);
 	}
 	
 	/* ===============
@@ -801,9 +788,7 @@ public class RequestHandler{
 		
 		validate(requestor);
 		
-		synchronized (ADD_DB_LOCK) {
-			return dbm.getEntry(entry_id);
-		}
+		return dbm.getEntry(entry_id);
 	}
 	
 	/**
@@ -813,13 +798,11 @@ public class RequestHandler{
 	 * @throws UserDoesNotExistException
 	 * @throws SessionExpiredException
 	 */
-	public static Calendar createCalendar(User requestor) throws UserDoesNotExistException, SessionExpiredException {
+	public static HashSet<CalendarEntry> createCalendar(User requestor) throws UserDoesNotExistException, SessionExpiredException {
 		
 		validate(requestor);
 		
-		synchronized (ADD_DB_LOCK) {
-			return dbm.createCalendar(requestor.getUsername());
-		}
+		return dbm.getAllEntriesForUser(requestor.getUsername());
 	}
 	
 	/**
@@ -866,9 +849,7 @@ public class RequestHandler{
 		
 		validate(requestor);
 		
-		synchronized (ADD_DB_LOCK) {
-			return dbm.getNotificationsForUser(requestor.getUsername());
-		}
+		return dbm.getNotificationsForUser(requestor.getUsername());
 	}
 	
 	/**
@@ -882,8 +863,6 @@ public class RequestHandler{
 		
 		validate(requestor);
 		
-		synchronized (ADD_DB_LOCK) {
-			return dbm.getInvitationsForUser(requestor.getUsername());
-		}
+		return dbm.getInvitationsForUser(requestor.getUsername());
 	}
 }
