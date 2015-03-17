@@ -52,8 +52,15 @@ public class ShowCalendar extends Command {
 				{
 					new Argument(false, "type of calendar", ArgumentType.text),
 					new Argument(true, "when the calendar is for", ArgumentType.date)
+				},
+				
+				{
+					new Argument(false, "type of calendar", ArgumentType.text),
+				},
+				
+				{
 				}
-		}; //TODO: Add optional arguments for agenda, month, week, year
+		};
 	}
 
 	@Override
@@ -63,6 +70,7 @@ public class ShowCalendar extends Command {
 
 	@Override
 	public String run(ServerClientHandler handler, List<Object> arguments, int syntax) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, SessionExpiredException, HasNotTheRightsException, UserDoesNotExistException, GroupDoesNotExistException, EntryDoesNotExistException, GroupAlreadyExistsException, UserInGroupDoesNotExistsException, UsernameAlreadyExistsException, InvitationDoesNotExistException {
+
 		//Calendar user_calendar = RequestHandler.createCalendar(handler.getUser());
 		HashSet<Invitation> invitations = RequestHandler.getInvitations(handler.getUsername());//user_calendar.getEntries();
 		HashSet<CalendarEntry> entries = new HashSet<>();
