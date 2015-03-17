@@ -70,12 +70,24 @@ public class ShowCalendar extends Command {
 
 	@Override
 	public String run(ServerClientHandler handler, List<Object> arguments, int syntax) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, SessionExpiredException, HasNotTheRightsException, UserDoesNotExistException, GroupDoesNotExistException, EntryDoesNotExistException, GroupAlreadyExistsException, UserInGroupDoesNotExistsException, UsernameAlreadyExistsException, InvitationDoesNotExistException {
-
-		//Calendar user_calendar = RequestHandler.createCalendar(handler.getUser());
-		HashSet<Invitation> invitations = RequestHandler.getInvitations(handler.getUsername());//user_calendar.getEntries();
-		HashSet<CalendarEntry> entries = new HashSet<>();
-		for (Invitation temp_entry : invitations)
-			entries.add(RequestHandler.getEntry(handler.getUsername(), temp_entry.getEntry_id()));
+		
+		long when;
+		String type;
+		
+		if (syntax == 0) {
+			when = arguments.get(1) == null ? System.currentTimeMillis() : (long) arguments.get(1);
+			type = (String) arguments.get(0);
+		} else if (syntax == 1) {
+			when = System.currentTimeMillis();
+			type = (String) arguments.get(0);
+		} else  {
+			when = System.currentTimeMillis();
+			type = "month";
+		}
+		
+		HashSet<CalendarEntry> entries = RequestHandler.getAllEntriesForUser(handler.getUsername());
+		
+		//TODO: Progress marker
 		
 		GregorianCalendar calendar = new GregorianCalendar();
 		
@@ -145,11 +157,5 @@ public class ShowCalendar extends Command {
 		} else {
 			return "Not a valid spesification!";
 		}
-	}
-	
-	private int startAtMonday(int weekday) {
-		weekday = (weekday - 2) % 7; // Transform from week starting with Sunday to Monday
-		weekday = (weekday < 0) ? (weekday + 7) : weekday; //Fix weird thing with modulo in java
-		return weekday;
 	}
 }

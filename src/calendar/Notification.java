@@ -2,6 +2,12 @@ package calendar;
 
 import java.util.Date;
 
+/**
+ * A Notification appears if a user is added or removed from a group, 
+ * a calendar entry the user is attending is removed or edited, 
+ * or if another user declines an invitation to a calendar entry the (first) user have made.
+ *
+ */
 public class Notification {
 	private final long notificationID;
 	private final String description;
@@ -9,6 +15,14 @@ public class Notification {
 	private final long time;
 	private final String username;
 	
+	/**
+	 * The Notification constructor
+	 * @param id
+	 * @param description
+	 * @param isOpened
+	 * @param time
+	 * @param username
+	 */
 	public Notification(long id, String description, boolean isOpened, long time, String username) {
 		this.notificationID = id;
 		this.description = description;
