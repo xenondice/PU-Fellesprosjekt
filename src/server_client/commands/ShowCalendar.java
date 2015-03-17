@@ -7,6 +7,7 @@ import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.SimpleFormatter;
 
 import calendar.Calendar;
 import calendar.CalendarEntry;
@@ -83,20 +84,21 @@ public class ShowCalendar extends Command {
 				temp_cal.setTimeInMillis(time);
 				if (temp_cal.get(GregorianCalendar.YEAR) == calendar.get(GregorianCalendar.YEAR))
 					if (temp_cal.get(GregorianCalendar.MONTH) == calendar.get(GregorianCalendar.MONTH))
-						c[temp_cal.get(GregorianCalendar.DAY_OF_WEEK_IN_MONTH)][temp_cal.get(GregorianCalendar.WEEK_OF_MONTH)] = true;
+						c[startAtMonday(temp_cal.get(GregorianCalendar.DAY_OF_WEEK))][temp_cal.get(GregorianCalendar.WEEK_OF_MONTH)] = true;
 			}
 			
 			GregorianCalendar temp_cal = new GregorianCalendar();
 			temp_cal.setTimeInMillis(System.currentTimeMillis());
 			if (temp_cal.get(GregorianCalendar.YEAR) == calendar.get(GregorianCalendar.YEAR))
 				if (temp_cal.get(GregorianCalendar.MONTH) == calendar.get(GregorianCalendar.MONTH))
-					n[temp_cal.get(GregorianCalendar.DAY_OF_WEEK_IN_MONTH)][temp_cal.get(GregorianCalendar.WEEK_OF_MONTH)] = true;
+					n[startAtMonday(temp_cal.get(GregorianCalendar.DAY_OF_WEEK))][temp_cal.get(GregorianCalendar.WEEK_OF_MONTH)] = true;
 			
-			int start = GenericCalendar.getMonthStartDay(calendar.get(GregorianCalendar.YEAR), calendar.get(GregorianCalendar.MONTH)+1);
-			System.out.println(start+","+calendar.get(GregorianCalendar.YEAR)+","+calendar.get(GregorianCalendar.MONTH));
-			int number_of_days = GenericCalendar.daysInMonth(calendar.get(GregorianCalendar.MONTH)+1, calendar.get(GregorianCalendar.YEAR));
-			int t = (-1)*(start);
-			
+			calendar.set(GregorianCalendar.DAY_OF_MONTH, 1);
+			System.out.println(calendar.get(GregorianCalendar.DAY_OF_WEEK));
+			int start = startAtMonday(calendar.get(GregorianCalendar.DAY_OF_WEEK));
+			int number_of_days = calendar.getActualMaximum(GregorianCalendar.DAY_OF_MONTH);
+			int t = (-1)*start;
+			System.out.println(start + "," + number_of_days + "["+GregorianCalendar.MONDAY+","+GregorianCalendar.TUESDAY+","+GregorianCalendar.WEDNESDAY+","+GregorianCalendar.THURSDAY+","+GregorianCalendar.FRIDAY+","+GregorianCalendar.SATURDAY+","+GregorianCalendar.SUNDAY+"]");
 			String message = ""
 					+ "+----------------------------------+\n"
 					+ "|             " + new SimpleDateFormat("MMM yyyy").format(calendar.getTime()).toUpperCase() + "             |\n"
@@ -135,5 +137,11 @@ public class ShowCalendar extends Command {
 		} else {
 			return "Not a valid spesification!";
 		}
+	}
+	
+	private int startAtMonday(int weekday) {
+		weekday = (weekday - 2) % 7; // Transform from week starting with Sunday to Monday
+		weekday = (weekday < 0) ? (weekday + 7) : weekday; //Fix weird thing with modulo in java
+		return weekday;
 	}
 }
