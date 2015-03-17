@@ -7,6 +7,12 @@ import exceptions.RoomAlreadyBookedException;
 
 public class RoomBookingHandler {
 
+	
+	/**
+	 * This class is here to handle the Room Bookings
+	 *
+	 */
+	
 	private DataBaseManager dbm;
 	
 	public RoomBookingHandler(DataBaseManager dbm){
@@ -14,6 +20,11 @@ public class RoomBookingHandler {
 	}
 
 
+	/**
+	 * This method books rooms. Input arguments are the Room, starttime (long), endtime (long) and entryID
+	 * of the entry you want the room booked for. 
+	 *
+	 */
 
 	public boolean bookRoom(Room room, long startTime, long endTime, long entryID) throws RoomAlreadyBookedException{
 		if(checkIfFree(room, startTime, endTime)){
@@ -24,6 +35,10 @@ public class RoomBookingHandler {
 		}
 	}
 	
+	/**
+	 * Checks whether the given timespan is at the same time as another timespan.  
+	 *
+	 */
 	private boolean isInbetween(long checkStart, long inputStart, long checkEnd, long inputEnd){
 	
 		if (inputStart >= checkStart && checkEnd <= inputEnd){
