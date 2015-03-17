@@ -1428,8 +1428,8 @@ public class DataBaseManager implements Closeable {
 				CalendarEntryBuilder entryB = new CalendarEntryBuilder();
 				
 				entryB.setEntryID(rset.getLong("entryID"));
-				entryB.setStartTime(rset.getLong("startTime"));
-				entryB.setEndTime(rset.getLong("endTime"));
+				entryB.setStartTime(rset.getTimestamp("startTime").getTime());
+				entryB.setEndTime(rset.getTimestamp("endTime").getTime());
 				entryB.setLocation(rset.getString("location"));
 				entryB.setDescription(rset.getString("description"));
 				entryB.setRoomID(rset.getString("roomID"));

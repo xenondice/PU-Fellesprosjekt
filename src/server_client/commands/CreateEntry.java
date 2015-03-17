@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
+import calendar.CalendarEntry;
 import calendar.CalendarEntryBuilder;
 import exceptions.ForcedReturnException;
 import exceptions.HasNotTheRightsException;
@@ -66,9 +67,8 @@ public class CreateEntry extends Command {
 			entry_builder.setEndTime(arguments.get(3)==null?(long) arguments.get(2):(long) arguments.get(3));
 			entry_builder.setRoomID((String) arguments.get(4));
 			entry_builder.setCreator(handler.getUsername());
-		
-		
-			if (RequestHandler.createEntry(handler.getUsername(), entry_builder.build())){
+			CalendarEntry cal = entry_builder.build();
+			if (RequestHandler.createEntry(handler.getUsername(), cal)){
 				return "Calendar entry successfully created!";
 			}else{
 				return "Calendar entry couldn't be created!";

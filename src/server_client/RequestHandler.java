@@ -400,6 +400,7 @@ public class RequestHandler{
 		
 		try {
 			synchronized (ADD_DB_LOCK) {
+
 				long entry_id = dbm.addEntry(entry);
 				
 				if (entry_id > -1) {

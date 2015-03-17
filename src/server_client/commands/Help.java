@@ -35,10 +35,10 @@ public class Help extends Command {
 	public Argument[][] getArguments() {
 		return new Argument[][]{
 			{
+				new Argument(false, "command", ArgumentType.command),
 			},
 			
 			{
-				new Argument(false, "command", ArgumentType.command),
 			},
 			
 			{
