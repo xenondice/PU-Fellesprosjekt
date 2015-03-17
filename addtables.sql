@@ -3,8 +3,8 @@ create database mariessa_pu;
 use mariessa_pu;
 
 CREATE TABLE Room (
-    roomID        VARCHAR(10)    NOT NULL,
-    size        INT        NOT NULL,
+    roomID        	VARCHAR(10)     NOT NULL,
+    size        	INT        	NOT NULL,
     PRIMARY KEY (roomID)
 );
  
@@ -37,10 +37,10 @@ CREATE TABLE CalendarEntry (
 
  
 CREATE TABLE Invitation ( # To store the user-calendarEntry relation
-    isGoing        BOOLEAN        DEFAULT NULL,
-    isShowing    BOOLEAN        DEFAULT TRUE,
-    username    VARCHAR(30)    NOT NULL,
-    entryID        BIGINT        NOT NULL,
+    isGoing        	BOOLEAN        	DEFAULT NULL,
+    isShowing    	BOOLEAN        	DEFAULT TRUE,
+    username   	 	VARCHAR(30)    	NOT NULL,
+    entryID        	BIGINT		NOT NULL,
     PRIMARY KEY (username, entryID),
     FOREIGN KEY (username) REFERENCES User (username)
         ON DELETE CASCADE ON UPDATE CASCADE,
@@ -70,22 +70,19 @@ FOREIGN KEY(username) REFERENCES User(username)
 
 
 CREATE TABLE Notification (
-    notificationID BIGINT NOT NULL     AUTO_INCREMENT,
-    description    VARCHAR(100)    NOT NULL,
-    isOpened    BOOLEAN        DEFAULT FALSE,
-    time        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP, # Time of creation
-    username    VARCHAR(30)    NOT NULL,
-    entryID        BIGINT        NOT NULL,
+    notificationID 	BIGINT 		NOT NULL     	AUTO_INCREMENT,
+    description    	VARCHAR(100)    NOT NULL,
+    isOpened    	BOOLEAN        			DEFAULT FALSE,
+    time        	TIMESTAMP    	NOT NULL 	DEFAULT CURRENT_TIMESTAMP, # Time of creation
+    username    	VARCHAR(30)    	NOT NULL,
     PRIMARY KEY(notificationID),
     FOREIGN KEY(username) REFERENCES User(username)
-        ON UPDATE CASCADE ON DELETE CASCADE,
-    FOREIGN KEY (entryID) REFERENCES CalendarEntry(entryID)
         ON UPDATE CASCADE ON DELETE CASCADE
 );
  
 CREATE TABLE IsAdmin (
-    entryID        BIGINT        NOT NULL,
-    username    VARCHAR(30)    NOT NULL,
+    entryID        	BIGINT        	NOT NULL,
+    username    	VARCHAR(30)   	NOT NULL,
     PRIMARY KEY (entryID, username),
     FOREIGN KEY (entryID) REFERENCES CalendarEntry(entryID)
         ON UPDATE CASCADE ON DELETE CASCADE,
@@ -99,8 +96,8 @@ CREATE TABLE Gruppe (
 );
  
 CREATE TABLE MemberOf (
-    groupname  VARCHAR(100)    NOT NULL,
-    username    VARCHAR(30)    NOT NULL,
+    groupname  	VARCHAR(100)    NOT NULL,
+    username    VARCHAR(30)    	NOT NULL,
     PRIMARY KEY (groupname, username),
     FOREIGN KEY (groupname) REFERENCES Gruppe(groupname)
         ON UPDATE CASCADE ON DELETE CASCADE,

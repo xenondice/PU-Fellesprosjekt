@@ -561,25 +561,26 @@ public class DataBaseManager implements Closeable {
 	 * Adds a new Notification to the DB
 	 * @param n
 	 * @return
-	 * @throws EntryDoesNotExistException
 	 * @throws UserDoesNotExistException
 	 */
-	private boolean addIntoNotification(Notification n) throws EntryDoesNotExistException, UserDoesNotExistException {
+	private boolean addIntoNotification(Notification n) throws UserDoesNotExistException {
 		if(n == null){
 			throw new IllegalArgumentException("notification is null");
 		}
-		checkUserAndEntry(n.getUsername(), n.getEntry_id());
+		checkIfUserExists(n.getUsername());
 		
 		
-		String addNotification = "INSERT INTO Notification (description, isOpened, time, username, entryID) VALUES (?, ?, ?, ? ,?)";
+		String addNotification = "INSERT INTO Notification (description, isOpened, time, username) VALUES (?, ?, ?, ?)";
 		try {
 			PreparedStatement addNotction_stm = connection.prepareStatement(addNotification);
 			int i = 0;
 			addNotction_stm.setString(++i, n.getDescription());
 			addNotction_stm.setBoolean(++i, n.isOpened());
-			addNotction_stm.setTimestamp(++i, new Timestamp(n.getTime()));
+			
+			long time = n.getTime() <= 0 ? System.currentTimeMillis() : n.getTime();
+			
+			addNotction_stm.setTimestamp(++i, new Timestamp(time));
 			addNotction_stm.setString(++i, n.getUsername());
-			addNotction_stm.setLong(++i, n.getEntry_id());
 			addNotction_stm.execute();
 			addNotction_stm.close();
 			return true;
@@ -1053,7 +1054,7 @@ public class DataBaseManager implements Closeable {
 	 * @throws EntryDoesNotExistException
 	 * @throws UserDoesNotExistException
 	 */
-	public boolean addNotification(Notification n) throws EntryDoesNotExistException, UserDoesNotExistException{
+	public boolean addNotification(Notification n) throws UserDoesNotExistException{
 		return this.addIntoNotification(n);
 	}
 	
@@ -1203,11 +1204,12 @@ public class DataBaseManager implements Closeable {
 			while(rset.next()){
 				NotificationBuilder nb = new NotificationBuilder();
 				nb.setDescription(rset.getString("description"));
-				nb.setEntry_id(rset.getLong("entryID"));
 				nb.setNotifiationID(rset.getLong("notificationID"));
 				nb.setOpened(rset.getBoolean("isOpened"));
 				nb.setTime(rset.getTimestamp("time").getTime());
 				nb.setUsername(rset.getString("username"));
+				
+				if(nb.getTime() <= 0){nb.setTime(System.currentTimeMillis());}
 				notifics.add(nb.build());
 			}
 			
@@ -1359,11 +1361,13 @@ public class DataBaseManager implements Closeable {
 			while(rset.next()){
 				NotificationBuilder nb = new NotificationBuilder();
 				nb.setDescription(rset.getString("description"));
-				nb.setEntry_id(rset.getLong("entryID"));
 				nb.setNotifiationID(rset.getLong("notificationID"));
 				nb.setOpened(rset.getBoolean("isOpened"));
 				nb.setTime(rset.getTimestamp("time").getTime());
 				nb.setUsername(username);
+				
+				if(nb.getTime() <= 0){nb.setTime(System.currentTimeMillis());}
+				
 				notifics.add(nb.build());
 			}
 			
@@ -1382,7 +1386,7 @@ public class DataBaseManager implements Closeable {
 		
 		PreparedStatement getInvis_stm;
 		try {
-			getInvis_stm = connection.prepareStatement("SELECT * FROM Invitation WHERE username=?; ");
+			getInvis_stm = connection.prepareStatement("SELECT * FROM Invitation WHERE username=? AND isShowing = true; ");
 	
 			int i = 0;
 			getInvis_stm.setString(++i, username);
@@ -2036,6 +2040,20 @@ public class DataBaseManager implements Closeable {
 			PreparedStatement stm = connection.prepareStatement("DELETE FROM Notification WHERE notificationID = ?;");
 			int i = 0;
 			stm.setLong(++i, notification_id);
+			stm.executeUpdate();
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	public boolean deleteInvitation(String username, long entry_id){
+		try {
+			PreparedStatement stm = connection.prepareStatement("DELETE FROM Invitation WHERE username = ? AND emtryID = ?;");
+			int i = 0;
+			stm.setString(++i, username);
+			stm.setLong(++i, entry_id);
 			stm.executeUpdate();
 			return true;
 		} catch (SQLException e) {
