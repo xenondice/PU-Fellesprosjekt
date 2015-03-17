@@ -55,4 +55,37 @@ public class CalendarEntryBuilder implements Builder<CalendarEntry>{
 	public void setStartTime(Long startTime) {
 		this.startTime = startTime;
 	}
+
+	public long getEndTime() {
+		return endTime;
+	}
+
+	public void setEndTime(long endTime) {
+		this.endTime = endTime;
+	}
+
+	public long getEntryID() {
+		return entryID;
+	}
+
+	public long getStartTime() {
+		return startTime;
+	}
+
+	public String getLocation() {
+		return location;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public String getRoomID() {
+		return roomID;
+	}
+
+	public String getCreator() {
+		return creator;
+	}
+	
 }
