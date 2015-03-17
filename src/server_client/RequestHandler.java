@@ -798,7 +798,7 @@ public class RequestHandler{
 	 * @throws UserDoesNotExistException
 	 * @throws SessionExpiredException
 	 */
-	public static HashSet<CalendarEntry> createCalendar(String requestor) throws UserDoesNotExistException, SessionExpiredException {
+	public static HashSet<CalendarEntry> getAllEntriesForUser(String requestor) throws UserDoesNotExistException, SessionExpiredException {
 		
 		validate(requestor);
 		
