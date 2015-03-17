@@ -25,7 +25,7 @@ CREATE TABLE CalendarEntry (
     startTime  	TIMESTAMP    	NOT NULL,
     endTime     TIMESTAMP    	NOT NULL,
     location   	VARCHAR(20)	DEFAULT NULL,
-    description VARCHAR(100)    NOT NULL,
+    description VARCHAR(500)    NOT NULL,
     roomID    	VARCHAR(10) 	DEFAULT NULL,
     creator    	VARCHAR(30)    	NOT NULL,
     PRIMARY KEY (entryID),
@@ -71,7 +71,7 @@ FOREIGN KEY(username) REFERENCES User(username)
 
 CREATE TABLE Notification (
     notificationID 	BIGINT 		NOT NULL     	AUTO_INCREMENT,
-    description    	VARCHAR(100)    NOT NULL,
+    description    	VARCHAR(1000)    NOT NULL,
     isOpened    	BOOLEAN        			DEFAULT FALSE,
     time        	TIMESTAMP    	NOT NULL 	DEFAULT CURRENT_TIMESTAMP, # Time of creation
     username    	VARCHAR(30)    	NOT NULL,

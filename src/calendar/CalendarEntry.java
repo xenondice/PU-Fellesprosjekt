@@ -37,22 +37,23 @@ public class CalendarEntry {
 	
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("CalendarEntry (id: ");
-		sb.append(entryID); sb.append(")\n");
-		sb.append("start: ");
-		sb.append(new Date(startTime)); sb.append("\n");
-		sb.append("end: ");
-		sb.append(new Date(endTime)); sb.append("\n");
-		sb.append("location: ");
-		sb.append(location); sb.append("\n");
-		sb.append("description: ");
-		sb.append(description); sb.append("\n");
-		sb.append("roomID: ");
-		sb.append(roomID); sb.append("\n");
-		sb.append("creator: ");
-		sb.append(creator); sb.append("\n");
-		return sb.toString();
+		StringBuilder builder = new StringBuilder();
+		builder.append("CalendarEntry [entryID=");
+		builder.append(entryID);
+		builder.append(", startTime=");
+		builder.append(startTime);
+		builder.append(", endTime=");
+		builder.append(endTime);
+		builder.append(", location=");
+		builder.append(location);
+		builder.append(", description=");
+		builder.append(description);
+		builder.append(", roomID=");
+		builder.append(roomID);
+		builder.append(", creator=");
+		builder.append(creator);
+		builder.append("]");
+		return builder.toString();
 	}
 	
 	public String getDescription() {

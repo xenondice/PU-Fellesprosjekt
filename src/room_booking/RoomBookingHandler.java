@@ -6,6 +6,7 @@ import server_client.RequestHandler;
 import dbms.DataBaseManager;
 import exceptions.EntryDoesNotExistException;
 import exceptions.RoomAlreadyBookedException;
+import exceptions.RoomDoesNotExistException;
 
 public class RoomBookingHandler {
 
@@ -31,10 +32,11 @@ public class RoomBookingHandler {
 	 * @param entryID
 	 * @return true if the Room is successfully booked.
 	 * @throws RoomAlreadyBookedException
+	 * @throws RoomDoesNotExistException 
 	 */
-	public boolean bookRoom(Room room, long startTime, long endTime, long entryID) throws RoomAlreadyBookedException{
-		if(checkIfFree(room, startTime, endTime)){
-			RoomReservation rr = new RoomReservation(room, startTime, endTime, entryID);
+	public boolean bookRoom(String room_id, long startTime, long endTime, long entryID) throws RoomAlreadyBookedException, RoomDoesNotExistException{
+		if(checkIfFree(room_id, startTime, endTime)){
+			RoomReservation rr = new RoomReservation(room_id, startTime, endTime, entryID);
 			return dbm.addRoomReservation(rr);
 		}else{
 			throw new RoomAlreadyBookedException("Room is not available at this time.");
@@ -66,7 +68,8 @@ public class RoomBookingHandler {
 	public boolean doOverlap(long start1, long end1, long start2, long end2){
 
 		return isBetween(start1, start2, end2)	|| isBetween(end1, start2, end2) 
-				||isBetween(start2, start1, end1) || isBetween(end2, start1, end1) ;
+				||isBetween(start2, start1, end1) || isBetween(end2, start1, end1) 
+				|| start1 == start2 || end1 == end2;
 	}
 	
 	// sjekke om det finnes RoomReservation rr;
@@ -77,8 +80,9 @@ public class RoomBookingHandler {
 	 * @param endTime
 	 * @return true if the Room is available
 	 */
-	public boolean checkIfFree(Room room, long startTime, long endTime){
-		HashSet<RoomReservation> reservations = dbm.getReservationsForRoom(room);
+	public boolean checkIfFree(String room_id, long startTime, long endTime){
+		HashSet<RoomReservation> reservations = dbm.getReservationsForRoom(room_id);
+		if(reservations == null){return true;}
 		for(RoomReservation res : reservations){
 			if( doOverlap(startTime, endTime, res.getStartTime(), res.getEndTime())){
 				return false;
@@ -88,31 +92,22 @@ public class RoomBookingHandler {
 	}
 	
 	/**
-<<<<<<< HEAD
-	 * deletes all reservations that overlap with the given timespan
+	 * releases all reservations connected to the given entry id
 	 * @param room
-	 * @param startTime
-	 * @param endTime
+	 * @param entry_id
 	 * @return
-=======
-	 * cancels a RoomReservation
-	 * @param room
-	 * @param startTime
-	 * @param endTime
-	 * @return true if the Room is successfully released.
->>>>>>> adc89ab30bf70a52acb7192161f91b2582a24da2
 	 */
-	public boolean releaseRoom(Room room, long startTime, long endTime){
+	public boolean releaseRoomEntry(String room_id, long entry_id){
 		boolean could_release_all = true;
-		if (dbm.getReservationsForRoom(room) != null){
-			HashSet<RoomReservation> reservations = dbm.getReservationsForRoom(room);
+		HashSet<RoomReservation> reservations = dbm.getReservationsForRoom(room_id);
+		if(reservations != null){
 			for(RoomReservation res : reservations){
-				if ( doOverlap(startTime, endTime, res.getStartTime(), res.getEndTime())){
+				if(res.getEntryID() == entry_id){
 					if (!dbm.deleteRoomReservation(res)){
 						could_release_all = false;
 					}else{
 						try {
-							RequestHandler.notify(dbm.getEntry(res.getEntryID()).getCreator(), "The reservation '"+res.toString()+"' was released.");
+							RequestHandler.notify(dbm.getEntry(entry_id).getCreator(), "The reservation '"+res.toString()+"' was released.");
 						} catch (EntryDoesNotExistException e) {
 							e.printStackTrace();
 						}
@@ -120,7 +115,6 @@ public class RoomBookingHandler {
 				}
 			}
 		}
-		
 		return could_release_all;
 	}
 	
@@ -154,6 +148,8 @@ public class RoomBookingHandler {
 		System.out.println(rbh.doOverlap(t2, t4, t1, t3)); // true
 		System.out.println(rbh.doOverlap(t2, t3, t1, t4)); // true
 		System.out.println(rbh.doOverlap(t2, t4, t3, t5)); // true
+		
+		System.out.println(rbh.doOverlap(t1, t2, t1, t2)); // true
 		
 		
 	}
