@@ -34,22 +34,15 @@ import exceptions.WrongPasswordException;
 import user.Group;
 import user.User;
 
-public class RequestHandler{
-	
-	// TODO which methods must be synchronized?
-	// TODO synchronize all DatabaseManager functions.
-	
+public class RequestHandler{		
 	// TODO add functions for 'get all rooms' 'get all events' 'get all notifications' (for user) etc.
 	
 	// TODO add command 'add-group-to-group' (in server_client commands)
-	
-	// TODO make entryID in the notification Table an optional argument. (And update the java code accordingly).
-	
-	// TODO check colisions of entries???
+		
+	// TODO check colisions/overlappings of entries???
 	
 	// TODO should not be able to use commands when not logged in!
 	
-	// TODO if neccessary: implement alarm stuff (change entry -> change alarm; command change alarm)
 	
 	private static DataBaseManager dbm;
 	private static ServerSocket server;
