@@ -7,6 +7,7 @@ import java.util.concurrent.TimeoutException;
 import calendar.CalendarEntryBuilder;
 import exceptions.ForcedReturnException;
 import exceptions.HasNotTheRightsException;
+import exceptions.RoomDoesNotExistException;
 import exceptions.SessionExpiredException;
 import exceptions.UserDoesNotExistException;
 import server_client.Argument;
@@ -17,7 +18,6 @@ import server_client.ServerClientHandler;
 
 public class CreateEntry extends Command {
 	
-	// TODO if room does not exist, return a text that says so.
 	
 	@Override
 	public String get() {
@@ -46,7 +46,7 @@ public class CreateEntry extends Command {
 				new Argument(true, "description of location", ArgumentType.text),
 				new Argument(false, "time of start", ArgumentType.date),
 				new Argument(true, "time of end", ArgumentType.date),
-				new Argument(true, "name of room", ArgumentType.text)
+				new Argument(true, "name or ID of room", ArgumentType.text)
 			}
 		};
 	}
@@ -58,19 +58,23 @@ public class CreateEntry extends Command {
 
 	@Override
 	public String run(ServerClientHandler handler, List<Object> arguments, int syntax) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, SessionExpiredException, HasNotTheRightsException, UserDoesNotExistException {
+		try {
+			CalendarEntryBuilder entry_builder = new CalendarEntryBuilder();
+			entry_builder.setDescription(arguments.get(0)==null?"":(String) arguments.get(0));
+			entry_builder.setLocation(arguments.get(1)==null?"":(String) arguments.get(1));
+			entry_builder.setStartTime((long) arguments.get(2));
+			entry_builder.setEndTime(arguments.get(3)==null?(long) arguments.get(2):(long) arguments.get(3));
+			entry_builder.setRoomID((String) arguments.get(4));
+			entry_builder.setCreator(handler.getUser().getUsername());
 		
-		CalendarEntryBuilder entry_builder = new CalendarEntryBuilder();
-		entry_builder.setDescription(arguments.get(0)==null?"":(String) arguments.get(0));
-		entry_builder.setLocation(arguments.get(1)==null?"":(String) arguments.get(1));
-		entry_builder.setStartTime((long) arguments.get(2));
-		entry_builder.setEndTime(arguments.get(3)==null?(long) arguments.get(2):(long) arguments.get(3));
-		entry_builder.setRoomID((String) arguments.get(4));
-		entry_builder.setCreator(handler.getUser().getUsername());
 		
-		if (RequestHandler.createEntry(handler.getUser(), entry_builder.build())){
-			return "Calendar entry successfully created!";
-		}else{
-			return "Calendar entry couldn't be created!";
+			if (RequestHandler.createEntry(handler.getUser(), entry_builder.build())){
+				return "Calendar entry successfully created!";
+			}else{
+				return "Calendar entry couldn't be created!";
+			}
+		} catch (RoomDoesNotExistException e) {
+			return "Calendar entry couldn't be created because this room does not exist!";
 		}
 	}
 }

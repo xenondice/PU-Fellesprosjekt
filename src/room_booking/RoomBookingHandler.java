@@ -31,21 +31,26 @@ public class RoomBookingHandler {
 			RoomReservation rr = new RoomReservation(room, startTime, endTime, entryID);
 			return dbm.addRoomReservation(rr);
 		}else{
-			throw new IllegalArgumentException("Room is not available");
+			throw new RoomAlreadyBookedException("Room is not available at this time.");
 		}
 	}
 	
 	/**
-	 * Checks whether the given timespan is at the same time as another timespan.  
-	 *
+	 * Checks whether two timespans overlap.</br>
+	 * 
+	 * @param start1
+	 * @param start2
+	 * @param end1
+	 * @param end2
+	 * @return
 	 */
-	private boolean isInbetween(long checkStart, long inputStart, long checkEnd, long inputEnd){
+	private boolean isInbetween(long start1, long start2, long end1, long end2){
 	
-		if (inputStart >= checkStart && checkEnd <= inputEnd){
+		if (start2 >= start1 && end1 <= end2){
 			return true;
-		}else if (inputStart >= checkStart && checkEnd >= inputEnd){
+		}else if (start2 >= start1 && end1 >= end2){
 			return true;
-		}else if (inputStart <= checkStart && checkEnd <= inputEnd){
+		}else if (start2 <= start1 && end1 <= end2){
 			return true;
 		}
 		return false;

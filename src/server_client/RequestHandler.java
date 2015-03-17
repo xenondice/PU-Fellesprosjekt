@@ -6,7 +6,6 @@ import java.net.Socket;
 import java.util.HashSet;
 import java.util.Set;
 
-
 import room_booking.Room;
 import room_booking.RoomBookingHandler;
 import calendar.Calendar;
@@ -24,6 +23,7 @@ import exceptions.HasNotTheRightsException;
 import exceptions.InvitationAlreadyExistsException;
 import exceptions.InvitationDoesNotExistException;
 import exceptions.RoomAlreadyBookedException;
+import exceptions.RoomDoesNotExistException;
 import exceptions.SessionExpiredException;
 import exceptions.UserDoesNotExistException;
 import exceptions.UserInGroupDoesNotExistsException;
@@ -396,8 +396,9 @@ public class RequestHandler{
 	 * @return
 	 * @throws UserDoesNotExistException
 	 * @throws SessionExpiredException
+	 * @throws RoomDoesNotExistException 
 	 */
-	public static boolean createEntry(User requestor, CalendarEntry entry) throws UserDoesNotExistException, SessionExpiredException {
+	public static boolean createEntry(User requestor, CalendarEntry entry) throws UserDoesNotExistException, SessionExpiredException, RoomDoesNotExistException {
 		
 		validate(requestor);
 		
