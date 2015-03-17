@@ -3,6 +3,14 @@ package server_client;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 
+ * Makes Harry Potter appear!
+ * 
+ * ..
+ * 
+ *
+ */
 public class Wizard {
 	private List<Argument> arguments;
 	
