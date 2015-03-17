@@ -5,7 +5,7 @@ import interfaces.Builder;
 public class RoomReservationBuilder implements Builder<RoomReservation> {
 
 	
-	private Room room = null;
+	private String room_id = null;
 	private long startTime  = 0; 
 	private long endTime = 0;
 	private long entryID = 0;
@@ -18,8 +18,8 @@ public class RoomReservationBuilder implements Builder<RoomReservation> {
 		this.entryID = entryID;
 	}
 
-	public void setRoom(Room room) {
-		this.room = room;
+	public void setRoomID(String room_id) {
+		this.room_id = room_id;
 	}
 
 
@@ -35,6 +35,22 @@ public class RoomReservationBuilder implements Builder<RoomReservation> {
 	
 	@Override
 	public RoomReservation build() {
-		return new RoomReservation(room, startTime, endTime, entryID);
+		return new RoomReservation(room_id, startTime, endTime, entryID);
+	}
+
+	public String getRoom_id() {
+		return room_id;
+	}
+
+	public long getStartTime() {
+		return startTime;
+	}
+
+	public long getEndTime() {
+		return endTime;
+	}
+
+	public long getEntryID() {
+		return entryID;
 	}
 }

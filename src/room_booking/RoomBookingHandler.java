@@ -6,6 +6,7 @@ import server_client.RequestHandler;
 import dbms.DataBaseManager;
 import exceptions.EntryDoesNotExistException;
 import exceptions.RoomAlreadyBookedException;
+import exceptions.RoomDoesNotExistException;
 
 public class RoomBookingHandler {
 
@@ -31,10 +32,11 @@ public class RoomBookingHandler {
 	 * @param entryID
 	 * @return true if the Room is successfully booked.
 	 * @throws RoomAlreadyBookedException
+	 * @throws RoomDoesNotExistException 
 	 */
-	public boolean bookRoom(Room room, long startTime, long endTime, long entryID) throws RoomAlreadyBookedException{
-		if(checkIfFree(room, startTime, endTime)){
-			RoomReservation rr = new RoomReservation(room, startTime, endTime, entryID);
+	public boolean bookRoom(String room_id, long startTime, long endTime, long entryID) throws RoomAlreadyBookedException, RoomDoesNotExistException{
+		if(checkIfFree(room_id, startTime, endTime)){
+			RoomReservation rr = new RoomReservation(room_id, startTime, endTime, entryID);
 			return dbm.addRoomReservation(rr);
 		}else{
 			throw new RoomAlreadyBookedException("Room is not available at this time.");
@@ -78,8 +80,9 @@ public class RoomBookingHandler {
 	 * @param endTime
 	 * @return true if the Room is available
 	 */
-	public boolean checkIfFree(Room room, long startTime, long endTime){
-		HashSet<RoomReservation> reservations = dbm.getReservationsForRoom(room);
+	public boolean checkIfFree(String room_id, long startTime, long endTime){
+		HashSet<RoomReservation> reservations = dbm.getReservationsForRoom(room_id);
+		if(reservations == null){return true;}
 		for(RoomReservation res : reservations){
 			if( doOverlap(startTime, endTime, res.getStartTime(), res.getEndTime())){
 				return false;
@@ -89,43 +92,14 @@ public class RoomBookingHandler {
 	}
 	
 	/**
-	 * cancels all reservations for this room overlapping with the given timespan.
-	 * @param room
-	 * @param startTime
-	 * @param endTime
-	 * @return true if the Room is successfully released.
-	 */
-	public boolean releaseRoomTime(Room room, long startTime, long endTime){
-		boolean could_release_all = true;
-		if (dbm.getReservationsForRoom(room) != null){
-			HashSet<RoomReservation> reservations = dbm.getReservationsForRoom(room);
-			for(RoomReservation res : reservations){
-				if ( doOverlap(startTime, endTime, res.getStartTime(), res.getEndTime())){
-					if (!dbm.deleteRoomReservation(res)){
-						could_release_all = false;
-					}else{
-						try {
-							RequestHandler.notify(dbm.getEntry(res.getEntryID()).getCreator(), "The reservation '"+res.toString()+"' was released.");
-						} catch (EntryDoesNotExistException e) {
-							e.printStackTrace();
-						}
-					}
-				}
-			}
-		}
-		
-		return could_release_all;
-	}
-	
-	/**
 	 * releases all reservations connected to the given entry id
 	 * @param room
 	 * @param entry_id
 	 * @return
 	 */
-	public boolean releaseRoomEntry(Room room, long entry_id){
+	public boolean releaseRoomEntry(String room_id, long entry_id){
 		boolean could_release_all = true;
-		HashSet<RoomReservation> reservations = dbm.getReservationsForRoom(room);
+		HashSet<RoomReservation> reservations = dbm.getReservationsForRoom(room_id);
 		if(reservations != null){
 			for(RoomReservation res : reservations){
 				if(res.getEntryID() == entry_id){

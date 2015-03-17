@@ -8,6 +8,8 @@ import calendar.CalendarEntryBuilder;
 import exceptions.EntryDoesNotExistException;
 import exceptions.ForcedReturnException;
 import exceptions.HasNotTheRightsException;
+import exceptions.RoomAlreadyBookedException;
+import exceptions.RoomDoesNotExistException;
 import exceptions.SessionExpiredException;
 import exceptions.UserDoesNotExistException;
 import server_client.Argument;
@@ -39,10 +41,11 @@ public class EditEntry extends Command {
 			{
 				new Argument(false, "ID of existing entry", ArgumentType.long_number),
 				new Argument(true, "description of event", ArgumentType.text),
-				new Argument(true, "time of end", ArgumentType.date),
+				new Argument(true, "start time", ArgumentType.date),
+				new Argument(true, "end time", ArgumentType.date),
 				new Argument(true, "description of location", ArgumentType.text),
-				new Argument(true, "name of room", ArgumentType.text),
-				new Argument(true, "time of start", ArgumentType.date),
+				new Argument(true, "room name or room id", ArgumentType.text),
+				
 			}
 		};
 	}
@@ -55,18 +58,29 @@ public class EditEntry extends Command {
 	@Override
 	public String run(ServerClientHandler handler, List<Object> arguments, int syntax) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException, SessionExpiredException {
 		
-		CalendarEntryBuilder entry_builder = new CalendarEntryBuilder();
-		entry_builder.setEntryID((Long) arguments.get(0));
+		CalendarEntryBuilder entry_builder = new CalendarEntryBuilder();	
+			
+		entry_builder.setEntryID((long) arguments.get(0));
 		entry_builder.setDescription((String) arguments.get(1));
-		entry_builder.setEndTime((Long) arguments.get(2));
-		entry_builder.setLocation((String) arguments.get(3));
-		entry_builder.setRoomID((String) arguments.get(4));
-		entry_builder.setCreator(handler.getUsername());
-		entry_builder.setStartTime((Long) arguments.get(5));
+		entry_builder.setStartTime(arguments.get(2) == null ? -1 : (long)arguments.get(2));
+		entry_builder.setEndTime(arguments.get(3) == null ? -1 : (long)arguments.get(3));
+		entry_builder.setLocation((String) arguments.get(4));
+		entry_builder.setRoomID((String) arguments.get(5));
+		entry_builder.setCreator(null);
 		
-		if (RequestHandler.editEntry(handler.getUsername(), entry_builder.build()))
-			return "Calendar entry successfully edited!";
-		else
-			return "Calendar entry couldn't be edited!";
+		
+		try {
+			if (RequestHandler.editEntry(handler.getUsername(), entry_builder.build())){
+				return "Calendar entry successfully edited!";
+			}else{
+				return "Calendar entry couldn't be edited!";
+			}
+		} catch (RoomAlreadyBookedException e) {
+			e.printStackTrace();
+			return "Calendar entry couldn't be edited! The given room is already booked for the given time!";
+		} catch (RoomDoesNotExistException e) {
+			e.printStackTrace();
+			return "Calendar entry couldn't be edited! The given room does not exist!";
+		}
 	}
 }

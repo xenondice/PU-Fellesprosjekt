@@ -7,6 +7,7 @@ import java.util.concurrent.TimeoutException;
 import calendar.CalendarEntryBuilder;
 import exceptions.ForcedReturnException;
 import exceptions.HasNotTheRightsException;
+import exceptions.RoomAlreadyBookedException;
 import exceptions.RoomDoesNotExistException;
 import exceptions.SessionExpiredException;
 import exceptions.UserDoesNotExistException;
@@ -75,6 +76,9 @@ public class CreateEntry extends Command {
 			}
 		} catch (RoomDoesNotExistException e) {
 			return "Calendar entry couldn't be created because this room does not exist!";
+		} catch (RoomAlreadyBookedException e) {
+			e.printStackTrace();
+			return "Calendar entry couldn't be created because the room is already booked for this time!";
 		}
 	}
 }

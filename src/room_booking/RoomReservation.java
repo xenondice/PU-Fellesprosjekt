@@ -5,7 +5,7 @@ public class RoomReservation {
 	/**
 	 * Represents a roomreservation for a calendar entry at the given timespan in the system
 	 */
-	private final Room room;
+	private final String room_id;
 	private final long startTime; 
 	private final long endTime;
 	private final long entryID;
@@ -17,8 +17,8 @@ public class RoomReservation {
 	 * @param endTime
 	 * @param entryID
 	 */
-	public RoomReservation(Room room, long startTime, long endTime, long entryID){
-		this.room = room;
+	public RoomReservation(String room_id, long startTime, long endTime, long entryID){
+		this.room_id = room_id;
 		this.startTime = startTime;
 		this.endTime = endTime;
 		this.entryID  = entryID;
@@ -27,8 +27,8 @@ public class RoomReservation {
 	/**
 	 * @return  the Room for the given RoomReservation
 	 */
-	public Room getRoom(){
-		return room;
+	public String getRoomID(){
+		return room_id;
 	}
 	
 	/**
@@ -50,6 +50,21 @@ public class RoomReservation {
 	 */
 	public long getEntryID(){
 		return entryID;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("RoomReservation [room_id=");
+		builder.append(room_id);
+		builder.append(", startTime=");
+		builder.append(startTime);
+		builder.append(", endTime=");
+		builder.append(endTime);
+		builder.append(", entryID=");
+		builder.append(entryID);
+		builder.append("]");
+		return builder.toString();
 	}
 	
 }

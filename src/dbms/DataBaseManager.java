@@ -714,6 +714,7 @@ public class DataBaseManager implements Closeable {
 			
 		} catch (InvitationDoesNotExistException e1) {
 			// ok, the programm may proceed.
+			
 			//add the users status to that event.
 			String add_status = "INSERT INTO Invitation (isGoing, isShowing, username, entryID) VALUES (?, ?, ?, ?);";
 			try {
@@ -808,17 +809,16 @@ public class DataBaseManager implements Closeable {
 	 * 
 	 * @param rr
 	 * @return true if the action was successful. False otherwise (for example if already the exact same reservation exists)
+	 * @throws RoomDoesNotExistException 
 	 */
-	private synchronized boolean addIntoRoomReservation(RoomReservation rr){
-		if(rr == null){
-			throw new IllegalArgumentException("RoomReservation is null");
-		}
+	private synchronized boolean addIntoRoomReservation(RoomReservation rr) throws RoomDoesNotExistException{
+		checkIfRoomExists(rr.getRoomID());
 		
 		try{
 			String add_RoomRes = "INSERT INTO RoomReservation (roomID, startTime, endTime, entryID) VALUES (?, ?, ?, ?);";
 			PreparedStatement addRoomRes_stmt = connection.prepareStatement(add_RoomRes);
 			int i = 0;
-			addRoomRes_stmt.setString(++i, rr.getRoom().getRoom_id());
+			addRoomRes_stmt.setString(++i, rr.getRoomID());
 			addRoomRes_stmt.setTimestamp(++i, new Timestamp(rr.getStartTime()));
 			addRoomRes_stmt.setTimestamp(++i, new Timestamp(rr.getEndTime()));
 			addRoomRes_stmt.setLong(++i, rr.getEntryID());
@@ -945,14 +945,36 @@ public class DataBaseManager implements Closeable {
 	//----------------------------------------------------------------------------------------------
 	// Add Methods
 	
+	/**
+	 * 
+	 * @param a
+	 * @return
+	 * @throws AlarmAlreadyExistsException
+	 * @throws EntryDoesNotExistException
+	 * @throws UserDoesNotExistException
+	 */
 	public synchronized boolean addAlarm(Alarm a) throws AlarmAlreadyExistsException, EntryDoesNotExistException, UserDoesNotExistException{
 		return this.addIntoAlarm(a);
 	}
 	
-	public synchronized boolean addRoomReservation(RoomReservation rr){
+	/**
+	 * 
+	 * @param rr
+	 * @return
+	 * @throws RoomDoesNotExistException
+	 */
+	public synchronized boolean addRoomReservation(RoomReservation rr) throws RoomDoesNotExistException{
 		return this.addIntoRoomReservation(rr);
 	}
 	
+	/**
+	 * 
+	 * @param inv
+	 * @return
+	 * @throws EntryDoesNotExistException
+	 * @throws UserDoesNotExistException
+	 * @throws InvitationAlreadyExistsException
+	 */
 	public synchronized boolean addInvitation(Invitation inv) throws EntryDoesNotExistException, UserDoesNotExistException, InvitationAlreadyExistsException{
 		return this.addIntoInvitation(inv);
 	}
@@ -1220,7 +1242,7 @@ public class DataBaseManager implements Closeable {
 				rb.setStartTime(rset.getTimestamp("startTime").getTime());
 				rb.setEndTime(rset.getTimestamp("endTime").getTime());
 				rb.setEntryID(rset.getLong("entryID"));
-				rb.setRoom(this.getRoom(rset.getString("roomID")));
+				rb.setRoomID(rset.getString("roomID"));
 				
 				reservations.add(rb.build());
 			}
@@ -1229,10 +1251,6 @@ public class DataBaseManager implements Closeable {
 			
 			
 		} catch (SQLException e) {
-			e.printStackTrace();
-			return null;
-		} catch (RoomDoesNotExistException e) {
-			// should never happen!
 			e.printStackTrace();
 			return null;
 		}
@@ -1630,8 +1648,8 @@ public class DataBaseManager implements Closeable {
 	 * @param r
 	 * @return HashSet of all reservations for a given room.
 	 */
-	public synchronized  HashSet<RoomReservation> getReservationsForRoom(Room r){
-		if(r == null){
+	public synchronized  HashSet<RoomReservation> getReservationsForRoom(String room_id){
+		if(room_id == null){
 			return null;
 		}
 		
@@ -1639,7 +1657,7 @@ public class DataBaseManager implements Closeable {
 		try {
 			getRes_stm = connection.prepareStatement("SELECT * FROM RoomReservation WHERE roomID=?");
 	
-			getRes_stm.setString(1, r.getRoom_id());
+			getRes_stm.setString(1, room_id);
 			ResultSet rs = getRes_stm.executeQuery();
 			
 			HashSet<RoomReservation> reservations = new HashSet<>();
@@ -1648,7 +1666,7 @@ public class DataBaseManager implements Closeable {
 				rb.setStartTime(rs.getTimestamp("startTime").getTime());
 				rb.setEndTime(rs.getTimestamp("endTime").getTime());
 				rb.setEntryID(rs.getLong("entryID"));
-				rb.setRoom(r);
+				rb.setRoomID(room_id);
 				
 				reservations.add(rb.build());
 			}
@@ -2135,7 +2153,7 @@ public class DataBaseManager implements Closeable {
 		try {
 			PreparedStatement stm = connection.prepareStatement("DELETE FROM RoomReservation WHERE roomID = ? and startTime = ? and endTime = ?;");
 			int i = 0;
-			stm.setString(++i, rr.getRoom().getRoom_id());
+			stm.setString(++i, rr.getRoomID());
 			stm.setTimestamp(++i, new Timestamp(rr.getStartTime()));
 			stm.setTimestamp(++i, new Timestamp(rr.getEndTime()));
 			stm.executeUpdate();

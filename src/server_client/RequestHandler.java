@@ -198,19 +198,15 @@ public class RequestHandler{
 	 * @return
 	 */
 	public static boolean notify(String username, String message) {
-		
-		// TODO give other name? (the function notify exists).
-		
+				
 		NotificationBuilder notification_builder = new NotificationBuilder();
 		notification_builder.setDescription(message);
 		notification_builder.setOpened(false);
 		notification_builder.setTime(System.currentTimeMillis());
 		notification_builder.setUsername(username);
-		
 
 		try {
 			if(dbm.addNotification(notification_builder.build())){
-				notify(username, message);
 				sendIfActive(username, "You have a new message! Type \"inbox\" to see.");
 				return true;
 			}else{
@@ -409,7 +405,7 @@ public class RequestHandler{
 				dbm.makeAdmin(entry.getCreator(), entry_id);
 				invite(requestor, entry_id, true);
 				if(entry.getRoomID() != null && ! entry.getRoomID().equals("")){
-					rbh.bookRoom(dbm.getRoom(entry.getRoomID()), entry.getStartTime(), entry.getEndTime(), entry_id);
+					rbh.bookRoom(entry.getRoomID(), entry.getStartTime(), entry.getEndTime(), entry_id);
 				}
 				
 				return true;
@@ -472,8 +468,10 @@ public class RequestHandler{
 	 * @throws HasNotTheRightsException
 	 * @throws UserDoesNotExistException
 	 * @throws SessionExpiredException
+	 * @throws RoomAlreadyBookedException 
+	 * @throws RoomDoesNotExistException 
 	 */
-	public static boolean editEntry(String requestor, CalendarEntry new_entry) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException, SessionExpiredException {
+	public static boolean editEntry(String requestor, CalendarEntry new_entry) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException, SessionExpiredException, RoomAlreadyBookedException, RoomDoesNotExistException {
 		
 		validate(requestor);
 		
@@ -484,7 +482,9 @@ public class RequestHandler{
 		synchronized (ADD_DB_LOCK) {
 			dbm.checkIfisAdmin(requestor, new_entry.getEntryID());
 			CalendarEntry old_entry = dbm.getEntry(new_entry.getEntryID());
+			
 			CalendarEntryBuilder eb = new CalendarEntryBuilder(old_entry);
+			
 			// update the entry
 			if(new_entry.getStartTime() > 0){ eb.setStartTime(new_entry.getStartTime());}
 			if(new_entry.getEndTime() > 0){ eb.setEndTime(new_entry.getEndTime());}
@@ -493,8 +493,9 @@ public class RequestHandler{
 			if(new_entry.getRoomID() != null){eb.setRoomID(new_entry.getRoomID());}
 			
 			CalendarEntry new_entry_final = eb.build();
-			
-			updateRoomReservation(old_entry, new_entry);
+			System.out.println(old_entry);
+			System.out.println(new_entry_final);
+			updateRoomReservation(old_entry, new_entry_final);
 			
 						
 			if(dbm.editEntry(new_entry_final, requestor)){
@@ -506,28 +507,31 @@ public class RequestHandler{
 		}
 	}
 	
-	private static boolean updateRoomReservation(CalendarEntry old_entry, CalendarEntry new_entry){
-		boolean change_room_reservation = false;
+	/**
+	 * 
+	 * @param old_entry
+	 * @param new_entry
+	 * @return
+	 * @throws RoomAlreadyBookedException
+	 * @throws RoomDoesNotExistException
+	 */
+	private static boolean updateRoomReservation(CalendarEntry old_entry, CalendarEntry new_entry) throws RoomAlreadyBookedException, RoomDoesNotExistException{
+		boolean change_room_reservation = old_entry.getStartTime() != new_entry.getStartTime() 
+										|| old_entry.getEndTime() != new_entry.getEndTime() 
+										|| old_entry.getRoomID() != new_entry.getRoomID();
 		
-		// TODO
 		
 		if(change_room_reservation){
-			try {
-				rbh.releaseRoomEntry(dbm.getRoom(old_entry.getRoomID()), old_entry.getEntryID());
-			} catch (RoomDoesNotExistException e) {
-				// should never happen!!
-				e.printStackTrace();
-				return false;
-			}
+			long entry_id = new_entry.getEntryID();
 			
-			try {
-				rbh.bookRoom(dbm.getRoom(new_entry.getRoomID()), new_entry.getStartTime(), new_entry.getEndTime(), new_entry.getEntryID());
-			} catch (RoomDoesNotExistException e) {
-				// should never happen!!
-				e.printStackTrace();
-				return false;
-			}
+			// remove old reservation
+			rbh.releaseRoomEntry(old_entry.getRoomID(), entry_id);
+				
+			// add new reservation
+			rbh.bookRoom(new_entry.getRoomID(), new_entry.getStartTime(), new_entry.getEndTime(), entry_id);
+			
 		}
+		return true;
 	}
 	
 	/**
@@ -781,12 +785,13 @@ public class RequestHandler{
 	 * @throws RoomAlreadyBookedException
 	 * @throws UserDoesNotExistException 
 	 * @throws SessionExpiredException 
+	 * @throws RoomDoesNotExistException 
 	 */
-	public static boolean bookRoom(String requestor, Room room, long start_time, long end_time, long entry_id) throws RoomAlreadyBookedException, SessionExpiredException {
+	public static boolean bookRoom(String requestor, String room_id, long start_time, long end_time, long entry_id) throws RoomAlreadyBookedException, SessionExpiredException, RoomDoesNotExistException {
 		
 		validate(requestor);
 		
-		return rbh.bookRoom(room, start_time, end_time, entry_id);
+		return rbh.bookRoom(room_id, start_time, end_time, entry_id);
 	}
 	
 //	/**
