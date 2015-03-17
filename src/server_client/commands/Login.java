@@ -59,9 +59,9 @@ public class Login extends Command {
 		try {
 			User user = RequestHandler.logIn((String) arguments.get(0), (String) arguments.get(1));
 			if (user != null) {
-				handler.setUser(user);
-				Set<Invitation> invitations = RequestHandler.getInvitations(user);
-				Set<Notification> notifications = RequestHandler.getNotifications(user);
+				handler.setUsername(user.getUsername());
+				Set<Invitation> invitations = RequestHandler.getInvitations(user.getUsername());
+				Set<Notification> notifications = RequestHandler.getNotifications(user.getUsername());
 				if ((invitations != null && invitations.size() > 0) || (notifications != null && notifications.size() > 0)){
 					return "Successfully logged in, and you have something in your inbox! Type \"inbox\" to see.";
 				}

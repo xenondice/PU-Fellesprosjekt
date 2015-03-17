@@ -32,7 +32,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 	private BufferedReader client_input;
 	private BufferedWriter client_output;
 	private Socket client;
-	private User user; // TODO would it be better only to store username?
+	private String username; // TODO would it be better only to store username?
 	
 	// Protocol declaration (headers to messages)
 	public static final int STATUS_DONE =			0;
@@ -278,19 +278,19 @@ public class ServerClientHandler implements Runnable, Closeable {
 	}
 	
 	/**
-	 * Get the user that this handler is currently listening to.
+	 * Get the username that this handler is currently listening to.
 	 * @return A user if the user is logged in, null if not.
 	 */
-	public User getUser() {
-		return user;
+	public String getUsername() {
+		return username;
 	}
 	
 	/**
 	 * Sets who this handler is currently listening to (for verification, etc).
 	 * @param user
 	 */
-	public void setUser(User user) {
-		this.user = user;
+	public void setUsername(String username) {
+		this.username = username;
 	}
 	
 	/**

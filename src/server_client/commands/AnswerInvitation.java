@@ -69,7 +69,7 @@ public class AnswerInvitation extends Command {
 	@Override
 	public String run(ServerClientHandler handler, List<Object> arguments, int syntax) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, SessionExpiredException, HasNotTheRightsException, EntryDoesNotExistException, UserDoesNotExistException {
 		try {
-			if (RequestHandler.invitationAnswer(handler.getUser(), (long) arguments.get(0), (boolean) arguments.get(1), (boolean) arguments.get(2))){
+			if (RequestHandler.invitationAnswer(handler.getUsername(), (long) arguments.get(0), (boolean) arguments.get(1), (boolean) arguments.get(2))){
 				return "Your answer is recorded!";
 			}else{
 				return "Couldn't answer invitation!";

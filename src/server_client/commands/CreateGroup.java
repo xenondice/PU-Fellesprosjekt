@@ -54,7 +54,7 @@ public class CreateGroup extends Command {
 		GroupBuilder group_builder = new GroupBuilder();
 		group_builder.setName((String) arguments.get(0));
 		
-		if (RequestHandler.createGroup(handler.getUser(), group_builder.build()))
+		if (RequestHandler.createGroup(handler.getUsername(), group_builder.build()))
 			return "Group successfully created!";
 		else
 			return "Group couldn't be created!";

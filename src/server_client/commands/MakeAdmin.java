@@ -52,7 +52,7 @@ public class MakeAdmin extends Command {
 	@Override
 	public String run(ServerClientHandler handler, List<Object> arguments, int syntax) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, HasNotTheRightsException, EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException {
 		
-		if (RequestHandler.makeAdmin(handler.getUser(), (String) arguments.get(0), (long) arguments.get(1)))
+		if (RequestHandler.makeAdmin(handler.getUsername(), (String) arguments.get(0), (long) arguments.get(1)))
 			return "User " + arguments.get(0) + " now admin!";
 		else
 			return "Could not make "  + arguments.get(0) + " admin!";

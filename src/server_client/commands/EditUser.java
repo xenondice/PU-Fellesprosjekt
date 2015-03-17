@@ -58,7 +58,7 @@ public class EditUser extends Command {
 		user_builder.setName((String) arguments.get(2));
 		user_builder.setEmail((String) arguments.get(3));
 		
-		if (RequestHandler.editUser(handler.getUser(), user_builder.build()))
+		if (RequestHandler.editUser(handler.getUsername(), user_builder.build()))
 			return "User successfully edited!";
 		else
 			return "User could not be edited!";

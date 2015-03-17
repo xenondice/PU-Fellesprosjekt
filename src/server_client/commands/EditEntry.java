@@ -61,10 +61,10 @@ public class EditEntry extends Command {
 		entry_builder.setEndTime((Long) arguments.get(2));
 		entry_builder.setLocation((String) arguments.get(3));
 		entry_builder.setRoomID((String) arguments.get(4));
-		entry_builder.setCreator(handler.getUser().getUsername());
+		entry_builder.setCreator(handler.getUsername());
 		entry_builder.setStartTime((Long) arguments.get(5));
 		
-		if (RequestHandler.editEntry(handler.getUser(), entry_builder.build()))
+		if (RequestHandler.editEntry(handler.getUsername(), entry_builder.build()))
 			return "Calendar entry successfully edited!";
 		else
 			return "Calendar entry couldn't be edited!";

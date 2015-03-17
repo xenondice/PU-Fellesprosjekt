@@ -50,7 +50,7 @@ public class RemoveUserFromGroup extends Command {
 	@Override
 	public String run(ServerClientHandler handler, List<Object> arguments, int syntax) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, GroupDoesNotExistException, SessionExpiredException, HasNotTheRightsException, UserDoesNotExistException {
 		
-		if (RequestHandler.removeUserFromGroup(handler.getUser(), (String) arguments.get(0), (String) arguments.get(1)))
+		if (RequestHandler.removeUserFromGroup(handler.getUsername(), (String) arguments.get(0), (String) arguments.get(1)))
 			return "User successfully removed from group!";
 		else
 			return "User couldn't be removed!";

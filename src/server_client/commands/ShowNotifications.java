@@ -48,8 +48,8 @@ public class ShowNotifications extends Command {
 	@Override
 	public String run(ServerClientHandler handler, List<Object> arguments, int syntax) throws IOException, TimeoutException, InterruptedException, ForcedReturnException, UserDoesNotExistException, SessionExpiredException {
 		
-		HashSet<Notification> notifications = RequestHandler.getNotifications(handler.getUser());
-		HashSet<Invitation> invitations = RequestHandler.getInvitations(handler.getUser());
+		HashSet<Notification> notifications = RequestHandler.getNotifications(handler.getUsername());
+		HashSet<Invitation> invitations = RequestHandler.getInvitations(handler.getUsername());
 		
 		if (notifications == null || invitations == null) return "Couldn't get inbox!";
 		
