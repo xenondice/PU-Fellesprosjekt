@@ -2203,26 +2203,24 @@ public class DataBaseManager implements Closeable {
 	 * @throws UserDoesNotExistException 
 	 * @throws SQLException 
 	 */
-	public Calendar createCalendar(String username) throws UserDoesNotExistException{
+	public HashSet<CalendarEntry> getAllEntriesForUser(String username) throws UserDoesNotExistException{
 		
 		checkIfUserExists(username);
 		
 		String select_all_events_for_user = "SELECT E.* "
-										  + "FROM CalendarEntry E, User U, Status S "
-										  + "WHERE S.isShowing = 1 "
-										  	+ "AND E.entryID = S.entryID "
-										  	+ "AND U.username = S.username "
-										  	+ "AND U.username = ? ;";
+										  + "FROM CalendarEntry E, Invitation I "
+										  + "WHERE I.isShowing = 1 "
+										  	+ "AND E.entryID = I.entryID "
+										  	+ "AND I.username = ? ;";
 		
-		CalendarBuilder cb = new CalendarBuilder();
+		HashSet<CalendarEntry> entries = new HashSet<>();
 		
 		
 		try {
-			cb.addUser(this.getUser(username));
+			
 			PreparedStatement stmt = connection.prepareStatement(select_all_events_for_user);
 			stmt.setString(1, username);
 			ResultSet rset = stmt.executeQuery();
-			
 			
 			while(rset.next()){
 				CalendarEntryBuilder entryB = new CalendarEntryBuilder();
@@ -2234,16 +2232,15 @@ public class DataBaseManager implements Closeable {
 				entryB.setDescription(rset.getString("description"));
 				entryB.setRoomID(rset.getString("roomID"));
 								
-				cb.addEntry(entryB.build());
+				entries.add(entryB.build());
 				
 			}
 			stmt.close();
-			return cb.build();
+			return entries;
 			
 		} catch (SQLException e) {
 			e.printStackTrace();
-			
-			return new CalendarBuilder().build();
+			return null;
 		}
 	}
 	

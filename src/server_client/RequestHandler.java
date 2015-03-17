@@ -557,8 +557,6 @@ public class RequestHandler{
 			group = dbm.getGroup(groupname);
 		}
 		
-		// TODO cast long to integer somewhere. fix it.
-		
 		for (User user : group.getUsers()) {
 			try {
 				kickUserFromEntry(requestor, user.getUsername(), entry_id);
