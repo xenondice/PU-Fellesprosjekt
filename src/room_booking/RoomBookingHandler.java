@@ -2,7 +2,9 @@ package room_booking;
 
 import java.util.HashSet;
 
+import server_client.RequestHandler;
 import dbms.DataBaseManager;
+import exceptions.EntryDoesNotExistException;
 import exceptions.RoomAlreadyBookedException;
 
 public class RoomBookingHandler {
@@ -40,6 +42,19 @@ public class RoomBookingHandler {
 	}
 	
 	/**
+	 * checks whether the number is in between the two numbers (equlity results in false).</br>
+	 * note that inBetween(10, 10, 20) returns false.
+	 * @param number
+	 * @param lowerBound
+	 * @param upperBound
+	 * @return
+	 */
+	public boolean isBetween(long number, long lowerBound, long upperBound){
+		if(lowerBound > upperBound){return isBetween(number, upperBound, lowerBound);}
+		return number > lowerBound && number < upperBound;
+	}
+	
+	/**
 	 * Checks whether two timespans overlap.</br>
 	 * 
 	 * @param start1
@@ -48,16 +63,10 @@ public class RoomBookingHandler {
 	 * @param end2
 	 * @return true if the input timespan overlaps with the other timespan.
 	 */
-	private boolean isInbetween(long start1, long start2, long end1, long end2){
-	
-		if (start2 >= start1 && end1 <= end2){
-			return true;
-		}else if (start2 >= start1 && end1 >= end2){
-			return true;
-		}else if (start2 <= start1 && end1 <= end2){
-			return true;
-		}
-		return false;
+	public boolean doOverlap(long start1, long end1, long start2, long end2){
+
+		return isBetween(start1, start2, end2)	|| isBetween(end1, start2, end2) 
+				||isBetween(start2, start1, end1) || isBetween(end2, start1, end1) ;
 	}
 	
 	// sjekke om det finnes RoomReservation rr;
@@ -69,31 +78,83 @@ public class RoomBookingHandler {
 	 * @return true if the Room is available
 	 */
 	public boolean checkIfFree(Room room, long startTime, long endTime){
-		HashSet<RoomReservation> rr = dbm.getReservationsForRoom(room);
-		for(RoomReservation res : rr){
-			return isInbetween(startTime, res.getStartTime(),  endTime, res.getEndTime());
+		HashSet<RoomReservation> reservations = dbm.getReservationsForRoom(room);
+		for(RoomReservation res : reservations){
+			if( doOverlap(startTime, endTime, res.getStartTime(), res.getEndTime())){
+				return false;
+			}
 		}
 		return true;
 	}
 	
 	/**
+<<<<<<< HEAD
+	 * deletes all reservations that overlap with the given timespan
+	 * @param room
+	 * @param startTime
+	 * @param endTime
+	 * @return
+=======
 	 * cancels a RoomReservation
 	 * @param room
 	 * @param startTime
 	 * @param endTime
 	 * @return true if the Room is successfully released.
+>>>>>>> adc89ab30bf70a52acb7192161f91b2582a24da2
 	 */
 	public boolean releaseRoom(Room room, long startTime, long endTime){
 		boolean could_release_all = true;
 		if (dbm.getReservationsForRoom(room) != null){
-			HashSet<RoomReservation> rr = dbm.getReservationsForRoom(room);
-			for(RoomReservation res : rr){
-				if ( isInbetween(startTime, res.getStartTime(),  endTime, res.getEndTime())){
-					if (!dbm.deleteRoomReservation(res))
+			HashSet<RoomReservation> reservations = dbm.getReservationsForRoom(room);
+			for(RoomReservation res : reservations){
+				if ( doOverlap(startTime, endTime, res.getStartTime(), res.getEndTime())){
+					if (!dbm.deleteRoomReservation(res)){
 						could_release_all = false;
+					}else{
+						try {
+							RequestHandler.notify(dbm.getEntry(res.getEntryID()).getCreator(), "The reservation '"+res.toString()+"' was released.");
+						} catch (EntryDoesNotExistException e) {
+							e.printStackTrace();
+						}
+					}
 				}
 			}
 		}
+		
 		return could_release_all;
+	}
+	
+	public static void main(String[] args) {
+		// Tests
+		RoomBookingHandler rbh = new RoomBookingHandler(new DataBaseManager());
+		long t1 = 100;
+		long t2 = 200;
+		long t3 = 300;
+		long t4 = 400;
+		long t5 = 500;
+		
+		System.out.println(rbh.isBetween(t1, t2, t3)); // false
+		System.out.println(rbh.isBetween(t4, t2, t3)); // false
+		System.out.println(rbh.isBetween(t1, t3, t2)); // false
+		System.out.println(rbh.isBetween(t1, t1, t3)); // false
+		System.out.println(rbh.isBetween(t3, t2, t3)); // false
+		System.out.println(rbh.isBetween(t3, t2, t4)); // true
+		System.out.println(rbh.isBetween(t3, t4, t2)); // true
+		
+		System.out.println("----------------");
+		
+		System.out.println(rbh.doOverlap(t1, t2, t3, t4)); // false
+		System.out.println(rbh.doOverlap(t3, t4, t1, t2)); // false
+		System.out.println(rbh.doOverlap(t1, t3, t2, t4)); // true
+		System.out.println(rbh.doOverlap(t1, t4, t2, t3)); // true
+		System.out.println(rbh.doOverlap(t3, t5, t2, t4)); // true
+		System.out.println();
+		System.out.println(rbh.doOverlap(t3, t4, t1, t2)); // false
+		System.out.println(rbh.doOverlap(t1, t2, t3, t4)); // false
+		System.out.println(rbh.doOverlap(t2, t4, t1, t3)); // true
+		System.out.println(rbh.doOverlap(t2, t3, t1, t4)); // true
+		System.out.println(rbh.doOverlap(t2, t4, t3, t5)); // true
+		
+		
 	}
 }
