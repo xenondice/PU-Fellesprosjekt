@@ -407,7 +407,7 @@ public class DataBaseManager implements Closeable {
 	 */
 	private synchronized void checkIfRoomExists(String room_id) throws RoomDoesNotExistException{
 		if(room_id == null || room_id.equals("null")){
-			throw new IllegalArgumentException("roomID can not be null or 'null'");
+			throw new RoomDoesNotExistException("roomID can not be null or 'null'");
 		}
 		if(! doesRoomExist(room_id)){throw new RoomDoesNotExistException(room_id);}
 	}
@@ -658,10 +658,13 @@ public class DataBaseManager implements Closeable {
 			throw new IllegalArgumentException("entry is null");
 		}
 		String roomID = e.getRoomID();
-		if(roomID != null && roomID.equals("")){
+		
+		if(roomID == null || roomID.equals("")){
 			roomID = null;
+		}else{
+			checkIfRoomExists(roomID);
 		}
-		checkIfRoomExists(roomID);
+		
 		checkIfUserExists(e.getCreator());
 		
 		String insert_entry = "INSERT INTO CalendarEntry (startTime, endTime, location, description, roomID, creator) "
@@ -676,7 +679,6 @@ public class DataBaseManager implements Closeable {
 			addEntry_stmt.setTimestamp(++i,new Timestamp(e.getEndTime()));
 			addEntry_stmt.setString(++i, e.getLocation());
 			addEntry_stmt.setString(++i, e.getDescription());
-			System.out.println("-->"+roomID);
 			addEntry_stmt.setString(++i, roomID);
 			addEntry_stmt.setString(++i, e.getCreator());
 	
