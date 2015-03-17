@@ -6,9 +6,8 @@ public class NotificationBuilder implements Builder<Notification> {
 	private long notifiationID;
 	private String description = null;
 	private boolean isOpened = false;
-	private long time = -1;
+	private long time = System.currentTimeMillis();
 	private String username = null;
-	private long entry_id = -1;
 	
 	public NotificationBuilder() {
 		
@@ -25,13 +24,13 @@ public class NotificationBuilder implements Builder<Notification> {
 		setDescription(n.getDescription());
 		setOpened(n.isOpened());
 		setTime(n.getTime());
+		if(time <= 0){time = System.currentTimeMillis();}
 		setUsername(n.getUsername());
-		setEntry_id(n.getEntry_id());
 	}
 
 	@Override
 	public Notification build() {
-		return new Notification(notifiationID, description, isOpened, time, username, entry_id);
+		return new Notification(notifiationID, description, isOpened, time, username);
 	}
 	
 	public long getNotifiationID() {
@@ -39,9 +38,6 @@ public class NotificationBuilder implements Builder<Notification> {
 	}
 	public String getDescription() {
 		return description;
-	}
-	public long getEntry_id() {
-		return entry_id;
 	}
 	public long getTime() {
 		return time;
@@ -59,15 +55,17 @@ public class NotificationBuilder implements Builder<Notification> {
 	public void setDescription(String description) {
 		this.description = description;
 	}
-	public void setEntry_id(long l) {
-		this.entry_id = l;
-	}
 	public void setOpened(boolean isOpened) {
 		this.isOpened = isOpened;
 	}
 
 	public void setTime(long time) {
-		this.time = time;
+		if(time <= 0){
+			time = System.currentTimeMillis();
+		}else{
+			this.time = time;
+		}
+		
 	}
 	public void setUsername(String username) {
 		this.username = username;

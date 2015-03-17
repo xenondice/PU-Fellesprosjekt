@@ -6,10 +6,12 @@ import java.net.Socket;
 import java.util.HashSet;
 import java.util.Set;
 
+
 import room_booking.Room;
 import room_booking.RoomBookingHandler;
 import calendar.Calendar;
 import calendar.CalendarEntry;
+import calendar.CalendarEntryBuilder;
 import calendar.Invitation;
 import calendar.InvitationBuilder;
 import calendar.Notification;
@@ -40,6 +42,10 @@ public class RequestHandler{
 	// TODO add command 'add-group-to-group' (in server_client commands)
 	
 	// TODO make entryID in the notification Table an optional argument. (And update the java code accordingly).
+	
+	// TODO check colisions of entries???
+	
+	// TODO should not be able to use commands when not logged in!
 	
 	// TODO if neccessary: implement alarm stuff (change entry -> change alarm; command change alarm)
 	
@@ -177,10 +183,11 @@ public class RequestHandler{
 			usernames = dbm.getInvitedUsersForEntry(entry_id);
 		}
 		
-		if (usernames != null)
+		if (usernames != null){
 			for (String username : usernames) {
-				notify(username, entry_id, message);
+				notify(username, message);
 			}
+		}
 	}
 	
 	/**
@@ -190,31 +197,29 @@ public class RequestHandler{
 	 * @param message
 	 * @return
 	 */
-	public static boolean notify(String username, long entry_id, String message) {
+	public static boolean notify(String username, String message) {
 		
 		// TODO give other name? (the function notify exists).
 		
 		NotificationBuilder notification_builder = new NotificationBuilder();
 		notification_builder.setDescription(message);
 		notification_builder.setOpened(false);
-		notification_builder.setEntry_id(entry_id);
 		notification_builder.setTime(System.currentTimeMillis());
 		notification_builder.setUsername(username);
 		
-		boolean result;
-		synchronized (ADD_DB_LOCK) {
-			try {
-				result = dbm.addNotification(notification_builder.build());
-			} catch (UserDoesNotExistException e) {
-				result = false;
-			} catch(EntryDoesNotExistException e){
-				// TODO this is only a small hack so that it will work. 
-				result = notify(username, entry_id+1, message); // TODO make entryid optional in notification.
+
+		try {
+			if(dbm.addNotification(notification_builder.build())){
+				notify(username, message);
+				sendIfActive(username, "You have a new message! Type \"inbox\" to see.");
+				return true;
+			}else{
+				return false;
 			}
+		} catch (UserDoesNotExistException e) {
+			return false;
 		}
-		
-		if (result) sendIfActive(username, "You have a new message! Type \"inbox\" to see.");
-		return result;
+
 	}
 	
 	/**
@@ -373,7 +378,7 @@ public class RequestHandler{
 			}
 			
 			if(dbm.makeAdmin(username, entry_id)){
-				notify(username, entry_id, "You are now admin to the entry with the id "+entry_id);
+				notify(username,  "You are now admin to the entry with the id "+entry_id);
 				return true;
 			}else{ return false;}
 		}
@@ -448,7 +453,7 @@ public class RequestHandler{
 		
 		if (result && invited_users != null){
 			for (String username : invited_users){
-				notify(username, entry_id, "The entry has just been deleted!");
+				notify(username, "The entry "+entry_id+" has just been deleted!");
 			}
 		}
 		
@@ -456,7 +461,8 @@ public class RequestHandler{
 	}
 	
 	/**
-	 * edit an already existing entry
+	 * edit an already existing entry</br>
+	 * All attributes that are 'null' will be kept from the old entry.
 	 * @param requestor
 	 * @param newEntry
 	 * @return
@@ -466,28 +472,35 @@ public class RequestHandler{
 	 * @throws SessionExpiredException
 	 */
 	public static boolean editEntry(User requestor, CalendarEntry new_entry) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException, SessionExpiredException {
-		
 		validate(requestor);
 		
 		if(new_entry == null || new_entry.getEntryID() <= 0){
 			return false;
 		}
+		dbm.checkIfisAdmin(requestor.getUsername(), new_entry.getEntryID());
 		
-		boolean result;
-		synchronized (ADD_DB_LOCK) {
-			dbm.checkIfisAdmin(requestor.getUsername(), new_entry.getEntryID());
-			
-			result = dbm.editEntry(new_entry, requestor.getUsername());
+		CalendarEntryBuilder eb = new CalendarEntryBuilder(dbm.getEntry(new_entry.getEntryID()));
+		
+		// update the entry
+		if(new_entry.getStartTime() > 0){ eb.setStartTime(new_entry.getStartTime());}
+		if(new_entry.getEndTime() > 0){ eb.setEndTime(new_entry.getEndTime());}
+		if(new_entry.getDescription() != null){eb.setDescription(new_entry.getDescription());}
+		if(new_entry.getLocation() != null){eb.setLocation(new_entry.getLocation());}
+		if(new_entry.getRoomID() != null){eb.setRoomID(new_entry.getRoomID());}
+		
+		CalendarEntry new_entry_final = eb.build();
+					
+		if(dbm.editEntry(new_entry_final, requestor.getUsername())){
+			provideUpdate(new_entry_final.getEntryID(), "The entry information has changed!");
+			return true;
+		}else{
+			return false;
 		}
-		
-		if (result) provideUpdate(new_entry.getEntryID(), "The entry information has changed!");
-		
-		return result;
 	}
 	
 	/**
-	 * makes that the user(name) can not see the entry anymore.
-	 * Note that requestor and username can not be the same.
+	 * deletes the Invitation to the entry for the user.
+	 * Note that the creator of an entry can not be kicked
 	 * @param requestor
 	 * @param username
 	 * @param entry_id
@@ -502,27 +515,25 @@ public class RequestHandler{
 		
 		validate(requestor);
 		
-		if(requestor.equals(username) || dbm.isCreator(username, entry_id)) {
+		if(dbm.isCreator(username, entry_id)) {
 			return false;
 		}
-		
-		boolean result;
-		synchronized (ADD_DB_LOCK) {
-			if (!dbm.isAllowedToEdit(requestor.getUsername(), entry_id)) {
-				throw new HasNotTheRightsException();
-			}
-			
-			result = dbm.hideEvent(username, entry_id) && dbm.notGoing(username, entry_id);
-			
-			// remove adminrights if he is admin.
-			if(dbm.isAdmin(username, entry_id)){
-				result = dbm.revokeAdmin(username, entry_id) && result;
-			}
+
+		if (!dbm.isAllowedToEdit(requestor.getUsername(), entry_id)) {
+			throw new HasNotTheRightsException();
 		}
-		
-		if (result) notify(username, entry_id, "You have just been kicked from the entry!");
-		
-		return result;
+
+		if(dbm.deleteInvitation(requestor.getUsername(), entry_id)){
+			boolean allOk = true;
+			// remove adminrights if he is admin.
+			if (dbm.isAdmin(username, entry_id)) {
+				allOk = dbm.revokeAdmin(username, entry_id);
+			}
+			notify(username, "You have just been kicked from the entry "+entry_id+"!");
+			return allOk;
+		}else{
+			return false;
+		}
 	}
 	
 	/**
@@ -624,6 +635,8 @@ public class RequestHandler{
 	 * Group functions
 	 *================*/
 	
+	// TODO make it more consistant to use the groups. Eg new table in DB linking groups to other groups.
+	
 	/**
 	 * adds the group to the DB
 	 * @param requestor
@@ -657,12 +670,10 @@ public class RequestHandler{
 	public static boolean addUserToGroup(User requestor, String username, String groupname) throws UserDoesNotExistException, GroupDoesNotExistException, SessionExpiredException {
 		
 		
-		validate(requestor);
-		// TODO make the entry optional for a notification.
-		
+		validate(requestor);		
 		synchronized (ADD_DB_LOCK) {
 			if(dbm.addUserToGroup(username, groupname)){
-				notify(username, 1, "You have been added to the group "+groupname);
+				notify(username, "You have been added to the group "+groupname);
 				return true;
 			}else{
 				return false;
@@ -823,22 +834,26 @@ public class RequestHandler{
 	 * @throws SessionExpiredException
 	 * @throws InvitationDoesNotExistException 
 	 */
-	public static boolean invitationAnswer(User requestor, long entry_id, boolean answer) throws EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException, InvitationDoesNotExistException {
+	public static boolean invitationAnswer(User requestor, long entry_id, boolean going, boolean showing) throws EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException, InvitationDoesNotExistException {
 		
 		validate(requestor);
 		
-		// shorter version:
-		// return answer? dbm.going(requestor.getUsername(), entry_id) : dbm.notGoing(requestor.getUsername(), entry_id);
-		
-		synchronized (ADD_DB_LOCK) {
-			if (answer){
-				return dbm.going(requestor.getUsername(), entry_id);
-			}else{
-				String creator = dbm.getEntry(entry_id).getCreator();
-				notify(creator, entry_id, requestor+" refused to participate in the event with id "+entry_id);
-				return dbm.notGoing(requestor.getUsername(), entry_id);
-			}
+		boolean allOk = true;
+		if(going){
+			allOk = dbm.going(requestor.getUsername(), entry_id);
+		}else{
+			allOk = dbm.notGoing(requestor.getUsername(), entry_id);
+			String creator = dbm.getEntry(entry_id).getCreator();
+			notify(creator, requestor+"refused to participate in the event with id "+ entry_id);
 		}
+		
+		if(showing){
+			allOk = dbm.allowToSee(requestor.getUsername(), entry_id) && allOk;
+		}else{
+			allOk = dbm.hideEvent(requestor.getUsername(), entry_id) && allOk;
+		}
+		
+		return allOk;
 	}
 	
 	/**

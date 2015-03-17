@@ -58,10 +58,10 @@ public class CalendarEntry {
 	public String getDescription() {
 		return description;
 	}
-	public Long getEndTime() {
+	public long getEndTime() {
 		return endTime;
 	}
-	public Long getEntryID() {
+	public long getEntryID() {
 		return entryID;
 	}
 	public String getLocation() {
@@ -70,7 +70,7 @@ public class CalendarEntry {
 	public String getRoomID() {
 		return roomID;
 	}
-	public Long getStartTime() {
+	public long getStartTime() {
 		return startTime;
 	}
 	public String getCreator(){
@@ -144,4 +144,6 @@ public class CalendarEntry {
 		}
 		return true;
 	}
+
+	
 }
