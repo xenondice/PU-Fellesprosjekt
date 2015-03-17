@@ -25,6 +25,9 @@ import exceptions.UserDoesNotExistException;
 import exceptions.UserInGroupDoesNotExistsException;
 import exceptions.UsernameAlreadyExistsException;
 
+//TODO: Make able to pass null arguments (empty, or \0)
+//TODO: if you are already attending to entry and invited to new at same time, give notification.
+
 public class ServerClientHandler implements Runnable, Closeable {
 	private BufferedReader client_input;
 	private BufferedWriter client_output;

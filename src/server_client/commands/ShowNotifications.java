@@ -17,6 +17,9 @@ import server_client.ServerClientHandler;
 
 public class ShowNotifications extends Command {
 	
+	//TODO: Make inbox not display message, just time and if it's opened, make open message command, mark as seen
+	//TODO: Make message system, make a notification system that is not bound by entry_id
+	
 	@Override
 	public String get() {
 		return "inbox";
