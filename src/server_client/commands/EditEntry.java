@@ -73,7 +73,7 @@ public class EditEntry extends Command {
 			if (RequestHandler.editEntry(handler.getUsername(), entry_builder.build())){
 				return "Calendar entry successfully edited!";
 			}else{
-				return "Calendar entry couldn't be edited!";
+				return "Calendar entry couldn't be edited! (mybe the start time is later than the end time?)";
 			}
 		} catch (RoomAlreadyBookedException e) {
 			e.printStackTrace();

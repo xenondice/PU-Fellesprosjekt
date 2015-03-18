@@ -11,6 +11,7 @@ import exceptions.HasNotTheRightsException;
 import exceptions.RoomAlreadyBookedException;
 import exceptions.RoomDoesNotExistException;
 import exceptions.SessionExpiredException;
+import exceptions.StartTimeIsLaterTanEndTimeException;
 import exceptions.UserDoesNotExistException;
 import server_client.Argument;
 import server_client.Argument.ArgumentType;
@@ -69,6 +70,9 @@ public class CreateEntry extends Command {
 			entry_builder.setRoomID((String) arguments.get(4));
 			entry_builder.setCreator(handler.getUsername());
 			CalendarEntry cal = entry_builder.build();
+			if(entry_builder.getStartTime() > entry_builder.getEndTime()){
+				return "The start Time must be before the end time!";
+			}
 			if (RequestHandler.createEntry(handler.getUsername(), cal)){
 				return "Calendar entry successfully created!";
 			}else{
@@ -79,6 +83,8 @@ public class CreateEntry extends Command {
 		} catch (RoomAlreadyBookedException e) {
 			e.printStackTrace();
 			return "Calendar entry couldn't be created because the room is already booked for this time!";
+		} catch (StartTimeIsLaterTanEndTimeException e) {
+			return "The start Time must be before the end time!";
 		}
 	}
 }

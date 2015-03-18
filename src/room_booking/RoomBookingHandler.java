@@ -7,6 +7,7 @@ import dbms.DataBaseManager;
 import exceptions.EntryDoesNotExistException;
 import exceptions.RoomAlreadyBookedException;
 import exceptions.RoomDoesNotExistException;
+import exceptions.StartTimeIsLaterTanEndTimeException;
 
 public class RoomBookingHandler {
 
@@ -33,43 +34,32 @@ public class RoomBookingHandler {
 	 * @return true if the Room is successfully booked.
 	 * @throws RoomAlreadyBookedException
 	 * @throws RoomDoesNotExistException 
+	 * @throws StartTimeIsLaterTanEndTimeException 
 	 */
-	public boolean bookRoom(String room_id, long startTime, long endTime, long entryID) throws RoomAlreadyBookedException, RoomDoesNotExistException{
-		if(checkIfFree(room_id, startTime, endTime)){
-			RoomReservation rr = new RoomReservation(room_id, startTime, endTime, entryID);
-			return dbm.addRoomReservation(rr);
-		}else{
-			throw new RoomAlreadyBookedException("Room is not available at this time.");
-		}
-	}
-	
-	/**
-	 * checks whether the number is in between the two numbers (equlity results in false).</br>
-	 * note that inBetween(10, 10, 20) returns false.
-	 * @param number
-	 * @param lowerBound
-	 * @param upperBound
-	 * @return
-	 */
-	public boolean isBetween(long number, long lowerBound, long upperBound){
-		if(lowerBound > upperBound){return isBetween(number, upperBound, lowerBound);}
-		return number > lowerBound && number < upperBound;
+	public boolean bookRoom(String room_id, long startTime, long endTime, long entryID) throws RoomAlreadyBookedException, RoomDoesNotExistException, StartTimeIsLaterTanEndTimeException{
+		
+			if(checkIfFree(room_id, startTime, endTime)){
+				RoomReservation rr = new RoomReservation(room_id, startTime, endTime, entryID);
+				return dbm.addRoomReservation(rr);
+			}else{
+				throw new RoomAlreadyBookedException("Room is not available at this time.");
+			}
+		
 	}
 	
 	/**
 	 * Checks whether two timespans overlap.</br>
 	 * 
-	 * @param start1
-	 * @param start2
+	 * @param start1 must be smaller than end1
+	 * @param start2 must be smaller than end2
 	 * @param end1
 	 * @param end2
 	 * @return true if the input timespan overlaps with the other timespan.
+	 * @throws StartTimeIsLaterTanEndTimeException 
 	 */
-	public boolean doOverlap(long start1, long end1, long start2, long end2){
-
-		return isBetween(start1, start2, end2)	|| isBetween(end1, start2, end2) 
-				||isBetween(start2, start1, end1) || isBetween(end2, start1, end1) 
-				|| start1 == start2 || end1 == end2;
+	public boolean doOverlap(long start1, long end1, long start2, long end2) throws StartTimeIsLaterTanEndTimeException{
+		if(start1 > end1 || start2 > end2){throw new StartTimeIsLaterTanEndTimeException();}
+		return ! (end1 <= start2 || end2 <= start1);
 	}
 	
 	// sjekke om det finnes RoomReservation rr;
@@ -79,8 +69,9 @@ public class RoomBookingHandler {
 	 * @param startTime
 	 * @param endTime
 	 * @return true if the Room is available
+	 * @throws StartTimeIsLaterTanEndTimeException 
 	 */
-	public boolean checkIfFree(String room_id, long startTime, long endTime){
+	public boolean checkIfFree(String room_id, long startTime, long endTime) throws StartTimeIsLaterTanEndTimeException{
 		HashSet<RoomReservation> reservations = dbm.getReservationsForRoom(room_id);
 		if(reservations == null){return true;}
 		for(RoomReservation res : reservations){
@@ -127,17 +118,11 @@ public class RoomBookingHandler {
 		long t4 = 400;
 		long t5 = 500;
 		
-		System.out.println(rbh.isBetween(t1, t2, t3)); // false
-		System.out.println(rbh.isBetween(t4, t2, t3)); // false
-		System.out.println(rbh.isBetween(t1, t3, t2)); // false
-		System.out.println(rbh.isBetween(t1, t1, t3)); // false
-		System.out.println(rbh.isBetween(t3, t2, t3)); // false
-		System.out.println(rbh.isBetween(t3, t2, t4)); // true
-		System.out.println(rbh.isBetween(t3, t4, t2)); // true
-		
 		System.out.println("----------------");
 		
-		System.out.println(rbh.doOverlap(t1, t2, t3, t4)); // false
+		try {
+			System.out.println(rbh.doOverlap(t1, t2, t3, t4));
+		
 		System.out.println(rbh.doOverlap(t3, t4, t1, t2)); // false
 		System.out.println(rbh.doOverlap(t1, t3, t2, t4)); // true
 		System.out.println(rbh.doOverlap(t1, t4, t2, t3)); // true
@@ -151,6 +136,9 @@ public class RoomBookingHandler {
 		
 		System.out.println(rbh.doOverlap(t1, t2, t1, t2)); // true
 		
-		
+		} catch (StartTimeIsLaterTanEndTimeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} // false
 	}
 }

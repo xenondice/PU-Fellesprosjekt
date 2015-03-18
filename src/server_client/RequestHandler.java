@@ -27,6 +27,7 @@ import exceptions.InvitationDoesNotExistException;
 import exceptions.RoomAlreadyBookedException;
 import exceptions.RoomDoesNotExistException;
 import exceptions.SessionExpiredException;
+import exceptions.StartTimeIsLaterTanEndTimeException;
 import exceptions.UserDoesNotExistException;
 import exceptions.UserInGroupDoesNotExistsException;
 import exceptions.UsernameAlreadyExistsException;
@@ -38,8 +39,6 @@ public class RequestHandler{
 	// TODO add functions for 'get all rooms' 'get all events' 'get all notifications' (for user) etc.
 	
 	// TODO add command 'add-group-to-group' (in server_client commands)
-		
-	// TODO check colisions/overlappings of entries???
 	
 	// TODO should not be able to use commands when not logged in!
 	
@@ -262,10 +261,10 @@ public class RequestHandler{
 		if (password.equals(existing_user.getPassword())) {
 			System.out.println("New user verified as " + existing_user.getUsername());
 			return existing_user; 
-			//TODO: Make better login
+			//TODO: Make better login pul
+		}else{
+			throw new WrongPasswordException();
 		}
-			
-		throw new WrongPasswordException();
 	}
 	
 	/**
@@ -378,13 +377,15 @@ public class RequestHandler{
 	 * @throws SessionExpiredException
 	 * @throws RoomDoesNotExistException 
 	 * @throws RoomAlreadyBookedException 
+	 * @throws StartTimeIsLaterTanEndTimeException 
 	 */
-	public synchronized static boolean createEntry(String requestor, CalendarEntry entry) throws UserDoesNotExistException, SessionExpiredException, RoomDoesNotExistException, RoomAlreadyBookedException {
+	public synchronized static boolean createEntry(String requestor, CalendarEntry entry) throws UserDoesNotExistException, SessionExpiredException, RoomDoesNotExistException, RoomAlreadyBookedException, StartTimeIsLaterTanEndTimeException {
 		
 		validate(requestor);
-
-		if (entry == null)
-			return false;
+		
+		
+		if (entry == null){	return false;}
+		if(entry.getStartTime() > entry.getEndTime()){throw new StartTimeIsLaterTanEndTimeException();}
 
 		try {
 
@@ -397,6 +398,8 @@ public class RequestHandler{
 					rbh.bookRoom(entry.getRoomID(), entry.getStartTime(), entry.getEndTime(), entry_id);
 				}
 				
+				handleOverlappings(entry_id, entry.getCreator());
+				
 				return true;
 			} else {
 				return false;
@@ -405,6 +408,26 @@ public class RequestHandler{
 			e.printStackTrace();
 			return false;
 		}
+	}
+	
+	private synchronized static void handleOverlappings(long entry_id, String username) throws UserDoesNotExistException, EntryDoesNotExistException{
+		HashSet<CalendarEntry> allEntries = dbm.getAllEntriesForUser(username);
+		CalendarEntry new_entry = dbm.getEntry(entry_id);
+		for(CalendarEntry e : allEntries){
+			if(doOverlap(new_entry, e)){
+				notify(username, "the entries nr"+entry_id+" and "+e.getEntryID()+" overlap! Maybe you want to do something about it ;)");
+			}
+		}
+	}
+	
+	private static boolean doOverlap(CalendarEntry e1, CalendarEntry e2){
+		long start1 = e1.getStartTime();
+		long start2 = e2.getStartTime();
+		long end1 = e1.getEndTime();
+		long end2 = e2.getEndTime();
+		
+		return ! (end1 <= start2 || end2 <= start1);
+		
 	}
 	
 	/**
@@ -479,10 +502,18 @@ public class RequestHandler{
 			if(new_entry.getRoomID() != null){eb.setRoomID(new_entry.getRoomID());}
 			
 			CalendarEntry new_entry_final = eb.build();
+			
+			if(new_entry_final.getStartTime() > new_entry_final.getEndTime()){
+				return false;
+			}
+			
 			System.out.println(old_entry);
 			System.out.println(new_entry_final);
 			updateRoomReservation(old_entry, new_entry_final);
-			
+			handleOverlappings(new_entry_final.getEntryID(), requestor);
+			if( ! requestor.equals(new_entry_final.getCreator())){
+				handleOverlappings(new_entry_final.getEntryID(), new_entry_final.getCreator());
+			}
 						
 			if(dbm.editEntry(new_entry_final, requestor)){
 				provideUpdate(new_entry_final.getEntryID(), "The entry information has changed!");
@@ -514,7 +545,11 @@ public class RequestHandler{
 			rbh.releaseRoomEntry(old_entry.getRoomID(), entry_id);
 				
 			// add new reservation
-			rbh.bookRoom(new_entry.getRoomID(), new_entry.getStartTime(), new_entry.getEndTime(), entry_id);
+			try {
+				rbh.bookRoom(new_entry.getRoomID(), new_entry.getStartTime(), new_entry.getEndTime(), entry_id);
+			} catch (StartTimeIsLaterTanEndTimeException e) {
+				e.printStackTrace();
+			}
 			
 		}
 		return true;
@@ -609,7 +644,13 @@ public class RequestHandler{
 			throw new HasNotTheRightsException();
 		}
 		
-		return invite(username, entry_id, false);
+		if(invite(username, entry_id, false)){
+			handleOverlappings(entry_id, username);
+			return true;
+		}else{
+			return false;
+		}
+		
 	}
 	
 	/**
@@ -774,7 +815,12 @@ public class RequestHandler{
 		
 		validate(requestor);
 		
-		return rbh.bookRoom(room_id, start_time, end_time, entry_id);
+		try {
+			return rbh.bookRoom(room_id, start_time, end_time, entry_id);
+		} catch (StartTimeIsLaterTanEndTimeException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 	
 //	/**
@@ -845,7 +891,7 @@ public class RequestHandler{
 		}else{
 			allOk = dbm.notGoing(requestor, entry_id);
 			String creator = dbm.getEntry(entry_id).getCreator();
-			notify(creator, requestor+"refused to participate in the event with id "+ entry_id);
+			notify(creator, requestor+" refused to participate in the event with id "+ entry_id);
 		}
 		
 		if(showing){
