@@ -9,14 +9,12 @@ public class User {
 	private final String username;
 	private final String name; 
 	private final String password;
-	private final String salt;
 	private final String email;
 	
-	public User(String username, String name, String password, String salt, String email){
+	public User(String username, String name, String password,  String email){
 		this.username = username;
 		this.name = name;
 		this.password = password;
-		this.salt = salt;
 		this.email = email;
 	}
 	
@@ -33,16 +31,14 @@ public class User {
 	public String getPassword() {
 		return password;
 	}
-	public String getSalt() {
-		return salt;
-	}
+
 	
 	
 	/**
 	 * returns identical (but new) instance of this user (deep-copy).
 	 */
 	public User clone(){
-		return new User(username, name, password, salt, email);
+		return new User(username, name, password,  email);
 	}
 
 	@Override
@@ -54,8 +50,6 @@ public class User {
 		builder.append(name);
 		builder.append(", password=");
 		builder.append(password);
-		builder.append(", salt=");
-		builder.append(salt);
 		builder.append(", email=");
 		builder.append(email);
 		builder.append("]");
@@ -70,7 +64,6 @@ public class User {
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		result = prime * result
 				+ ((password == null) ? 0 : password.hashCode());
-		result = prime * result + ((salt == null) ? 0 : salt.hashCode());
 		result = prime * result
 				+ ((username == null) ? 0 : username.hashCode());
 		return result;
@@ -107,13 +100,6 @@ public class User {
 				return false;
 			}
 		} else if (!password.equals(other.password)) {
-			return false;
-		}
-		if (salt == null) {
-			if (other.salt != null) {
-				return false;
-			}
-		} else if (!salt.equals(other.salt)) {
 			return false;
 		}
 		if (username == null) {

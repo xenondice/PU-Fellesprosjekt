@@ -64,7 +64,6 @@ public class CreateUser extends Command {
 		user_builder.setPassword((String) arguments.get(1));
 		user_builder.setName(arguments.get(2)==null?"":(String) arguments.get(2));
 		user_builder.setEmail(arguments.get(3)==null?"":(String) arguments.get(3));
-		user_builder.setSalt("");
 		User user = user_builder.build();
 		
 		if (RequestHandler.createUser(user))

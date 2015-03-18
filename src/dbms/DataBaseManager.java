@@ -621,7 +621,7 @@ public class DataBaseManager implements Closeable {
 			throw new UsernameAlreadyExistsException();
 		}
 
-		String addUser = "INSERT INTO User VALUES (?, ?, ?, ?, ?);";
+		String addUser = "INSERT INTO User VALUES (?, ?, ?, ?);";
 
 		try {
 			PreparedStatement stm = connection.prepareStatement(addUser);
@@ -630,7 +630,6 @@ public class DataBaseManager implements Closeable {
 			stm.setString(++i, u.getUsername());
 			stm.setString(++i, u.getName());
 			stm.setString(++i, u.getPassword());
-			stm.setString(++i, u.getSalt());
 			stm.setString(++i, u.getEmail());
 			stm.execute();
 			stm.close();
@@ -1117,7 +1116,6 @@ public class DataBaseManager implements Closeable {
 				ub.setName(rset.getString("name"));
 				ub.setEmail(rset.getString("email"));
 				ub.setPassword(rset.getString("password"));
-				ub.setSalt(rset.getString("salt"));			
 				
 				users.add(ub.build());
 			}
@@ -1555,7 +1553,6 @@ public class DataBaseManager implements Closeable {
 				ub.setUsername(username);
 				ub.setName(rs.getString("name"));
 				ub.setPassword(rs.getString("password"));
-				ub.setSalt(rs.getString("salt"));
 				ub.setEmail(rs.getString("email"));
 				return ub.build();
 			} else{
@@ -1849,7 +1846,7 @@ public class DataBaseManager implements Closeable {
 		checkIfUserExists(u.getUsername());	
 		
 		String edit_entry = "UPDATE User "
-				+ "SET name = ?, password = ?, salt = ?, email = ?"
+				+ "SET name = ?, password = ?, email = ?"
 				+ "WHERE username = ?; ";
 		
 		User existingUser = getUser(u.getUsername());
@@ -1860,7 +1857,6 @@ public class DataBaseManager implements Closeable {
 			
 			editUser_stmt.setString(++i, u.getName()==null?existingUser.getName():u.getName());
 			editUser_stmt.setString(++i, u.getPassword()==null?existingUser.getPassword():u.getPassword());
-			editUser_stmt.setString(++i, u.getSalt()==null?existingUser.getSalt():u.getSalt());
 			editUser_stmt.setString(++i, u.getEmail()==null?existingUser.getEmail():u.getEmail());
 			editUser_stmt.setString(++i, u.getUsername());
 			

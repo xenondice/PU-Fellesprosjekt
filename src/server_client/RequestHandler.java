@@ -10,6 +10,7 @@ import com.mysql.jdbc.UpdatableResultSet;
 
 import room_booking.Room;
 import room_booking.RoomBookingHandler;
+import security.LoginHandler;
 import calendar.Calendar;
 import calendar.CalendarEntry;
 import calendar.CalendarEntryBuilder;
@@ -34,6 +35,7 @@ import exceptions.UsernameAlreadyExistsException;
 import exceptions.WrongPasswordException;
 import user.Group;
 import user.User;
+import user.UserBuilder;
 
 public class RequestHandler{		
 	// TODO add functions for 'get all rooms' 'get all events' 'get all notifications' (for user) etc.
@@ -47,6 +49,7 @@ public class RequestHandler{
 	private static ServerSocket server;
 	private static Set<ServerClientHandler> currently_connected;
 	private static RoomBookingHandler rbh;
+	private static LoginHandler logh;
 
 	
 	public static int PORT = 56692;
@@ -69,6 +72,7 @@ public class RequestHandler{
 			dbm = new DataBaseManager();
 			server = new ServerSocket(PORT);
 			rbh = new RoomBookingHandler(dbm);
+			logh = new LoginHandler(dbm);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.out.println("Couldn't start server! Is the port available?");
@@ -255,16 +259,18 @@ public class RequestHandler{
 	 */
 	public static User logIn(String username, String password) throws UserDoesNotExistException, WrongPasswordException {
 		
-		User existing_user;
-		existing_user = dbm.getUser(username);
-			
-		if (password.equals(existing_user.getPassword())) {
-			System.out.println("New user verified as " + existing_user.getUsername());
-			return existing_user; 
-			//TODO: Make better login pul
-		}else{
-			throw new WrongPasswordException();
-		}
+		return logh.checkPW(username, password);
+		
+//		User existing_user;
+//		existing_user = dbm.getUser(username);
+//			
+//		if (password.equals(existing_user.getPassword())) {
+//			System.out.println("New user verified as " + existing_user.getUsername());
+//			return existing_user; 
+//			//TODO: Make better login pul
+//		}else{
+//			throw new WrongPasswordException();
+//		}
 	}
 	
 	/**
@@ -310,7 +316,10 @@ public class RequestHandler{
 		if (user == null || user.getUsername() == null || user.getUsername().equals("")) {
 			return false;
 		}
-		return dbm.addUser(user);
+		
+		UserBuilder ub = new UserBuilder(user);
+		ub.setPassword(logh.createHash(user.getPassword()));
+		return dbm.addUser(ub.build());
 	}
 	
 	/**
@@ -650,7 +659,6 @@ public class RequestHandler{
 		}else{
 			return false;
 		}
-		
 	}
 	
 	/**

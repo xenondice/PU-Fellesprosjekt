@@ -10,13 +10,19 @@ public class UserBuilder implements Builder<User>{
 	private String username = null;
 	private String name = null; 
 	private String password = null;
-	private String salt = null;
 	private String email = null;
 	
 	public UserBuilder(){
 		
 	}
 	
+	public UserBuilder(User user) {
+		setUsername(user.getUsername());
+		setEmail(user.getEmail());
+		setName(user.getName());
+		setPassword(user.getPassword());
+	}
+
 	public void setUsername(String newusername){
 		this.username = newusername;
 	}
@@ -29,12 +35,27 @@ public class UserBuilder implements Builder<User>{
 	public void setPassword(String password) {
 		this.password = password;
 	}
-	public void setSalt(String salt) {
-		this.salt = salt;
-	}
+	
+
 
 	@Override
 	public User build() {
-		return new User(username, name, password, salt, email);
+		return new User(username, name, password, email);
+	}
+
+	public String getUsername() {
+		return username;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public String getEmail() {
+		return email;
 	}
 }
