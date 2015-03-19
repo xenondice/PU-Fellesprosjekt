@@ -579,7 +579,7 @@ public class RequestHandler{
 		
 		validate(requestor);
 		
-			if (dbm.isCreator(requestor, entry_id))
+			if (dbm.isCreator(username, entry_id))
 				throw new HasNotTheRightsException();
 	
 			if (!dbm.isAllowedToEdit(requestor, entry_id))
