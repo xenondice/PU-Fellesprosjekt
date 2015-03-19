@@ -1198,6 +1198,36 @@ public class DataBaseManager implements Closeable {
 		}
 	}
 	
+	/**
+	 * 
+	 * @param entry_id
+	 * @return all invitations for an entry
+	 */
+	public synchronized  HashSet<Invitation> getAllInvitationsForEntry(long entry_id){
+		try {
+			PreparedStatement getInvis_stm = connection.prepareStatement("SELECT * FROM Invitation WHERE entryID = ?; ");
+			getInvis_stm.setLong(1, entry_id);
+			ResultSet rset = getInvis_stm.executeQuery();
+			
+			HashSet<Invitation> invitations = new HashSet<>();
+			while(rset.next()){
+				InvitationBuilder ib = new InvitationBuilder();
+				ib.setEntry_id(rset.getLong("entryID"));
+				ib.setGoing(rset.getBoolean("isGoing"));
+				ib.setShowing(rset.getBoolean("isShowing"));
+				ib.setUsername(rset.getString("username"));
+				
+				invitations.add(ib.build());
+			}
+			
+			return invitations;
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
 	public synchronized  HashSet<Notification> getAllNotifications(){
 		PreparedStatement getNotifications_stm;
 		try {
@@ -1464,7 +1494,7 @@ public class DataBaseManager implements Closeable {
 
 	public synchronized  Room getRoom(String room_id) throws RoomDoesNotExistException{
 		if(room_id == null || room_id.equals("null")){
-			throw new IllegalArgumentException("room_id can not be null or 'null'");
+			throw new RoomDoesNotExistException(room_id);
 		}
 		PreparedStatement getAlarm_stm;
 		try {

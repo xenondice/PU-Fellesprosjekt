@@ -53,11 +53,12 @@ public class ShowGroup extends Command {
 		String groupname = (String) arguments.get(0);
 		try {
 			Group g = RequestHandler.getGroup(groupname);
+			if(g.isEmpty()){
+				return "group '"+groupname+"' is empty (has no users in it).";
+			}
 			return g.toString();
 		} catch (GroupDoesNotExistException e) {
 			return "The group '"+groupname+"' does not exist. So there are no user in it.";
 		}
-		
 	}
-
 }

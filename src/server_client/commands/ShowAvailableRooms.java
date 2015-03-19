@@ -1,6 +1,7 @@
 package server_client.commands;
 
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -63,9 +64,16 @@ public class ShowAvailableRooms extends Command{
 		int minsize = arguments.get(2) == null ? -1: (int)arguments.get(2);
 		try {
 			ArrayList<Room> freerooms = RequestHandler.getAllFreeRooms(stime, etime, minsize);
-			return freerooms.toString();
+			StringBuilder sb = new StringBuilder();
+			sb.append("Free Rooms for the period "+new Timestamp(stime).toString()+" - "+new Timestamp(etime).toString()+":\n");
+			for(Room r : freerooms){
+				sb.append("-> ");
+				sb.append(r.toString());
+				sb.append("\n");
+			}
+			return sb.toString();
 		} catch (StartTimeIsLaterTanEndTimeException e) {
-			return "The startTime must be befor the end time!";
+			return "The startTime must be before the end time!";
 		}
 	}
 }

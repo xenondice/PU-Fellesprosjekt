@@ -37,9 +37,11 @@ import exceptions.UsernameAlreadyExistsException;
 import exceptions.WrongPasswordException;
 
 public class RequestHandler{		
-	// TODO add functions for 'get all rooms' 'get all events' 'get all notifications' (for user) etc.
+	// TODO add functions for 'show all users'
 	
-	// TODO add command 'add-group-to-group' (in server_client commands)
+	// TODO look at todos in ShowNotifications class!
+	
+	// TODO if made admin, also invite the user automatically if he is not invited yet.
 	
 	// TODO should not be able to use commands when not logged in!
 	
@@ -532,8 +534,8 @@ public class RequestHandler{
 			throw new StartTimeIsLaterTanEndTimeException();
 		}
 
-		System.out.println(old_entry); // TODO remove this two printouts
-		System.out.println(new_entry_final);
+//		System.out.println(old_entry); // TODO remove this two printouts
+//		System.out.println(new_entry_final);
 		
 		updateRoomReservation(old_entry, new_entry_final);
 		handleOverlappings(new_entry_final.getEntryID(), requestor);
@@ -608,12 +610,17 @@ public class RequestHandler{
 	 * @throws HasNotTheRightsException
 	 * @throws InvitationDoesNotExistException
 	 */
-	public synchronized static boolean kickUserFromEntry(String requestor, String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException, HasNotTheRightsException, InvitationDoesNotExistException {
+	public synchronized static boolean kickUserFromEntry(String requestor, String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException, HasNotTheRightsException{
 		
 		validate(requestor);
 		
-			if (dbm.isCreator(username, entry_id))
-				throw new HasNotTheRightsException();
+			if (dbm.isCreator(username, entry_id)){
+				if(requestor.equals(username)){
+					return true;
+				}else{
+					throw new HasNotTheRightsException();
+				}
+			}
 	
 			if (!dbm.isAllowedToEdit(requestor, entry_id))
 				throw new HasNotTheRightsException();
@@ -646,20 +653,30 @@ public class RequestHandler{
 	 * @throws HasNotTheRightsException
 	 * @throws InvitationDoesNotExistException
 	 */
-	public synchronized static boolean kickGroupFromEntry(String requestor, String groupname, long entry_id) throws GroupDoesNotExistException, UserInGroupDoesNotExistsException, EntryDoesNotExistException, SessionExpiredException, UserDoesNotExistException, HasNotTheRightsException {
+	public synchronized static boolean kickGroupFromEntry(String requestor, String groupname, long entry_id) throws SessionExpiredException, GroupDoesNotExistException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException{
 		
 		validate(requestor);
-		
-			Group group = dbm.getGroup(groupname);
-			
-			for (User user : group.getUsers()) {
-				try {
-					kickUserFromEntry(requestor, user.getUsername(), entry_id);
-				} catch (InvitationDoesNotExistException e) {
-					
-				}	
+
+		Group group = dbm.getGroup(groupname);
+		boolean all_users_exist = true;
+		boolean allowed_to_remove_all = true;
+		for (User user : group.getUsers()) {
+			try {
+				kickUserFromEntry(requestor, user.getUsername(), entry_id);
+			} catch (UserDoesNotExistException e) {
+				e.printStackTrace();
+				all_users_exist = false;
+			} catch (HasNotTheRightsException e) {
+				e.printStackTrace();
+				allowed_to_remove_all = false;
 			}
-		
+		}
+		if(! all_users_exist){
+			throw new UserDoesNotExistException();
+		}
+		if(! allowed_to_remove_all){
+			throw new HasNotTheRightsException();
+		}
 		
 		return true;
 	}
@@ -807,7 +824,12 @@ public class RequestHandler{
 		
 		validate(requestor);
 		
-		return dbm.removeUserFromGroup(username, groupname);
+		if(dbm.removeUserFromGroup(username, groupname)){
+			notify(username, "You have been removed from group "+groupname+". ("+requestor+" removed you).");
+			return true;
+		}else{
+			return false;
+		}
 	}
 	
 	/**
@@ -912,6 +934,20 @@ public class RequestHandler{
 		return dbm.getAllEntriesForUser(requestor);
 	}
 	
+	public synchronized static HashSet<Group> getAllGroups(){
+		HashSet<String> grnames = dbm.getAllGroupnames();
+		HashSet<Group> groups = new HashSet<>();
+		for(String gn : grnames){
+			try {
+				groups.add(dbm.getGroup(gn));
+			} catch (GroupDoesNotExistException e) {
+				// should never happen!
+				e.printStackTrace();
+			}
+		}
+		return groups;
+	}
+	
 	/**
 	 * 
 	 * @return a hashset of all existing rooms
@@ -966,6 +1002,20 @@ public class RequestHandler{
 			if(isFree){freerooms.add(r);}
 		}
 		return freerooms;
+	}
+	
+	public synchronized static HashSet<User> getAllInvitedUsers(long entry_id){
+		HashSet<User> users = new HashSet<>();
+		for(Invitation inv : dbm.getAllInvitationsForEntry(entry_id)){
+			try {
+				users.add(dbm.getUser(inv.getUsername()));
+			} catch (UserDoesNotExistException e) {
+				e.printStackTrace();
+				// should never happen
+			}
+		}
+		return users;
+		
 	}
 	
 	public static Group getGroup(String groupname) throws GroupDoesNotExistException{

@@ -1,10 +1,12 @@
 package server_client.commands;
 
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
+import room_booking.Room;
 import room_booking.RoomReservation;
 import server_client.Argument;
 import server_client.Argument.ArgumentType;
@@ -55,8 +57,15 @@ public class ShowAllReservations extends Command{
 		HashSet<RoomReservation> res = RequestHandler.getAllReservationsForRoom(roomID);
 		if(res == null || res.isEmpty()){
 			return "There are no reservations for this room ("+roomID+").";
+		}else{
+			StringBuilder sb = new StringBuilder();
+			sb.append("all reservations for room "+roomID+": \n");
+			for(RoomReservation rr : res){
+				sb.append("-> ");
+				sb.append(rr.toString());
+				sb.append("\n");
+			}
+			return sb.toString();
 		}
-		return res.toString();
 	}
-
 }

@@ -13,6 +13,8 @@ import server_client.commands.CreateUser;
 import server_client.commands.DeleteEntry;
 import server_client.commands.EditEntry;
 import server_client.commands.EditUser;
+import server_client.commands.ShowAllGroups;
+import server_client.commands.ShowAllInvitedUsers;
 import server_client.commands.ShowAvailableRooms;
 import server_client.commands.Help;
 import server_client.commands.InviteGroup;
@@ -81,7 +83,9 @@ public abstract class Command {
 		new ShowAllRooms(),
 		new ShowEntry(),
 		new ShowGroup(),
+		new ShowAllGroups(),
 		new ShowAvailableRooms(),
+		new ShowAllInvitedUsers(),
 	};
 	
 	/**
