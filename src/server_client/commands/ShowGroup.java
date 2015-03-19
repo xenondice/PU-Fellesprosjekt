@@ -18,7 +18,7 @@ import server_client.Argument;
 import server_client.Command;
 import server_client.ServerClientHandler;
 
-public class ViewEntry extends Command {
+public class ShowGroup extends Command {
 
 	@Override
 	public String get() {

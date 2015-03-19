@@ -25,8 +25,6 @@ import server_client.commands.RemoveUserFromGroup;
 import server_client.commands.RunWizard;
 import server_client.commands.ShowCalendar;
 import server_client.commands.ShowNotifications;
-import server_client.commands.showAllReservations;
-import server_client.commands.showAllRooms;
 import exceptions.EntryDoesNotExistException;
 import exceptions.ForcedReturnException;
 import exceptions.GroupAlreadyExistsException;
@@ -70,8 +68,9 @@ public abstract class Command {
 		new RemoveUserFromGroup(),
 		new ShowCalendar(),
 		new ShowNotifications(),
-		new showAllReservations(),
-		new showAllRooms(),
+//		new ShowAllReservations(),
+//		new ShowAllRooms(),
+//		new ShowEntry(),
 	};
 	
 	/**

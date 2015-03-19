@@ -15,52 +15,56 @@ import exceptions.UserDoesNotExistException;
 import exceptions.UserInGroupDoesNotExistsException;
 import exceptions.UsernameAlreadyExistsException;
 import server_client.Argument;
+import server_client.Argument.ArgumentType;
 import server_client.Command;
+import server_client.RequestHandler;
 import server_client.ServerClientHandler;
 
-public class ViewGroup extends Command {
+public class ShowEntry extends Command {
 
 	@Override
 	public String get() {
-		// TODO Auto-generated method stub
-		return null;
+		return "show-entry";
 	}
 
 	@Override
 	public String getDescription() {
-		// TODO Auto-generated method stub
-		return null;
+		return "shows the entry with the spezified entryID.";
 	}
 
 	@Override
 	public String getManual() {
-		// TODO Auto-generated method stub
-		return null;
+		return getDescription();
 	}
 
 	@Override
 	public Argument[][] getArguments() {
-		// TODO Auto-generated method stub
-		return null;
+		return new Argument[][] {
+				{
+					new Argument(false, "the entry ID", ArgumentType.long_number)
+				}
+				
+		};
 	}
 
 	@Override
 	public String[] getExamples() {
-		// TODO Auto-generated method stub
-		return null;
+		return new String[] {get()+" 7"};
 	}
 
 	@Override
 	public String run(ServerClientHandler handler, List<Object> arguments,
 			int sytax) throws IOException, TimeoutException,
 			InterruptedException, ForcedReturnException,
-			SessionExpiredException, HasNotTheRightsException,
-			UserDoesNotExistException, GroupDoesNotExistException,
-			EntryDoesNotExistException, GroupAlreadyExistsException,
-			UserInGroupDoesNotExistsException, UsernameAlreadyExistsException,
-			InvitationDoesNotExistException {
-		// TODO Auto-generated method stub
-		return null;
+			SessionExpiredException {
+		
+		String requestor = handler.getUsername();
+		long entry_id = (long) arguments.get(0);
+		try {
+			return RequestHandler.getEntry(requestor, entry_id).toString();
+		} catch (EntryDoesNotExistException e) {
+			return "This entry does not exist or you can not see it.";
+		}
 	}
 
 }

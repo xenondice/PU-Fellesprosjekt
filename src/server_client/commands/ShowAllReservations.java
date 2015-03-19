@@ -14,7 +14,7 @@ import server_client.ServerClientHandler;
 import exceptions.ForcedReturnException;
 import exceptions.SessionExpiredException;
 
-public class showAllReservations extends Command{
+public class ShowAllReservations extends Command{
 
 	@Override
 	public String get() {
