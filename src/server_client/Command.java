@@ -23,7 +23,10 @@ import server_client.commands.MakeAdmin;
 import server_client.commands.Manual;
 import server_client.commands.RemoveUserFromGroup;
 import server_client.commands.RunWizard;
+import server_client.commands.ShowAllReservations;
+import server_client.commands.ShowAllRooms;
 import server_client.commands.ShowCalendar;
+import server_client.commands.ShowEntry;
 import server_client.commands.ShowNotifications;
 import exceptions.EntryDoesNotExistException;
 import exceptions.ForcedReturnException;
@@ -68,9 +71,9 @@ public abstract class Command {
 		new RemoveUserFromGroup(),
 		new ShowCalendar(),
 		new ShowNotifications(),
-//		new ShowAllReservations(),
-//		new ShowAllRooms(),
-//		new ShowEntry(),
+		new ShowAllReservations(),
+		new ShowAllRooms(),
+		new ShowEntry(),
 	};
 	
 	/**

@@ -580,13 +580,13 @@ public class RequestHandler{
 		
 		validate(requestor);
 		
-			if (dbm.isCreator(username, entry_id))
+			if (dbm.isCreator(requestor, entry_id))
 				throw new HasNotTheRightsException();
 	
 			if (!dbm.isAllowedToEdit(requestor, entry_id))
 				throw new HasNotTheRightsException();
 	
-			if (dbm.deleteInvitation(requestor, entry_id)) {
+			if (dbm.deleteInvitation(username, entry_id)) {
 				boolean allOk = true;
 
 				if (dbm.isAdmin(username, entry_id))
