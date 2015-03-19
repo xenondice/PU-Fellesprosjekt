@@ -2096,7 +2096,7 @@ public class DataBaseManager implements Closeable {
 	
 	public synchronized  boolean deleteInvitation(String username, long entry_id){
 		try {
-			PreparedStatement stm = connection.prepareStatement("DELETE FROM Invitation WHERE username = ? AND emtryID = ?;");
+			PreparedStatement stm = connection.prepareStatement("DELETE FROM Invitation WHERE username = ? AND entryID = ?;");
 			int i = 0;
 			stm.setString(++i, username);
 			stm.setLong(++i, entry_id);
