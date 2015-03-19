@@ -64,7 +64,7 @@ public class Help extends Command {
 			
 			return message;
 		} else if (syntax == 2) {
-			return ((ArgumentType) arguments.get(0)).getHelp();
+			return "Type of argument, format: " + ((ArgumentType) arguments.get(0)).getHelp();
 		}
 		
 		Command command = (Command) arguments.get(0);

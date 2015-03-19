@@ -32,7 +32,7 @@ public class ServerClientHandler implements Runnable, Closeable {
 	private BufferedReader client_input;
 	private BufferedWriter client_output;
 	private Socket client;
-	private String username; // TODO would it be better only to store username?
+	private String username;
 	
 	// Protocol declaration (headers to messages)
 	public static final int STATUS_DONE =			0;
@@ -69,8 +69,11 @@ public class ServerClientHandler implements Runnable, Closeable {
 		
 		while (matcher.find())
 			for (int i = 1; i <= 3; i++)
-				if (matcher.group(i) != null)
-					splitted_answer.add(matcher.group(i).toLowerCase());
+				if (matcher.group(i) != null) {
+					String argument = matcher.group(i).toLowerCase();
+					if (argument == null || argument.isEmpty() || argument.equals("null")) splitted_answer.add(null);
+					else splitted_answer.add(argument);
+				}
 		
 		return splitted_answer;
 	}
