@@ -903,6 +903,10 @@ public class RequestHandler{
 		return res;
 	}
 	
+	public static Group getGroup(String groupname) throws GroupDoesNotExistException{
+		return dbm.getGroup(groupname);
+	}
+	
 	/**
 	 * 
 	 * @param requestor
