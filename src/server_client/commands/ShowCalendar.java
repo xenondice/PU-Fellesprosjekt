@@ -1,5 +1,7 @@
 package server_client.commands;
 
+import interfaces.TypeCalendar;
+
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
@@ -7,6 +9,7 @@ import java.util.concurrent.TimeoutException;
 
 import calendar.CalendarEntry;
 import calendar.MonthCalendar;
+import calendar.YearCalendar;
 import exceptions.EntryDoesNotExistException;
 import exceptions.ForcedReturnException;
 import exceptions.GroupAlreadyExistsException;
@@ -79,20 +82,23 @@ public class ShowCalendar extends Command {
 		}
 		
 		HashSet<CalendarEntry> entries = RequestHandler.getAllEntriesForUser(handler.getUsername());
+		System.out.println(entries);
+		TypeCalendar cal;
 		
 		if (type.equals("month")) {
-			MonthCalendar month = new MonthCalendar(when);
-			for (CalendarEntry entry : entries)
-				month.insert(entry.getStartTime(), entry.getEndTime());
-			return month.toString();
+			cal = new MonthCalendar(when);
 		} else if (type.equals("week")) {
 			return "TODO";
 		} else if (type.equals("day")) {
 			return "TODO";
 		} else if (type.equals("year")) {
-			return "TODO";
+			cal = new YearCalendar(when);
 		} else {
 			return "Not a valid spesification!";
 		}
+		
+		for (CalendarEntry entry : entries)
+			cal.insert(entry.getStartTime(), entry.getEndTime());
+		return cal.toString();
 	}
 }

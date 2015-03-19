@@ -55,7 +55,7 @@ public class Help extends Command {
 	@Override
 	public String run(ServerClientHandler handler, List<Object> arguments, int syntax) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
 		
-		if (syntax == 0) {
+		if (syntax == 1) {
 			String message = ""
 					+ "Valid commands (type \"help command\" for the correct syntax):\n";
 			
