@@ -41,8 +41,6 @@ public class RequestHandler{
 	
 	// TODO look at todos in ShowNotifications class!
 	
-	// TODO if made admin, also invite the user automatically if he is not invited yet.
-	
 	// TODO should not be able to use commands when not logged in!
 	
 	
@@ -238,7 +236,7 @@ public class RequestHandler{
 				result = false;
 			} catch (InvitationAlreadyExistsException e){
 				try {
-				result = dbm.going(username, entry_id);
+				result = is_going ? dbm.going(username, entry_id) : dbm.notGoing(username, entry_id);
 				result = dbm.allowToSee(username, entry_id) && result;
 				} catch (InvitationDoesNotExistException e1) {
 					// should never happen!
@@ -356,6 +354,7 @@ public class RequestHandler{
 
 		if (dbm.makeAdmin(username, entry_id)) {
 			notify(username, "You are now admin to the entry with the id "+ entry_id);
+			invite(username, entry_id, false);
 			return true;
 		} else {
 			return false;
@@ -1067,6 +1066,15 @@ public class RequestHandler{
 		validate(requestor);
 		
 		return dbm.getNotificationsForUser(requestor);
+	}
+	
+	/**
+	 * 
+	 * @param notification_id
+	 * @return true iff action was successful
+	 */
+	public static boolean deleteNotification(long notification_id){
+		return dbm.deleteNotification(notification_id);
 	}
 	
 	/**

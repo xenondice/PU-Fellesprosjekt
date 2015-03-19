@@ -1,5 +1,6 @@
 package calendar;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -58,7 +59,7 @@ public class Notification {
 		builder.append(", isOpened=");
 		builder.append(isOpened);
 		builder.append(", time=");
-		builder.append(time);
+		builder.append(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(time));
 		builder.append(", username=");
 		builder.append(username);
 		builder.append("]");

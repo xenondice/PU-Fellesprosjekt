@@ -11,6 +11,7 @@ import server_client.commands.CreateEntry;
 import server_client.commands.CreateGroup;
 import server_client.commands.CreateUser;
 import server_client.commands.DeleteEntry;
+import server_client.commands.DeleteNotification;
 import server_client.commands.EditEntry;
 import server_client.commands.EditUser;
 import server_client.commands.ShowAllGroups;
@@ -86,6 +87,7 @@ public abstract class Command {
 		new ShowAllGroups(),
 		new ShowAvailableRooms(),
 		new ShowAllInvitedUsers(),
+		new DeleteNotification(),
 	};
 	
 	/**
