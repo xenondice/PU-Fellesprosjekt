@@ -1,6 +1,7 @@
 
 package calendar;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 /**
  * Represents an CalendarEntry in a Calendar
@@ -41,9 +42,9 @@ public class CalendarEntry {
 		builder.append("CalendarEntry [entryID=");
 		builder.append(entryID);
 		builder.append(", startTime=");
-		builder.append(startTime);
+		builder.append(new SimpleDateFormat("dd/MM/yy HH:mm").format(startTime));
 		builder.append(", endTime=");
-		builder.append(endTime);
+		builder.append(new SimpleDateFormat("dd/MM/yy HH:mm").format(endTime));
 		builder.append(", location=");
 		builder.append(location);
 		builder.append(", description=");
