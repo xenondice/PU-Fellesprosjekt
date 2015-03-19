@@ -1,6 +1,7 @@
 package room_booking;
 
 import java.util.HashSet;
+import java.util.Random;
 
 import server_client.RequestHandler;
 import dbms.DataBaseManager;
@@ -37,7 +38,6 @@ public class RoomBookingHandler {
 	 * @throws StartTimeIsLaterTanEndTimeException 
 	 */
 	public boolean bookRoom(String room_id, long startTime, long endTime, long entryID) throws RoomAlreadyBookedException, RoomDoesNotExistException, StartTimeIsLaterTanEndTimeException{
-		
 			if(checkIfFree(room_id, startTime, endTime)){
 				RoomReservation rr = new RoomReservation(room_id, startTime, endTime, entryID);
 				return dbm.addRoomReservation(rr);
@@ -120,6 +120,9 @@ public class RoomBookingHandler {
 		
 		System.out.println("----------------");
 		
+		
+		
+		
 		try {
 			System.out.println(rbh.doOverlap(t1, t2, t3, t4));
 		
@@ -135,10 +138,22 @@ public class RoomBookingHandler {
 		System.out.println(rbh.doOverlap(t2, t4, t3, t5)); // true
 		
 		System.out.println(rbh.doOverlap(t1, t2, t1, t2)); // true
-		
+		Random r = new Random();
+			for (int i = 0; i < 100; i++) {
+				try {
+					System.out.println(i
+							+ ") "
+							+ rbh.doOverlap(r.nextLong() % 200000,
+									r.nextLong() % 200000,
+									r.nextLong() % 200000,
+									r.nextLong() % 200000));
+
+				} catch (StartTimeIsLaterTanEndTimeException e) {
+					System.out.println("time wrong");
+				}
+			}
 		} catch (StartTimeIsLaterTanEndTimeException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} // false
+		}
 	}
 }
