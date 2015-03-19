@@ -87,7 +87,9 @@ public class YearCalendar implements TypeCalendar {
 		Calendar calendar_stop = new GregorianCalendar();
 		calendar_stop.setTimeInMillis(time_stop);
 		
+		calendar_temp.setTimeInMillis(calendar.getTimeInMillis());
 		for (int i = calendar_start.get(Calendar.MONTH); i <= calendar_stop.get(Calendar.MONTH); i++) {
+			System.out.println("month: " + i);
 			calendar_temp.set(Calendar.MONTH, i);
 			insert(calendar_temp.getTimeInMillis());
 		}
