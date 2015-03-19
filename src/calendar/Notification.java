@@ -9,7 +9,7 @@ import java.util.Date;
  * or if another user declines an invitation to a calendar entry the (first) user have made.
  *
  */
-public class Notification {
+public class Notification implements Comparable<Notification>{
 	private final long notificationID;
 	private final String description;
 	private final boolean isOpened;
@@ -91,5 +91,15 @@ public class Notification {
 			return false;
 		}
 		return true;
+	}
+	@Override
+	public int compareTo(Notification o) {
+		if(o == null){
+			return 1;
+		}else if(this.equals(o)){
+			return 0;
+		}else{
+			return this.notificationID > o.notificationID ? 1 : -1;
+		}
 	}
 }

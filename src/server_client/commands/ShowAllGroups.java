@@ -56,6 +56,7 @@ public class ShowAllGroups extends Command {
 			if(g.isEmpty()){
 				sb.append("has no Users \n");
 			}else{
+				sb.append("\n");
 				for(User u : g.getUsers()){
 					sb.append("-->");
 					sb.append(u.toString());

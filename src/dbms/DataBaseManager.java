@@ -1131,7 +1131,7 @@ public class DataBaseManager implements Closeable {
 	
 	public synchronized  HashSet<String> getAllGroupnames(){
 		try {
-			PreparedStatement getGroupnames_stm = connection.prepareStatement("SELECT * FROM Group; ");
+			PreparedStatement getGroupnames_stm = connection.prepareStatement("SELECT * FROM Gruppe; ");
 			
 			ResultSet rset = getGroupnames_stm.executeQuery();
 			
