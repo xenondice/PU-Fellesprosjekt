@@ -49,7 +49,7 @@ public class User {
 		builder.append(", name=");
 		builder.append(name);
 		builder.append(", password=");
-		builder.append(password);
+		builder.append("****");
 		builder.append(", email=");
 		builder.append(email);
 		builder.append("]");
