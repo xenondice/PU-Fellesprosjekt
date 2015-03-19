@@ -69,7 +69,7 @@ public class Help extends Command {
 		
 		Command command = (Command) arguments.get(0);
 		
-		String message = command.getDescription() + "\n";
+		String message = (command.getDescription() == null) ? "No description!\n" : command.getDescription() + "\n";
 		
 		for (Argument[] syntaxes : command.getArguments()) {
 			message += "Syntax: " + command.get();

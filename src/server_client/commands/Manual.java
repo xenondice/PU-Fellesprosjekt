@@ -48,8 +48,8 @@ public class Manual extends Command {
 		
 		String message = ""
 				+ "Manual for " + command.get() + ":\n"
-				+ "\n"
-				+ command.getManual() + "\n";
+				+ "\n";
+		message += (command.getManual() == null) ? "No manual!\n" : command.getManual() + "\n";
 		
 		for (Argument[] syntaxes : command.getArguments()) {
 			message += "\n"
@@ -59,14 +59,15 @@ public class Manual extends Command {
 		}
 		
 		int i = 0;
-		for (String example : command.getExamples()) {
-			i++;
-			message += ""
-					+ "\n"
-					+ "\n"
-					+ "Example " + i + ":\n"
-					+ example;
-		}
+		if (command.getExamples() != null)
+			for (String example : command.getExamples()) {
+				i++;
+				message += ""
+						+ "\n"
+						+ "\n"
+						+ "Example " + i + ":\n"
+						+ example;
+			}
 		
 		return message;
 	}

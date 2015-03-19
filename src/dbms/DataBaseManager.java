@@ -72,7 +72,7 @@ public class DataBaseManager implements Closeable {
 	public DataBaseManager() {
 		try {
 			String[] ci = readConnectionInformation();
-			if (ci.equals(null)) throw new IllegalArgumentException("Something is wrong with your db_id file and a connection can't be established");
+			if (ci == null) throw new IllegalArgumentException("Something is wrong with your db_id file and a connection can't be established");
 			Class.forName("com.mysql.jdbc.Driver");
 			connection = DriverManager.getConnection(ci[0], ci[1], ci[2]);
 		} catch (SQLException | ClassNotFoundException e) {
