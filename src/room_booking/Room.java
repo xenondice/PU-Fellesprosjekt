@@ -61,4 +61,15 @@ public class Room {
 		return true;
 	}
 
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("Room [room_id=");
+		builder.append(room_id);
+		builder.append(", size=");
+		builder.append(size);
+		builder.append("]");
+		return builder.toString();
+	}
+
 }

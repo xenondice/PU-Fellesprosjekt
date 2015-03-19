@@ -6,12 +6,13 @@ import java.net.Socket;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.mysql.jdbc.UpdatableResultSet;
-
 import room_booking.Room;
 import room_booking.RoomBookingHandler;
+import room_booking.RoomReservation;
 import security.LoginHandler;
-import calendar.Calendar;
+import user.Group;
+import user.User;
+import user.UserBuilder;
 import calendar.CalendarEntry;
 import calendar.CalendarEntryBuilder;
 import calendar.Invitation;
@@ -33,9 +34,6 @@ import exceptions.UserDoesNotExistException;
 import exceptions.UserInGroupDoesNotExistsException;
 import exceptions.UsernameAlreadyExistsException;
 import exceptions.WrongPasswordException;
-import user.Group;
-import user.User;
-import user.UserBuilder;
 
 public class RequestHandler{		
 	// TODO add functions for 'get all rooms' 'get all events' 'get all notifications' (for user) etc.
@@ -423,7 +421,7 @@ public class RequestHandler{
 		HashSet<CalendarEntry> allEntries = dbm.getAllEntriesForUser(username);
 		CalendarEntry new_entry = dbm.getEntry(entry_id);
 		for(CalendarEntry e : allEntries){
-			if(doOverlap(new_entry, e)){
+			if(e.getEntryID() != new_entry.getEntryID() && doOverlap(new_entry, e)){
 				notify(username, "the entries nr"+entry_id+" and "+e.getEntryID()+" overlap! Maybe you want to do something about it ;)");
 			}
 		}
@@ -876,6 +874,32 @@ public class RequestHandler{
 		validate(requestor);
 		
 		return dbm.getAllEntriesForUser(requestor);
+	}
+	
+	/**
+	 * 
+	 * @return a hashset of all existing rooms
+	 */
+	public static HashSet<Room> getAllRooms(){
+		return dbm.getAllRooms();
+	}
+	
+	/**
+	 * 
+	 * @param roomID
+	 * @return a hashSet with all the reservations for the given room
+	 */
+	public static HashSet<RoomReservation> getAllReservationsForRoom(String roomID){
+		HashSet<RoomReservation> res = new HashSet<RoomReservation>(5);
+		HashSet<RoomReservation> allres = dbm.getAllRoomReservations();
+		if(allres != null){
+			for(RoomReservation rr : allres){
+				if(rr.getRoomID().equals(roomID)){
+					res.add(rr);
+				}
+			}
+		}
+		return res;
 	}
 	
 	/**
