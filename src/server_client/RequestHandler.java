@@ -36,12 +36,9 @@ import exceptions.UserInGroupDoesNotExistsException;
 import exceptions.UsernameAlreadyExistsException;
 import exceptions.WrongPasswordException;
 
-public class RequestHandler{		
-	// TODO add functions for 'show all users'
+public class RequestHandler{
 	
 	// TODO look at todos in ShowNotifications class!
-	
-	// TODO should not be able to use commands when not logged in!
 	
 	
 	private static DataBaseManager dbm;
@@ -953,6 +950,15 @@ public class RequestHandler{
 	 */
 	public static HashSet<Room> getAllRooms(){
 		return dbm.getAllRooms();
+	}
+	
+	public static HashSet<String> getAllUsernames(){
+		HashSet<User> users = dbm.getAllUsers();
+		HashSet<String> names = new HashSet<>();
+		for(User u : users){
+			names.add(u.getUsername());
+		}
+		return names;
 	}
 	
 	/**
