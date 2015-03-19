@@ -3,6 +3,7 @@ package server_client;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -884,12 +885,17 @@ public class RequestHandler{
 	 * @return
 	 * @throws SessionExpiredException
 	 * @throws EntryDoesNotExistException
+	 * @throws UserDoesNotExistException 
 	 */
-	public static CalendarEntry getEntry(String requestor, long entry_id) throws SessionExpiredException, EntryDoesNotExistException {
+	public static CalendarEntry getEntry(String requestor, long entry_id) throws SessionExpiredException, EntryDoesNotExistException, UserDoesNotExistException {
 		
 		validate(requestor);
+		if(dbm.isAllowedToSee(requestor, entry_id)){
+			return dbm.getEntry(entry_id);
+		}else{
+			return null;
+		}
 		
-		return dbm.getEntry(entry_id);
 	}
 	
 	/**
@@ -930,6 +936,36 @@ public class RequestHandler{
 			}
 		}
 		return res;
+	}
+	
+	/**
+	 * @param startTime
+	 * @param endTime
+	 * @param minsize
+	 * @return all free rooms for the given timeperiod and the room is bigger or equal <i>minsize</i>.
+	 * @throws StartTimeIsLaterTanEndTimeException
+	 */
+	public static ArrayList<Room> getAllFreeRooms(long startTime, long endTime, int minsize) throws StartTimeIsLaterTanEndTimeException{
+		if(startTime > endTime){throw new StartTimeIsLaterTanEndTimeException();}
+		HashSet<Room> allrooms = RequestHandler.getAllRooms();
+		ArrayList<Room> freerooms = new ArrayList<>();
+		for(Room r : allrooms){
+			if(r.getSize() < minsize){continue;}
+			boolean isFree = true;
+			HashSet<RoomReservation> all_res_for_room = RequestHandler.getAllReservationsForRoom(r.getRoom_id());
+			for(RoomReservation rres : all_res_for_room){
+				if(rres.getStartTime() > rres.getEndTime()){continue;} // check if start and endtime of the reservation are correct.
+				else if(isFree){ // if no overlapping reservation is found yet
+					boolean overlap = ! (rres.getEndTime() < startTime || rres.getStartTime() > endTime);
+					// TODO outsource the overlap check and fuse with doOverlap(entry, entry)
+					if(overlap){
+						isFree = false;
+					}
+				}
+			}
+			if(isFree){freerooms.add(r);}
+		}
+		return freerooms;
 	}
 	
 	public static Group getGroup(String groupname) throws GroupDoesNotExistException{

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
+import calendar.CalendarEntry;
 import exceptions.EntryDoesNotExistException;
 import exceptions.ForcedReturnException;
 import exceptions.GroupAlreadyExistsException;
@@ -61,9 +62,13 @@ public class ShowEntry extends Command {
 		String requestor = handler.getUsername();
 		long entry_id = (long) arguments.get(0);
 		try {
-			return RequestHandler.getEntry(requestor, entry_id).toString();
+			CalendarEntry e =  RequestHandler.getEntry(requestor, entry_id);
+			return e != null ? e.toString() : "This entry does not exist or you can not see it.";
 		} catch (EntryDoesNotExistException e) {
 			return "This entry does not exist or you can not see it.";
+		} catch (UserDoesNotExistException e) {
+			e.printStackTrace();
+			return "You are either not logged in or your username is not registert.";
 		}
 	}
 

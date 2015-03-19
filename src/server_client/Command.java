@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
+import server_client.commands.AddGroupToGroup;
 import server_client.commands.AddUserToGroup;
 import server_client.commands.AnswerInvitation;
 import server_client.commands.CreateEntry;
@@ -12,6 +13,7 @@ import server_client.commands.CreateUser;
 import server_client.commands.DeleteEntry;
 import server_client.commands.EditEntry;
 import server_client.commands.EditUser;
+import server_client.commands.ShowAvailableRooms;
 import server_client.commands.Help;
 import server_client.commands.InviteGroup;
 import server_client.commands.InviteUser;
@@ -28,6 +30,7 @@ import server_client.commands.ShowAllRooms;
 import server_client.commands.ShowCalendar;
 import server_client.commands.ShowEntry;
 import server_client.commands.ShowGroup;
+import server_client.commands.ShowNotification;
 import server_client.commands.ShowNotifications;
 import exceptions.EntryDoesNotExistException;
 import exceptions.ForcedReturnException;
@@ -58,6 +61,7 @@ public abstract class Command {
 		
 		// Additional
 		new AddUserToGroup(),
+		new AddGroupToGroup(),
 		new AnswerInvitation(),
 		new CreateEntry(),
 		new CreateGroup(),
@@ -72,10 +76,12 @@ public abstract class Command {
 		new RemoveUserFromGroup(),
 		new ShowCalendar(),
 		new ShowNotifications(),
+		new ShowNotification(),
 		new ShowAllReservations(),
 		new ShowAllRooms(),
 		new ShowEntry(),
 		new ShowGroup(),
+		new ShowAvailableRooms(),
 	};
 	
 	/**

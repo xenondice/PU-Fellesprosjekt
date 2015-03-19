@@ -1,66 +1,70 @@
 package server_client.commands;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
+import server_client.Argument;
+import server_client.Argument.ArgumentType;
+import server_client.Command;
+import server_client.RequestHandler;
+import server_client.ServerClientHandler;
+import calendar.Notification;
 import exceptions.EntryDoesNotExistException;
 import exceptions.ForcedReturnException;
-import exceptions.GroupAlreadyExistsException;
-import exceptions.GroupDoesNotExistException;
-import exceptions.HasNotTheRightsException;
-import exceptions.InvitationDoesNotExistException;
 import exceptions.SessionExpiredException;
 import exceptions.UserDoesNotExistException;
-import exceptions.UserInGroupDoesNotExistsException;
-import exceptions.UsernameAlreadyExistsException;
-import server_client.Argument;
-import server_client.Command;
-import server_client.ServerClientHandler;
 
 public class ShowNotification extends Command {
 
 	@Override
 	public String get() {
-		// TODO Auto-generated method stub
-		return null;
+		return "show-notification";
 	}
 
 	@Override
 	public String getDescription() {
-		// TODO Auto-generated method stub
-		return null;
+		return "shows the notification with the spezified id.";
 	}
 
 	@Override
 	public String getManual() {
-		// TODO Auto-generated method stub
-		return null;
+		return getDescription();
 	}
 
 	@Override
 	public Argument[][] getArguments() {
-		// TODO Auto-generated method stub
-		return null;
+		return new Argument[][] {
+				{
+					new Argument(false, "the notification ID", ArgumentType.long_number)
+				}
+				
+		};
 	}
 
 	@Override
 	public String[] getExamples() {
-		// TODO Auto-generated method stub
-		return null;
+		return new String[] {get()+" 7"};
 	}
 
 	@Override
 	public String run(ServerClientHandler handler, List<Object> arguments,
 			int sytax) throws IOException, TimeoutException,
 			InterruptedException, ForcedReturnException,
-			SessionExpiredException, HasNotTheRightsException,
-			UserDoesNotExistException, GroupDoesNotExistException,
-			EntryDoesNotExistException, GroupAlreadyExistsException,
-			UserInGroupDoesNotExistsException, UsernameAlreadyExistsException,
-			InvitationDoesNotExistException {
-		// TODO Auto-generated method stub
-		return null;
+			SessionExpiredException, UserDoesNotExistException {
+		
+		String requestor = handler.getUsername();
+		long notification_id = (long) arguments.get(0);
+		HashSet<Notification> notifics;
+		
+		notifics = RequestHandler.getNotifications(requestor);
+		for (Notification n : notifics) {
+			if (n.getNotificationID() == notification_id) {
+				return n.toString();
+			}
+		}
+		return "this notification with id "+notification_id+" does not exist or you can not see it.";
+		
 	}
-
 }

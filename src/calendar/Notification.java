@@ -50,26 +50,30 @@ public class Notification {
 	
 	@Override
 	public String toString() {
-		String str = "(" + new Date(time) + ") ID=" + notificationID +"; message: "+ description;
-		
-		if (!isOpened) str += " *";
-		
-		return str;
+		StringBuilder builder = new StringBuilder();
+		builder.append("Notification [notificationID=");
+		builder.append(notificationID);
+		builder.append(", description=");
+		builder.append(description);
+		builder.append(", isOpened=");
+		builder.append(isOpened);
+		builder.append(", time=");
+		builder.append(time);
+		builder.append(", username=");
+		builder.append(username);
+		builder.append("]");
+		return builder.toString();
 	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result
-				+ ((description == null) ? 0 : description.hashCode());
-		result = prime * result + (isOpened ? 1231 : 1237);
-		result = prime * result
 				+ (int) (notificationID ^ (notificationID >>> 32));
-		result = prime * result + (int) (time ^ (time >>> 32));
-		result = prime * result
-				+ ((username == null) ? 0 : username.hashCode());
 		return result;
 	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -82,27 +86,7 @@ public class Notification {
 			return false;
 		}
 		Notification other = (Notification) obj;
-		if (description == null) {
-			if (other.description != null) {
-				return false;
-			}
-		} else if (!description.equals(other.description)) {
-			return false;
-		}
-		if (isOpened != other.isOpened) {
-			return false;
-		}
 		if (notificationID != other.notificationID) {
-			return false;
-		}
-		if (time != other.time) {
-			return false;
-		}
-		if (username == null) {
-			if (other.username != null) {
-				return false;
-			}
-		} else if (!username.equals(other.username)) {
 			return false;
 		}
 		return true;
