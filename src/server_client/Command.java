@@ -27,6 +27,7 @@ import server_client.commands.ShowAllReservations;
 import server_client.commands.ShowAllRooms;
 import server_client.commands.ShowCalendar;
 import server_client.commands.ShowEntry;
+import server_client.commands.ShowGroup;
 import server_client.commands.ShowNotifications;
 import exceptions.EntryDoesNotExistException;
 import exceptions.ForcedReturnException;
@@ -74,6 +75,7 @@ public abstract class Command {
 		new ShowAllReservations(),
 		new ShowAllRooms(),
 		new ShowEntry(),
+		new ShowGroup(),
 	};
 	
 	/**

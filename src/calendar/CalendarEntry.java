@@ -42,9 +42,9 @@ public class CalendarEntry {
 		builder.append("CalendarEntry [entryID=");
 		builder.append(entryID);
 		builder.append(", startTime=");
-		builder.append(new SimpleDateFormat("dd/MM/yy HH:mm").format(startTime));
+		builder.append(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(startTime));
 		builder.append(", endTime=");
-		builder.append(new SimpleDateFormat("dd/MM/yy HH:mm").format(endTime));
+		builder.append(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(endTime));
 		builder.append(", location=");
 		builder.append(location);
 		builder.append(", description=");

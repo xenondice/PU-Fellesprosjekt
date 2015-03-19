@@ -35,7 +35,7 @@ public class ShowCalendar extends Command {
 
 	@Override
 	public String getDescription() {
-		return "Get a ASCII calendar over your current activities. Enter either \"week\", \"day\", \"month\", \"year\" or \"agenda\".";
+		return "Get a ASCII calendar over your current activities. Enter either \"week\", \"day\", \"month\" or \"year\".";
 	}
 
 	@Override

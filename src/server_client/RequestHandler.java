@@ -552,6 +552,7 @@ public class RequestHandler{
 			rbh.releaseRoomEntry(old_entry.getRoomID(), entry_id);
 				
 			// add new reservation
+			// TODO what if no new room is spezified (new room = null) etc?
 			try {
 				rbh.bookRoom(new_entry.getRoomID(), new_entry.getStartTime(), new_entry.getEndTime(), entry_id);
 			} catch (StartTimeIsLaterTanEndTimeException e) {
@@ -900,6 +901,10 @@ public class RequestHandler{
 			}
 		}
 		return res;
+	}
+	
+	public static Group getGroup(String groupname) throws GroupDoesNotExistException{
+		return dbm.getGroup(groupname);
 	}
 	
 	/**

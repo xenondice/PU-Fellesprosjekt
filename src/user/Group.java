@@ -1,6 +1,8 @@
 
 package user;
 
+import java.util.Arrays;
+
 /**
  * Represents a Group in the system
  * @author Marie
@@ -37,5 +39,18 @@ public class Group {
 	 */
 	public String getName() {
 		return name;
+	}
+
+	@Override
+	public String toString() {
+		final int maxLen = 100;
+		StringBuilder builder = new StringBuilder();
+		builder.append("Group ");
+		builder.append("name=");
+		builder.append(name);
+		builder.append("users = ");
+		builder.append(users != null ? Arrays.asList(users).subList(0,	Math.min(users.length, maxLen)) : null);
+		builder.append("]");
+		return builder.toString();
 	}
 }

@@ -78,11 +78,16 @@ public class MonthCalendar implements TypeCalendar {
 		time_start = time_start < first_time ? first_time : time_start;
 		time_stop = time_stop > last_time ? last_time : time_stop;
 		
-		long difference = time_stop - time_start;
-		long days = difference/MILLI_IN_DAY + 1;
+		Calendar calendar_start = new GregorianCalendar();
+		calendar_start.setTimeInMillis(time_start);
+		Calendar calendar_stop = new GregorianCalendar();
+		calendar_stop.setTimeInMillis(time_stop);
 		
-		for (int i = 0; i < days; i++) {
-			insert(time_start + i*MILLI_IN_DAY);
+		calendar_temp.setTimeInMillis(calendar.getTimeInMillis());
+		for (int i = calendar_start.get(Calendar.DAY_OF_MONTH); i <= calendar_stop.get(Calendar.DAY_OF_MONTH); i++) {
+			System.out.println("day: " + i);
+			calendar_temp.set(Calendar.DAY_OF_MONTH, i);
+			insert(calendar_temp.getTimeInMillis());
 		}
 	}
 	
