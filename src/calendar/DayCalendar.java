@@ -66,7 +66,7 @@ public class DayCalendar implements TypeCalendar {
 				+ "+-----+------------+---+\n";
 
 		for (int hour = 0; hour < HEIGHT; hour++) {
-			message += "|"+(hour<10?"0"+(hour+1):(hour+1))+":00| "
+			message += "|"+(hour<9?"0"+(hour+1):(hour+1))+":00| "
 					+ (isMarked(hour) ? "**********" : "          ");
 			message += " | "+(isNow(hour)?"X":" ")+" |\n";
 		}
