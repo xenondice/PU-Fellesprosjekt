@@ -22,12 +22,12 @@ public class ShowAvailableRooms extends Command{
 
 	@Override
 	public String get() {
-		return "show-aviable-rooms";
+		return "show-available-rooms";
 	}
 
 	@Override
 	public String getDescription() {
-		return "shows all aviable rooms in the given timespan";
+		return "shows all available rooms in the given timespan";
 	}
 
 	@Override
