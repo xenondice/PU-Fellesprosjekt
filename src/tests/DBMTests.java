@@ -43,10 +43,9 @@ public class DBMTests {
 	
 	private DataBaseManager dbm;
 	private Connection connection;
-	User u = new User("lukasap", "Lukas Pestalozzi", "1234", "ABC", "lukasap@stud.ntnu.no");
+	User u = new User("lukasap", "Lukas Pestalozzi", "1234", "lukasap@stud.ntnu.no");
 	Room r = new Room("K5-208", 8);
 	CalendarEntry e;
-	Alarm a = new Alarm(100, "lukasap", 1);
 	Invitation inv = new Invitation(true, true, "lukasap", 1);
 
 	@Before
@@ -55,7 +54,6 @@ public class DBMTests {
 		
 		// inserts standarddata into DB
 		try {
-			dbm.addSQL("addtables.sql");
 			dbm.addSQL("testSetup.sql");
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -63,7 +61,7 @@ public class DBMTests {
 		
 		dbm = new DataBaseManager(); // refresh the connection
 		Class.forName("com.mysql.jdbc.Driver");
-		String[] ci= {"jdbc:mysql://mysql.stud.ntnu.no/mariessa_pu", "mariessa_pu","fellesprosjekt" };
+		String[] ci= {"jdbc:mysql://mysql.stud.ntnu.no/test_pu", "mariessa_pu","fellesprosjekt" };
 		connection = DriverManager.getConnection(ci[0], ci[1], ci[2]);
 
 		e = new CalendarEntry(getlastEntryID(), 1000000, 2000000, "Gloeshaugen", "Database fellesprosjekt", "K5-208", "lukasap");
@@ -87,7 +85,7 @@ public class DBMTests {
 	
 	public void testAddUser() {
 		// remove user if it is there
-		User testU = new User("testU", "as", "sdfsad", "asdf", "fsda");
+		User testU = new User("testU", "as", "sdfsad", "fsda");
 		try {
 			connection.createStatement().executeUpdate("DELETE FROM User WHERE username = '"+testU.getUsername()+"';");
 		} catch (SQLException e1) {
@@ -118,7 +116,7 @@ public class DBMTests {
 		
 		// check what happens with username = null
 		try {
-			assertTrue(dbm.addUser(new User(null, "", "", "", "")) == false);
+			assertTrue(dbm.addUser(new User(null, "", "", "")) == false);
 			
 		} catch (Exception e) {
 			fail("exception thrown");
@@ -336,6 +334,10 @@ public class DBMTests {
 			
 		} catch (UserDoesNotExistException e) {
 			assertTrue(true);
+		} catch (RoomDoesNotExistException e) {
+			
+			e.printStackTrace();
+			fail();
 		}
 		
 		// check what happens with username = null (should throw UserDoesNotExistException)
@@ -343,6 +345,8 @@ public class DBMTests {
 			assertTrue(dbm.addEntry(new CalendarEntry(1, 1000, 100000, "tree", "happy tree friends", null, null)) > 0);
 			
 		} catch (UserDoesNotExistException e) {
+			assertTrue(true);
+		} catch (RoomDoesNotExistException e) {
 			assertTrue(true);
 		}
 	}
@@ -362,9 +366,9 @@ public class DBMTests {
 			fail("WTF?");
 		}
 		// make some users and add them to DB
-		User u1 = new User("u1", "", "", "", "");
-		User u2 = new User("u2", "", "", "", "");
-		User u3 = new User("u3", "", "", "", "");
+		User u1 = new User("u1", "", "", "");
+		User u2 = new User("u2", "", "", "");
+		User u3 = new User("u3", "", "", "");
 		User[] userArray = { u1, u2, u3 };
 		for(User user : userArray){
 			try {
@@ -486,7 +490,7 @@ public class DBMTests {
 	
 	public void testAddNotification() {
 		
-		Notification n = new Notification(1, "nndnasfghjhtrd", false, 1000, "lukasap", 1);
+		Notification n = new Notification(1, "nndnasfghjhtrd", false, 1000, "lukasap");
 
 		// check adding a entry correctly
 		try {
@@ -498,17 +502,8 @@ public class DBMTests {
 		}
 
 		try {
-			dbm.addNotification(new Notification(10, "awd", false, 12930, "", 1)); // userDoesnotexist
+			dbm.addNotification(new Notification(10, "awd", false, 12930, "")); // userDoesnotexist
 		} catch (UserDoesNotExistException e) {
-			assertTrue(true);
-		}  catch (Exception e){
-			e.printStackTrace();
-			fail();
-		}
-
-		try {
-			dbm.addNotification(new Notification(10, "awd", false, 12930, "lukasap", 1000000)); // EntryDoesnotexist
-		} catch (EntryDoesNotExistException e) {
 			assertTrue(true);
 		}  catch (Exception e){
 			e.printStackTrace();
@@ -519,8 +514,8 @@ public class DBMTests {
 	@Test
 	
 	public void testIsAllowedToSee_Going() {
-		User u1 = new User("u1", "u1", "u1", "u1", "u1");
-		User u2 = new User("admin", "admin", "admin", "admin", "admin");
+		User u1 = new User("u1", "u1", "u1", "u1");
+		User u2 = new User("admin", "admin", "admin", "admin");
 		long entryID = 0;
 		try {
 			dbm.addUser(u1);
@@ -529,7 +524,7 @@ public class DBMTests {
 			entryID = getlastEntryID();
 			dbm.addInvitation(new Invitation(false, false, u1.getUsername(), entryID));
 			
-		} catch (UsernameAlreadyExistsException | UserDoesNotExistException | EntryDoesNotExistException | InvitationAlreadyExistsException e1) {
+		} catch (UsernameAlreadyExistsException | UserDoesNotExistException | EntryDoesNotExistException | InvitationAlreadyExistsException | RoomDoesNotExistException e1) {
 			
 			e1.printStackTrace();
 			fail("WTF");
@@ -552,8 +547,8 @@ public class DBMTests {
 	@Test@Ignore
 	
 	public void testIsAllowedToEdit_testMakeAdmin() {
-		User u1 = new User("u1", "u1", "u1", "u1", "u1");
-		User u2 = new User("admin", "admin", "admin", "admin", "admin");
+		User u1 = new User("u1", "u1", "u1", "u1");
+		User u2 = new User("admin", "admin", "admin", "admin");
 		
 		try {
 			dbm.addUser(u1);
@@ -608,9 +603,9 @@ public class DBMTests {
 	@Test@Ignore
 	
 	public void testIsMemberOf() {
-		User u1 = new User("u1", "u1", "u1", "u1", "u1");
-		User u2 = new User("admin", "admin", "admin", "admin", "admin");
-		User u3 = new User("u3", "u3", "u3", "u3", "u3");
+		User u1 = new User("u1", "u1", "u1", "u1");
+		User u2 = new User("admin", "admin", "admin", "admin");
+		User u3 = new User("u3", "u3", "u3", "u3");
 		
 		try {
 			dbm.addUser(u1);
@@ -698,7 +693,7 @@ public class DBMTests {
 	@Test@Ignore
 	
 	public void testGetUser() {
-		User u1 = new User("u1", "asdf", "ssdf", "123", "asd@sf");
+		User u1 = new User("u1", "asdf", "ssdf", "asd@sf");
 		try {
 			dbm.addUser(u1);
 		} catch (Exception e) {
@@ -712,7 +707,6 @@ public class DBMTests {
 			assertTrue(gotUser.getUsername().equals(u1.getUsername()));
 			assertTrue(gotUser.getName().equals(u1.getName()));
 			assertTrue(gotUser.getPassword().equals(u1.getPassword()));
-			assertTrue(gotUser.getSalt().equals(u1.getSalt()));
 		} catch (Exception e) {
 			e.printStackTrace();
 			fail("exception thrown");
@@ -748,9 +742,9 @@ public class DBMTests {
 	
 	public void testGetGroup() {
 		// make some users and add them to DB
-		User u1 = new User("u1", "", "", "", "");
-		User u2 = new User("u2", "", "", "", "");
-		User u3 = new User("u3", "", "", "", "");
+		User u1 = new User("u1", "", "", "");
+		User u2 = new User("u2", "", "", "");
+		User u3 = new User("u3", "", "", "");
 		User[] userArray = { u1, u2, u3 };
 		for (User user : userArray) {
 			try {
@@ -802,8 +796,8 @@ public class DBMTests {
 	@Test@Ignore
 	
 	public void testEditNotification() {
-		Notification n1 = new Notification(1, "sadffs", false, 10000, "lukasap", 1);
-		Notification n1_edited = new Notification(1, "kjgidf", true, 50000, "lukasap", 1);
+		Notification n1 = new Notification(1, "sadffs", false, 10000, "lukasap");
+		Notification n1_edited = new Notification(1, "kjgidf", true, 50000, "lukasap");
 		
 		try {
 			dbm.addNotification(n1);
@@ -819,8 +813,8 @@ public class DBMTests {
 	@Test@Ignore
 	
 	public void testEditUser() {
-		User u1 = new User("u1", "lol", "asdf", "gh", "tzui");
-		User u_edit = new User("u1", "aklsd", "ert", "qw", "sdf");
+		User u1 = new User("u1", "lol", "asdf", "tzui");
+		User u_edit = new User("u1", "aklsd", "ert", "sdf");
 		
 			try {
 				dbm.addUser(u1);
@@ -873,7 +867,7 @@ public class DBMTests {
 	@Test@Ignore
 	
 	public void testAllowToSee() {
-		User u1 = new User("kuno", "asd", "sdfasdf", "", "");
+		User u1 = new User("kuno", "asd", "sdfasdf", "");
 		try {
 			dbm.addUser(u1);
 			dbm.addInvitation(new Invitation(false, false, u1.getUsername(), 1));
@@ -892,9 +886,9 @@ public class DBMTests {
 	public void testAllowToSeeGroup() {
 		try {
 			// make some users and add them to DB
-			User u1 = new User("u1", "", "", "", "");
-			User u2 = new User("u2", "", "", "", "");
-			User u3 = new User("u3", "", "", "", "");
+			User u1 = new User("u1", "", "", "");
+			User u2 = new User("u2", "", "", "");
+			User u3 = new User("u3", "", "", "");
 			User[] userArray = { u1, u2, u3 };
 			for (User user : userArray) {
 				dbm.addUser(user);
@@ -922,7 +916,7 @@ public class DBMTests {
 	@Test@Ignore
 	
 	public void testHideEvent() {
-		User u1 = new User("kuno", "asd", "sdfasdf", "", "");
+		User u1 = new User("kuno", "asd", "sdfasdf", "");
 		
 		try {
 			dbm.addUser(u1);
@@ -944,9 +938,9 @@ public class DBMTests {
 	public void testHideEventGroup() {
 		try {
 			// make some users and add them to DB
-			User u1 = new User("u1", "", "", "", "");
-			User u2 = new User("u2", "", "", "", "");
-			User u3 = new User("u3", "", "", "", "");
+			User u1 = new User("u1", "", "", "");
+			User u2 = new User("u2", "", "", "");
+			User u3 = new User("u3", "", "", "");
 			User[] userArray = { u1, u2, u3 };
 			for (User user : userArray) {
 				dbm.addUser(user);
@@ -979,7 +973,7 @@ public class DBMTests {
 	@Test@Ignore
 	
 	public void testGoing_notGoing() {
-		User u1 = new User("kuno", "asd", "sdfasdf", "", "");
+		User u1 = new User("kuno", "asd", "sdfasdf", "");
 		
 		try {
 			dbm.addUser(u1);
@@ -1018,7 +1012,7 @@ public class DBMTests {
 	@Test@Ignore
 	
 	public void testRevokeAdmin() {
-		User u1 = new User("hsdf", "", "", "", "");
+		User u1 = new User("hsdf", "", "", "");
 		try {
 			dbm.addUser(u1);
 			assertTrue(dbm.isAdmin(u1.getUsername(), 1) == false);
@@ -1036,7 +1030,7 @@ public class DBMTests {
 	@Test@Ignore
 	
 	public void testDeleteNotification() {
-		Notification n1 = new Notification(1, "sadffs", false, 10000, "lukasap", 1);
+		Notification n1 = new Notification(1, "sadffs", false, 10000, "lukasap");
 		
 		try {
 			dbm.addNotification(n1);
@@ -1071,9 +1065,9 @@ public class DBMTests {
 	public void testRemoveUserFromGroup() {
 		try {
 			// make some users and add them to DB
-			User u1 = new User("u1", "", "", "", "");
-			User u2 = new User("u2", "", "", "", "");
-			User u3 = new User("u3", "", "", "", "");
+			User u1 = new User("u1", "", "", "");
+			User u2 = new User("u2", "", "", "");
+			User u3 = new User("u3", "", "", "");
 			User[] userArray = { u1, u2, u3 };
 			for (User user : userArray) {
 				dbm.addUser(user);
@@ -1100,9 +1094,9 @@ public class DBMTests {
 	public void testDeleteGroup() {
 		try {
 			// make some users and add them to DB
-			User u1 = new User("u1", "", "", "", "");
-			User u2 = new User("u2", "", "", "", "");
-			User u3 = new User("u3", "", "", "", "");
+			User u1 = new User("u1", "", "", "");
+			User u2 = new User("u2", "", "", "");
+			User u3 = new User("u3", "", "", "");
 			User[] userArray = { u1, u2, u3 };
 			for (User user : userArray) {
 				dbm.addUser(user);
