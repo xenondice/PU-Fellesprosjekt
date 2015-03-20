@@ -54,7 +54,6 @@ public class DBMTests {
 		
 		// inserts standarddata into DB
 		try {
-			dbm.addSQL("addtables.sql");
 			dbm.addSQL("testSetup.sql");
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -62,7 +61,7 @@ public class DBMTests {
 		
 		dbm = new DataBaseManager(); // refresh the connection
 		Class.forName("com.mysql.jdbc.Driver");
-		String[] ci= {"jdbc:mysql://mysql.stud.ntnu.no/mariessa_pu", "mariessa_pu","fellesprosjekt" };
+		String[] ci= {"jdbc:mysql://mysql.stud.ntnu.no/test_pu", "mariessa_pu","fellesprosjekt" };
 		connection = DriverManager.getConnection(ci[0], ci[1], ci[2]);
 
 		e = new CalendarEntry(getlastEntryID(), 1000000, 2000000, "Gloeshaugen", "Database fellesprosjekt", "K5-208", "lukasap");
