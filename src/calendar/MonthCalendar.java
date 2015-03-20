@@ -13,7 +13,6 @@ public class MonthCalendar implements TypeCalendar {
 	private final static int HEIGHT =			6;
 	private final static int WIDTH =			7;
 	private final static int LAYERS =			2;
-	private final static int MILLI_IN_DAY =		1000*60*60*24;
 	
 	private final static int LAYER_NOW =		0;
 	private final static int LAYER_MARK =		1;
@@ -41,54 +40,23 @@ public class MonthCalendar implements TypeCalendar {
 		Calendar calendar_insertion = new GregorianCalendar();
 		calendar_insertion.setTimeInMillis(time);
 		if (calendar_insertion.get(Calendar.YEAR) == calendar.get(Calendar.YEAR) && calendar_insertion.get(Calendar.MONTH) == calendar.get(Calendar.MONTH)) {
-			int x = GenericCalendar.weekStartAtMonday(calendar_insertion.get(GregorianCalendar.DAY_OF_WEEK)) - 1;
-			int y = calendar_insertion.get(GregorianCalendar.WEEK_OF_MONTH);
+			int day = calendar_insertion.get(Calendar.DAY_OF_MONTH) + GenericCalendar.getMonthStartDay(time) - 2;
+			int x = day % WIDTH;
+			int y = day / WIDTH;
 			grid[x][y][layer] = true;
 		}
 	}
 	
+	@Override
 	public void insert(long time) {
 		insert(time, LAYER_MARK);
 	}
 	
+	@Override
 	public void insert(long time_start, long time_stop) {
-		Calendar calendar_temp = new GregorianCalendar();
-		
-		calendar_temp.setTimeInMillis(calendar.getTimeInMillis());
-		calendar_temp.set(Calendar.DAY_OF_MONTH, calendar_temp.getActualMinimum(Calendar.DAY_OF_MONTH));
-		calendar_temp.set(Calendar.MILLISECOND, calendar_temp.getActualMinimum(Calendar.MILLISECOND));
-		calendar_temp.set(Calendar.SECOND, calendar_temp.getActualMinimum(Calendar.SECOND));
-		calendar_temp.set(Calendar.MINUTE, calendar_temp.getActualMinimum(Calendar.MINUTE));
-		calendar_temp.set(Calendar.HOUR_OF_DAY, calendar_temp.getActualMinimum(Calendar.HOUR_OF_DAY));
-		long first_time = calendar_temp.getTimeInMillis();
-		System.out.println(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(first_time));
-		
-		calendar_temp.setTimeInMillis(calendar.getTimeInMillis());
-		calendar_temp.set(Calendar.DAY_OF_MONTH, calendar_temp.getActualMaximum(Calendar.DAY_OF_MONTH));
-		calendar_temp.set(Calendar.MILLISECOND, calendar_temp.getActualMaximum(Calendar.MILLISECOND));
-		calendar_temp.set(Calendar.SECOND, calendar_temp.getActualMaximum(Calendar.SECOND));
-		calendar_temp.set(Calendar.MINUTE, calendar_temp.getActualMaximum(Calendar.MINUTE));
-		calendar_temp.set(Calendar.HOUR_OF_DAY, calendar_temp.getActualMaximum(Calendar.HOUR_OF_DAY));
-		long last_time = calendar_temp.getTimeInMillis();
-		System.out.println(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(last_time));
-		
-		if (time_start > time_stop) return;
-		else if (time_stop < first_time || time_start > last_time) return;
-		
-		time_start = time_start < first_time ? first_time : time_start;
-		time_stop = time_stop > last_time ? last_time : time_stop;
-		
-		Calendar calendar_start = new GregorianCalendar();
-		calendar_start.setTimeInMillis(time_start);
-		Calendar calendar_stop = new GregorianCalendar();
-		calendar_stop.setTimeInMillis(time_stop);
-		
-		calendar_temp.setTimeInMillis(calendar.getTimeInMillis());
-		for (int i = calendar_start.get(Calendar.DAY_OF_MONTH); i <= calendar_stop.get(Calendar.DAY_OF_MONTH); i++) {
-			System.out.println("day: " + i);
-			calendar_temp.set(Calendar.DAY_OF_MONTH, i);
-			insert(calendar_temp.getTimeInMillis());
-		}
+		long[] times = GenericCalendar.getTimesBetweenBounded(time_start, time_stop, calendar.getTimeInMillis(), Calendar.DAY_OF_MONTH);
+		for (long time : times)
+			insert(time);
 	}
 	
 	private boolean isNow(int week_day, int week_in_month) {

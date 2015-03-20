@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import calendar.CalendarEntry;
+import calendar.DayCalendar;
 import calendar.MonthCalendar;
+import calendar.WeekCalendar;
 import calendar.YearCalendar;
 import exceptions.EntryDoesNotExistException;
 import exceptions.ForcedReturnException;
@@ -82,15 +84,14 @@ public class ShowCalendar extends Command {
 		}
 		
 		HashSet<CalendarEntry> entries = RequestHandler.getAllEntriesForUser(handler.getUsername());
-		System.out.println(entries);
 		TypeCalendar cal;
 		
 		if (type.equals("month")) {
 			cal = new MonthCalendar(when);
 		} else if (type.equals("week")) {
-			return "TODO";
+			cal = new WeekCalendar(when);
 		} else if (type.equals("day")) {
-			return "TODO";
+			cal = new DayCalendar(when);
 		} else if (type.equals("year")) {
 			cal = new YearCalendar(when);
 		} else {
