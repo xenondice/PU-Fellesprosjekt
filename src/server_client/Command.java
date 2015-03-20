@@ -6,6 +6,7 @@ import java.util.concurrent.TimeoutException;
 
 import server_client.commands.AddGroupToGroup;
 import server_client.commands.AddUserToGroup;
+import server_client.commands.Agenda;
 import server_client.commands.AnswerInvitation;
 import server_client.commands.CreateEntry;
 import server_client.commands.CreateGroup;
@@ -90,6 +91,7 @@ public abstract class Command {
 		new ShowAllInvitedUsers(),
 		new DeleteNotification(),
 		new ShowAllUsers(),
+		new Agenda(),
 	};
 	
 	/**

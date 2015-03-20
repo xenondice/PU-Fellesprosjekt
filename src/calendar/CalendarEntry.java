@@ -39,21 +39,17 @@ public class CalendarEntry {
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("CalendarEntry [entryID=");
+		builder.append("ID: ");
 		builder.append(entryID);
-		builder.append(", startTime=");
+		builder.append(", (");
 		builder.append(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(startTime));
-		builder.append(", endTime=");
+		builder.append(" - ");
 		builder.append(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(endTime));
-		builder.append(", location=");
-		builder.append(location);
-		builder.append(", description=");
-		builder.append(description);
-		builder.append(", roomID=");
-		builder.append(roomID);
-		builder.append(", creator=");
-		builder.append(creator);
-		builder.append("]");
+		builder.append(")");
+		if (location != null && !location.isEmpty()) builder.append(" Takes place at: " + location + ",");
+		if (description != null && !description.isEmpty()) builder.append(" Description: " + description + ",");
+		if (roomID != null && !roomID.isEmpty()) builder.append(" Room: " + roomID + ",");
+		if (creator != null && !creator.isEmpty()) builder.append(" (Made by: " + creator + ")");
 		return builder.toString();
 	}
 	
