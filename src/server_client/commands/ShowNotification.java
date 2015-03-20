@@ -1,6 +1,7 @@
 package server_client.commands;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
@@ -13,6 +14,7 @@ import server_client.ServerClientHandler;
 import calendar.Notification;
 import exceptions.EntryDoesNotExistException;
 import exceptions.ForcedReturnException;
+import exceptions.NotificationDoesNotExistException;
 import exceptions.SessionExpiredException;
 import exceptions.UserDoesNotExistException;
 
@@ -61,10 +63,15 @@ public class ShowNotification extends Command {
 		notifics = RequestHandler.getNotifications(requestor);
 		for (Notification n : notifics) {
 			if (n.getNotificationID() == notification_id) {
-				return n.toString();
+				try {RequestHandler.markNotificationAsViewed(requestor, notification_id);
+				} catch (NotificationDoesNotExistException e) {}
+				return "("
+						+ new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(n.getTime())
+						+ ") "+(n.getDescription()==null?"No content!":n.getDescription());
 			}
 		}
-		return "this notification with id "+notification_id+" does not exist or you can not see it.";
+		
+		return "Notification with id "+notification_id+" does not exist or you can not see it.";
 		
 	}
 }

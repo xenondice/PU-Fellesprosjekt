@@ -1,7 +1,6 @@
 package calendar;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
 
 /**
  * A Notification appears if a user is added or removed from a group, 
@@ -52,17 +51,10 @@ public class Notification implements Comparable<Notification>{
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("Notification [notificationID=");
+		builder.append("ID: ");
 		builder.append(notificationID);
-		builder.append(", description=");
-		builder.append(description);
-		builder.append(", isOpened=");
-		builder.append(isOpened);
-		builder.append(", time=");
-		builder.append(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(time));
-		builder.append(", username=");
-		builder.append(username);
-		builder.append("]");
+		builder.append(", (" + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(time) + ")");
+		builder.append((isOpened?"":" (NEW)"));
 		return builder.toString();
 	}
 	

@@ -2,7 +2,6 @@
 package calendar;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
 /**
  * Represents an CalendarEntry in a Calendar
  * The class is immutable. That means no instance of this class can change any of its attributes.

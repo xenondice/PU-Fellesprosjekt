@@ -27,6 +27,7 @@ import exceptions.GroupDoesNotExistException;
 import exceptions.HasNotTheRightsException;
 import exceptions.InvitationAlreadyExistsException;
 import exceptions.InvitationDoesNotExistException;
+import exceptions.NotificationDoesNotExistException;
 import exceptions.RoomAlreadyBookedException;
 import exceptions.RoomDoesNotExistException;
 import exceptions.SessionExpiredException;
@@ -204,7 +205,18 @@ public class RequestHandler{
 		} catch (UserDoesNotExistException e) {
 			return false;
 		}
-
+	}
+	
+	public static boolean markNotificationAsViewed(String requestor, long notification_id) throws SessionExpiredException, NotificationDoesNotExistException {
+		
+		validate(requestor);
+		
+		NotificationBuilder nb = new NotificationBuilder();
+		nb.setOpened(true);
+		nb.setTime(-1);
+		nb.setNotifiationID(notification_id);
+		
+		return dbm.editNotification(nb.build());
 	}
 	
 	/**

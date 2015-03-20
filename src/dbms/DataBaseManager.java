@@ -30,8 +30,6 @@ import user.User;
 import user.UserBuilder;
 import calendar.Alarm;
 import calendar.AlarmBuilder;
-import calendar.Calendar;
-import calendar.CalendarBuilder;
 import calendar.CalendarEntry;
 import calendar.CalendarEntryBuilder;
 import calendar.Invitation;
@@ -1257,6 +1255,31 @@ public class DataBaseManager implements Closeable {
 		}
 	}
 	
+	public synchronized Notification getNotification(long notification_id) throws NotificationDoesNotExistException {
+		PreparedStatement getNotifications_stm;
+		try {
+			getNotifications_stm = connection.prepareStatement("SELECT * FROM Notification WHERE notificationID = ?;");
+			getNotifications_stm.setLong(1, notification_id);
+			ResultSet rset = getNotifications_stm.executeQuery();
+			
+			if (rset.next()) {
+				NotificationBuilder nb = new NotificationBuilder();
+				nb.setDescription(rset.getString("description"));
+				nb.setNotifiationID(rset.getLong("notificationID"));
+				nb.setOpened(rset.getBoolean("isOpened"));
+				nb.setTime(rset.getTimestamp("time").getTime());
+				nb.setUsername(rset.getString("username"));
+				
+				if(nb.getTime() <= 0){nb.setTime(System.currentTimeMillis());}
+				return nb.build();
+			}
+			throw new NotificationDoesNotExistException(notification_id);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
 	public synchronized  HashSet<RoomReservation> getAllRoomReservations(){
 
 		try {
@@ -1846,13 +1869,15 @@ public class DataBaseManager implements Closeable {
 				+ "SET description = ?, isOpened = ?, time = ? "
 				+ "WHERE notificationID = ?; ";
 		
+		Notification existing_notification = getNotification(n.getNotificationID());
+		
 		try {
 			PreparedStatement editNotific_stmt = connection.prepareStatement(edit_notific);
 			int i = 0;
-			
-			editNotific_stmt.setString(++i, n.getDescription());
+
+			editNotific_stmt.setString(++i, n.getDescription()==null?existing_notification.getDescription():n.getDescription());
 			editNotific_stmt.setBoolean(++i, n.isOpened());
-			editNotific_stmt.setTimestamp(++i, new Timestamp(n.getTime()));
+			editNotific_stmt.setTimestamp(++i, new Timestamp(n.getTime()<0?existing_notification.getTime():n.getTime()));
 			editNotific_stmt.setLong(++i, n.getNotificationID());
 			
 			editNotific_stmt.executeUpdate();
