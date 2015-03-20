@@ -74,7 +74,6 @@ public class Invitation implements Comparable<Invitation>{
 	
 	@Override
 	public String toString() {
-		System.out.println("-->"+isGoing);
 		String str = "Invitation to entry " + entry_id + ", current answer: " + (isGoing?"Attending":"Not attending");
 		return str;
 	}
