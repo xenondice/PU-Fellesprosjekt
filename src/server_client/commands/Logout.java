@@ -7,6 +7,7 @@ import java.util.concurrent.TimeoutException;
 import exceptions.ForcedReturnException;
 import server_client.Argument;
 import server_client.Command;
+import server_client.RequestHandler;
 import server_client.ServerClientHandler;
 
 public class Logout extends Command {
@@ -38,6 +39,7 @@ public class Logout extends Command {
 
 	@Override
 	public String run(ServerClientHandler handler, List<Object> arguments, int syntax) throws IOException, TimeoutException, InterruptedException, ForcedReturnException {
+		RequestHandler.disconnectUser(handler);
 		handler.setUsername(null);
 		return "Logged out!";
 	}

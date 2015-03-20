@@ -382,7 +382,10 @@ public class RequestHandler{
 		if(entry.getStartTime() > entry.getEndTime()){throw new StartTimeIsLaterTanEndTimeException();}
 
 		try {
-
+			if(! rbh.checkIfFree(entry.getRoomID(), entry.getStartTime(), entry.getEndTime())){
+				throw new RoomAlreadyBookedException(entry.getRoomID());
+			}
+			
 			long entry_id = dbm.addEntry(entry);
 
 			if (entry_id > 0) {
