@@ -69,7 +69,7 @@ public class Agenda extends Command {
 		for (Invitation invitation : invitations)
 			if (invitation.isGoing())
 				for (CalendarEntry entry : entries)
-					if (entry.getEntryID() == invitation.getEntry_id())
+					if (entry.getEntryID() == invitation.getEntry_id() && entry.getEndTime() >= System.currentTimeMillis())
 						message += " * "
 								+ entry
 								+ "\n";
