@@ -37,7 +37,7 @@ public class ShowCalendar extends Command {
 
 	@Override
 	public String getDescription() {
-		return "Get a ASCII calendar over your current activities. Enter either \"week\", \"day\", \"month\" or \"year\".";
+		return "Get a ASCII calendar over your current activities. Enter either \"day\", \"month\" or \"year\".";
 	}
 
 	@Override
@@ -88,8 +88,8 @@ public class ShowCalendar extends Command {
 		
 		if (type.equals("month")) {
 			cal = new MonthCalendar(when);
-		} else if (type.equals("week")) {
-			cal = new WeekCalendar(when);
+		//} else if (type.equals("week")) {
+		//	cal = new WeekCalendar(when);
 		} else if (type.equals("day")) {
 			cal = new DayCalendar(when);
 		} else if (type.equals("year")) {
