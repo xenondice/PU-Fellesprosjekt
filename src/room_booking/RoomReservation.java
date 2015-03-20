@@ -1,5 +1,7 @@
 package room_booking;
 
+import java.text.SimpleDateFormat;
+
 public class RoomReservation {
 
 	/**
@@ -58,9 +60,9 @@ public class RoomReservation {
 		builder.append("RoomReservation [room_id=");
 		builder.append(room_id);
 		builder.append(", startTime=");
-		builder.append(startTime);
+		builder.append(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(startTime));
 		builder.append(", endTime=");
-		builder.append(endTime);
+		builder.append(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(endTime));
 		builder.append(", entryID=");
 		builder.append(entryID);
 		builder.append("]");
