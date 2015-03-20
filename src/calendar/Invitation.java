@@ -1,6 +1,6 @@
 package calendar;
 
-public class Invitation {
+public class Invitation implements Comparable<Invitation>{
 	
 	private final boolean isGoing;
 	private final boolean isShowing;
@@ -74,8 +74,18 @@ public class Invitation {
 	
 	@Override
 	public String toString() {
-		System.out.println("-->"+isGoing);
 		String str = "Invitation to entry " + entry_id + ", current answer: " + (isGoing?"Attending":"Not attending");
 		return str;
+	}
+
+	@Override
+	public int compareTo(Invitation o) {
+		if(o == null){
+			return 1;
+		}else if(this.equals(o)){
+			return 0;
+		}else{
+			return this.entry_id > o.entry_id ? 1 : -1;
+		}
 	}
 }

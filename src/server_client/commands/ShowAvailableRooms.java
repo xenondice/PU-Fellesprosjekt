@@ -2,6 +2,7 @@ package server_client.commands;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
@@ -15,17 +16,18 @@ import server_client.RequestHandler;
 import server_client.ServerClientHandler;
 import exceptions.ForcedReturnException;
 import exceptions.SessionExpiredException;
+import exceptions.StartTimeIsLaterTanEndTimeException;
 
-public class ShowAllReservations extends Command{
+public class ShowAvailableRooms extends Command{
 
 	@Override
 	public String get() {
-		return "show-room-reservations";
+		return "show-aviable-rooms";
 	}
 
 	@Override
 	public String getDescription() {
-		return "Shows all reservations for a given room.";
+		return "shows all aviable rooms in the given timespan";
 	}
 
 	@Override
@@ -37,35 +39,41 @@ public class ShowAllReservations extends Command{
 	public Argument[][] getArguments() {
 		return new Argument[][]{
 				{
-					new Argument(false, "the room Id ", ArgumentType.text)
+					new Argument(false, "start Time", ArgumentType.date),
+					new Argument(false, "end Time", ArgumentType.date),
+					new Argument(true, "min size of the room", ArgumentType.number),
 				}
 		};
 	}
 
 	@Override
 	public String[] getExamples() {
-		return new String[] {"'"+this.get()+"' R-205"};
+		return new String[]{
+				get()+"22/10/2015 22/11/2015 45",
+				get()+"22/10/2015 22/11/2015",
+		};
 	}
 
 	@Override
 	public String run(ServerClientHandler handler, List<Object> arguments,
 			int sytax) throws IOException, TimeoutException,
 			InterruptedException, ForcedReturnException,
-			SessionExpiredException {
-		
-		String roomID = (String)arguments.get(0);
-		HashSet<RoomReservation> res = RequestHandler.getAllReservationsForRoom(roomID);
-		if(res == null || res.isEmpty()){
-			return "There are no reservations for this room ("+roomID+").";
-		}else{
+			SessionExpiredException{
+		long stime = (long) arguments.get(0);
+		long etime = (long) arguments.get(1);
+		int minsize = arguments.get(2) == null ? -1: (int)arguments.get(2);
+		try {
+			ArrayList<Room> freerooms = RequestHandler.getAllFreeRooms(stime, etime, minsize);
 			StringBuilder sb = new StringBuilder();
-			sb.append("all reservations for room "+roomID+": \n");
-			for(RoomReservation rr : res){
+			sb.append("Free Rooms for the period "+new Timestamp(stime).toString()+" - "+new Timestamp(etime).toString()+":\n");
+			for(Room r : freerooms){
 				sb.append("-> ");
-				sb.append(rr.toString());
+				sb.append(r.toString());
 				sb.append("\n");
 			}
 			return sb.toString();
+		} catch (StartTimeIsLaterTanEndTimeException e) {
+			return "The startTime must be before the end time!";
 		}
 	}
 }

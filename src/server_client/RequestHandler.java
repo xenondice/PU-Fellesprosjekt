@@ -3,6 +3,7 @@ package server_client;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -35,12 +36,7 @@ import exceptions.UserInGroupDoesNotExistsException;
 import exceptions.UsernameAlreadyExistsException;
 import exceptions.WrongPasswordException;
 
-public class RequestHandler{		
-	// TODO add functions for 'get all rooms' 'get all events' 'get all notifications' (for user) etc.
-	
-	// TODO add command 'add-group-to-group' (in server_client commands)
-	
-	// TODO should not be able to use commands when not logged in!
+public class RequestHandler{
 	
 	
 	private static DataBaseManager dbm;
@@ -235,7 +231,7 @@ public class RequestHandler{
 				result = false;
 			} catch (InvitationAlreadyExistsException e){
 				try {
-				result = dbm.going(username, entry_id);
+				result = is_going ? dbm.going(username, entry_id) : dbm.notGoing(username, entry_id);
 				result = dbm.allowToSee(username, entry_id) && result;
 				} catch (InvitationDoesNotExistException e1) {
 					// should never happen!
@@ -259,16 +255,6 @@ public class RequestHandler{
 		
 		return logh.checkPW(username, password);
 		
-//		User existing_user;
-//		existing_user = dbm.getUser(username);
-//			
-//		if (password.equals(existing_user.getPassword())) {
-//			System.out.println("New user verified as " + existing_user.getUsername());
-//			return existing_user; 
-//			//TODO: Make better login pul
-//		}else{
-//			throw new WrongPasswordException();
-//		}
 	}
 	
 	/**
@@ -363,6 +349,7 @@ public class RequestHandler{
 
 		if (dbm.makeAdmin(username, entry_id)) {
 			notify(username, "You are now admin to the entry with the id "+ entry_id);
+			invite(username, entry_id, false);
 			return true;
 		} else {
 			return false;
@@ -488,51 +475,82 @@ public class RequestHandler{
 	 * @throws SessionExpiredException
 	 * @throws RoomAlreadyBookedException 
 	 * @throws RoomDoesNotExistException 
+	 * @throws StartTimeIsLaterTanEndTimeException 
 	 */
-	public synchronized static boolean editEntry(String requestor, CalendarEntry new_entry) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException, SessionExpiredException, RoomAlreadyBookedException, RoomDoesNotExistException {
+	public synchronized static boolean editEntry(String requestor, CalendarEntry new_entry) throws EntryDoesNotExistException, HasNotTheRightsException, UserDoesNotExistException, SessionExpiredException, RoomAlreadyBookedException, RoomDoesNotExistException, StartTimeIsLaterTanEndTimeException {
 		
 		validate(requestor);
 		
 		if(new_entry == null || new_entry.getEntryID() <= 0){
 			return false;
 		}
-			dbm.checkIfisAdmin(requestor, new_entry.getEntryID());
-			CalendarEntry old_entry = dbm.getEntry(new_entry.getEntryID());
-			
-			CalendarEntryBuilder eb = new CalendarEntryBuilder(old_entry);
-			
-			// update the entry
-			if(new_entry.getStartTime() > 0){ eb.setStartTime(new_entry.getStartTime());}
-			if(new_entry.getEndTime() > 0){ eb.setEndTime(new_entry.getEndTime());}
-			if(new_entry.getDescription() != null){eb.setDescription(new_entry.getDescription());}
-			if(new_entry.getLocation() != null){eb.setLocation(new_entry.getLocation());}
-			if(new_entry.getRoomID() != null){eb.setRoomID(new_entry.getRoomID());}
-			
-			CalendarEntry new_entry_final = eb.build();
-			
-			if(new_entry_final.getStartTime() > new_entry_final.getEndTime()){
-				return false;
-			}
-			
-			System.out.println(old_entry);
-			System.out.println(new_entry_final);
-			updateRoomReservation(old_entry, new_entry_final);
-			handleOverlappings(new_entry_final.getEntryID(), requestor);
-			if( ! requestor.equals(new_entry_final.getCreator())){
-				handleOverlappings(new_entry_final.getEntryID(), new_entry_final.getCreator());
-			}
-						
-			if(dbm.editEntry(new_entry_final, requestor)){
-				provideUpdate(new_entry_final.getEntryID(), "The entry information has changed!");
-				return true;
-			}else{
-				return false;
-			}
+		dbm.checkIfisAdmin(requestor, new_entry.getEntryID());
+		CalendarEntry old_entry = dbm.getEntry(new_entry.getEntryID());
+
+		CalendarEntryBuilder eb = new CalendarEntryBuilder(old_entry);
+
+		// update the entry
+		if (new_entry.getStartTime() > 0) {
+			eb.setStartTime(new_entry.getStartTime());
+		}
+		if (new_entry.getEndTime() > 0) {
+			eb.setEndTime(new_entry.getEndTime());
+		}
+		if (new_entry.getDescription() != null) {
+			eb.setDescription(new_entry.getDescription());
+		}
+		if (new_entry.getLocation() != null) {
+			eb.setLocation(new_entry.getLocation());
+		}
 		
+		/* if the new roomID = "null" (String) then user wants no room anymore for the entry
+		 * if the new roomID = null (the java null) then the room should not change.
+		 * if for some reason the old room does not exist anymore and no new is specified, then remove the room
+		 * if a new is specified then take the new room.
+		 */
+		if (new_entry.getRoomID() != null) {
+			String new_roomID = new_entry.getRoomID();
+			eb.setRoomID(new_roomID.equals("null")? null : new_roomID);
+		}else{
+			// the new room is (java) null -> user wants to keep the old
+			try {
+				// check if the old room exists
+				dbm.getRoom(old_entry.getRoomID());
+			} catch (RoomDoesNotExistException e) {
+				// old room does not exist anymore for some reason. -> remove the room
+				eb.setRoomID(null);
+			}
+		}
+
+		CalendarEntry new_entry_final = eb.build();
+
+		if (new_entry_final.getStartTime() > new_entry_final.getEndTime()) {
+			throw new StartTimeIsLaterTanEndTimeException();
+		}
+
+		
+		updateRoomReservation(old_entry, new_entry_final);
+		handleOverlappings(new_entry_final.getEntryID(), requestor);
+		if (!requestor.equals(new_entry_final.getCreator())) {
+			handleOverlappings(new_entry_final.getEntryID(),
+					new_entry_final.getCreator());
+		}
+
+		if (dbm.editEntry(new_entry_final, requestor)) {
+			provideUpdate(new_entry_final.getEntryID(),
+					"The entry information has changed!");
+			return true;
+		} else {
+			return false;
+		}
+
 	}
 	
 	/**
-	 * 
+	 * takes an old entry and a new one.</br>
+	 * looks if something relevant for the reservation changed (time or room).</br>
+	 * If so then releases the old reservation and makes a new one.</br>
+	 * Note that the two entryId's must be the same!
 	 * @param old_entry
 	 * @param new_entry
 	 * @return
@@ -540,6 +558,9 @@ public class RequestHandler{
 	 * @throws RoomDoesNotExistException
 	 */
 	private static boolean updateRoomReservation(CalendarEntry old_entry, CalendarEntry new_entry) throws RoomAlreadyBookedException, RoomDoesNotExistException{
+		if(old_entry.getEntryID() != new_entry.getEntryID()){
+			return false;
+		}
 		boolean change_room_reservation = old_entry.getStartTime() != new_entry.getStartTime() 
 										|| old_entry.getEndTime() != new_entry.getEndTime() 
 										|| old_entry.getRoomID() != new_entry.getRoomID();
@@ -552,11 +573,16 @@ public class RequestHandler{
 			rbh.releaseRoomEntry(old_entry.getRoomID(), entry_id);
 				
 			// add new reservation
-			// TODO what if no new room is spezified (new room = null) etc?
 			try {
-				rbh.bookRoom(new_entry.getRoomID(), new_entry.getStartTime(), new_entry.getEndTime(), entry_id);
+				if(new_entry.getRoomID() != null){
+					rbh.bookRoom(new_entry.getRoomID(), new_entry.getStartTime(), new_entry.getEndTime(), entry_id);
+				}
 			} catch (StartTimeIsLaterTanEndTimeException e) {
 				e.printStackTrace();
+				return false;
+			} catch (RoomDoesNotExistException e){
+				// A non existing room can not be booked.
+				return true;
 			}
 			
 		}
@@ -576,12 +602,17 @@ public class RequestHandler{
 	 * @throws HasNotTheRightsException
 	 * @throws InvitationDoesNotExistException
 	 */
-	public synchronized static boolean kickUserFromEntry(String requestor, String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException, HasNotTheRightsException, InvitationDoesNotExistException {
+	public synchronized static boolean kickUserFromEntry(String requestor, String username, long entry_id) throws EntryDoesNotExistException, UserDoesNotExistException, SessionExpiredException, HasNotTheRightsException{
 		
 		validate(requestor);
 		
-			if (dbm.isCreator(username, entry_id))
-				throw new HasNotTheRightsException();
+			if (dbm.isCreator(username, entry_id)){
+				if(requestor.equals(username)){
+					return true;
+				}else{
+					throw new HasNotTheRightsException();
+				}
+			}
 	
 			if (!dbm.isAllowedToEdit(requestor, entry_id))
 				throw new HasNotTheRightsException();
@@ -614,20 +645,30 @@ public class RequestHandler{
 	 * @throws HasNotTheRightsException
 	 * @throws InvitationDoesNotExistException
 	 */
-	public synchronized static boolean kickGroupFromEntry(String requestor, String groupname, long entry_id) throws GroupDoesNotExistException, UserInGroupDoesNotExistsException, EntryDoesNotExistException, SessionExpiredException, UserDoesNotExistException, HasNotTheRightsException {
+	public synchronized static boolean kickGroupFromEntry(String requestor, String groupname, long entry_id) throws SessionExpiredException, GroupDoesNotExistException, EntryDoesNotExistException, UserDoesNotExistException, HasNotTheRightsException{
 		
 		validate(requestor);
-		
-			Group group = dbm.getGroup(groupname);
-			
-			for (User user : group.getUsers()) {
-				try {
-					kickUserFromEntry(requestor, user.getUsername(), entry_id);
-				} catch (InvitationDoesNotExistException e) {
-					
-				}	
+
+		Group group = dbm.getGroup(groupname);
+		boolean all_users_exist = true;
+		boolean allowed_to_remove_all = true;
+		for (User user : group.getUsers()) {
+			try {
+				kickUserFromEntry(requestor, user.getUsername(), entry_id);
+			} catch (UserDoesNotExistException e) {
+				e.printStackTrace();
+				all_users_exist = false;
+			} catch (HasNotTheRightsException e) {
+				e.printStackTrace();
+				allowed_to_remove_all = false;
 			}
-		
+		}
+		if(! all_users_exist){
+			throw new UserDoesNotExistException();
+		}
+		if(! allowed_to_remove_all){
+			throw new HasNotTheRightsException();
+		}
 		
 		return true;
 	}
@@ -698,8 +739,6 @@ public class RequestHandler{
 	/* ===============
 	 * Group functions
 	 *================*/
-	
-	// TODO make it more consistant to use the groups. Eg new table in DB linking groups to other groups.
 	
 	/**
 	 * adds the group to the DB
@@ -777,7 +816,12 @@ public class RequestHandler{
 		
 		validate(requestor);
 		
-		return dbm.removeUserFromGroup(username, groupname);
+		if(dbm.removeUserFromGroup(username, groupname)){
+			notify(username, "You have been removed from group "+groupname+". ("+requestor+" removed you).");
+			return true;
+		}else{
+			return false;
+		}
 	}
 	
 	/**
@@ -855,12 +899,17 @@ public class RequestHandler{
 	 * @return
 	 * @throws SessionExpiredException
 	 * @throws EntryDoesNotExistException
+	 * @throws UserDoesNotExistException 
 	 */
-	public static CalendarEntry getEntry(String requestor, long entry_id) throws SessionExpiredException, EntryDoesNotExistException {
+	public static CalendarEntry getEntry(String requestor, long entry_id) throws SessionExpiredException, EntryDoesNotExistException, UserDoesNotExistException {
 		
 		validate(requestor);
+		if(dbm.isAllowedToSee(requestor, entry_id)){
+			return dbm.getEntry(entry_id);
+		}else{
+			return null;
+		}
 		
-		return dbm.getEntry(entry_id);
 	}
 	
 	/**
@@ -877,12 +926,35 @@ public class RequestHandler{
 		return dbm.getAllEntriesForUser(requestor);
 	}
 	
+	public synchronized static HashSet<Group> getAllGroups(){
+		HashSet<String> grnames = dbm.getAllGroupnames();
+		HashSet<Group> groups = new HashSet<>();
+		for(String gn : grnames){
+			try {
+				groups.add(dbm.getGroup(gn));
+			} catch (GroupDoesNotExistException e) {
+				// should never happen!
+				e.printStackTrace();
+			}
+		}
+		return groups;
+	}
+	
 	/**
 	 * 
 	 * @return a hashset of all existing rooms
 	 */
 	public static HashSet<Room> getAllRooms(){
 		return dbm.getAllRooms();
+	}
+	
+	public static HashSet<String> getAllUsernames(){
+		HashSet<User> users = dbm.getAllUsers();
+		HashSet<String> names = new HashSet<>();
+		for(User u : users){
+			names.add(u.getUsername());
+		}
+		return names;
 	}
 	
 	/**
@@ -901,6 +973,49 @@ public class RequestHandler{
 			}
 		}
 		return res;
+	}
+	
+	/**
+	 * @param startTime
+	 * @param endTime
+	 * @param minsize
+	 * @return all free rooms for the given timeperiod and the room is bigger or equal <i>minsize</i>.
+	 * @throws StartTimeIsLaterTanEndTimeException
+	 */
+	public static ArrayList<Room> getAllFreeRooms(long startTime, long endTime, int minsize) throws StartTimeIsLaterTanEndTimeException{
+		if(startTime > endTime){throw new StartTimeIsLaterTanEndTimeException();}
+		HashSet<Room> allrooms = RequestHandler.getAllRooms();
+		ArrayList<Room> freerooms = new ArrayList<>();
+		for(Room r : allrooms){
+			if(r.getSize() < minsize){continue;}
+			boolean isFree = true;
+			HashSet<RoomReservation> all_res_for_room = RequestHandler.getAllReservationsForRoom(r.getRoom_id());
+			for(RoomReservation rres : all_res_for_room){
+				if(rres.getStartTime() > rres.getEndTime()){continue;} // check if start and endtime of the reservation are correct.
+				else if(isFree){ // if no overlapping reservation is found yet
+					boolean overlap = ! (rres.getEndTime() < startTime || rres.getStartTime() > endTime);
+					if(overlap){
+						isFree = false;
+					}
+				}
+			}
+			if(isFree){freerooms.add(r);}
+		}
+		return freerooms;
+	}
+	
+	public synchronized static HashSet<User> getAllInvitedUsers(long entry_id){
+		HashSet<User> users = new HashSet<>();
+		for(Invitation inv : dbm.getAllInvitationsForEntry(entry_id)){
+			try {
+				users.add(dbm.getUser(inv.getUsername()));
+			} catch (UserDoesNotExistException e) {
+				e.printStackTrace();
+				// should never happen
+			}
+		}
+		return users;
+		
 	}
 	
 	public static Group getGroup(String groupname) throws GroupDoesNotExistException{
@@ -952,6 +1067,15 @@ public class RequestHandler{
 		validate(requestor);
 		
 		return dbm.getNotificationsForUser(requestor);
+	}
+	
+	/**
+	 * 
+	 * @param notification_id
+	 * @return true iff action was successful
+	 */
+	public static boolean deleteNotification(long notification_id){
+		return dbm.deleteNotification(notification_id);
 	}
 	
 	/**

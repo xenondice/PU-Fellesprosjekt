@@ -4,7 +4,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-import calendar.CalendarEntry;
+import server_client.Argument;
+import server_client.Argument.ArgumentType;
+import server_client.Command;
+import server_client.RequestHandler;
+import server_client.ServerClientHandler;
+import user.User;
 import exceptions.EntryDoesNotExistException;
 import exceptions.ForcedReturnException;
 import exceptions.GroupAlreadyExistsException;
@@ -15,22 +20,17 @@ import exceptions.SessionExpiredException;
 import exceptions.UserDoesNotExistException;
 import exceptions.UserInGroupDoesNotExistsException;
 import exceptions.UsernameAlreadyExistsException;
-import server_client.Argument;
-import server_client.Argument.ArgumentType;
-import server_client.Command;
-import server_client.RequestHandler;
-import server_client.ServerClientHandler;
 
-public class ShowEntry extends Command {
+public class ShowAllInvitedUsers extends Command{
 
 	@Override
 	public String get() {
-		return "show-entry";
+		return "show-invited-users";
 	}
 
 	@Override
 	public String getDescription() {
-		return "shows the entry with the spezified entryID.";
+		return "shows all users invited to the given entry";
 	}
 
 	@Override
@@ -40,11 +40,10 @@ public class ShowEntry extends Command {
 
 	@Override
 	public Argument[][] getArguments() {
-		return new Argument[][] {
+		return new Argument[][]{
 				{
-					new Argument(false, "the entry ID", ArgumentType.long_number)
+					new Argument(false, "entryID", ArgumentType.long_number)
 				}
-				
 		};
 	}
 
@@ -57,19 +56,15 @@ public class ShowEntry extends Command {
 	public String run(ServerClientHandler handler, List<Object> arguments,
 			int sytax) throws IOException, TimeoutException,
 			InterruptedException, ForcedReturnException,
-			SessionExpiredException {
+			SessionExpiredException{
 		
-		String requestor = handler.getUsername();
-		long entry_id = (long) arguments.get(0);
-		try {
-			CalendarEntry e =  RequestHandler.getEntry(requestor, entry_id);
-			return e != null ? e.toString() : "This entry does not exist or you can not see it.";
-		} catch (EntryDoesNotExistException e) {
-			return "This entry does not exist or you can not see it.";
-		} catch (UserDoesNotExistException e) {
-			e.printStackTrace();
-			return "You are either not logged in or your username is not registert.";
+		StringBuilder sb = new StringBuilder("The invited users are: \n");
+		for(User u : RequestHandler.getAllInvitedUsers((long) arguments.get(0))){
+			sb.append("-->");
+			sb.append(u.toString());
+			sb.append("\n");
 		}
+		return sb.toString();
 	}
 
 }

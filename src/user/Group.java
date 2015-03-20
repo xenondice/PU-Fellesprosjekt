@@ -24,6 +24,14 @@ public class Group {
 	
 	/**
 	 * 
+	 * @return true iff no users are in the group.
+	 */
+	public boolean isEmpty(){
+		return users.length == 0;
+	}
+	
+	/**
+	 * 
 	 * @return a list of the Users in the given group
 	 */
 	public User[] getUsers(){
@@ -43,14 +51,15 @@ public class Group {
 
 	@Override
 	public String toString() {
-		final int maxLen = 100;
 		StringBuilder builder = new StringBuilder();
-		builder.append("Group ");
-		builder.append("name=");
+		builder.append("Groupname= ");
 		builder.append(name);
-		builder.append("users = ");
-		builder.append(users != null ? Arrays.asList(users).subList(0,	Math.min(users.length, maxLen)) : null);
-		builder.append("]");
+		builder.append("\n");
+		for(User u : users){
+			builder.append("-> ");
+			builder.append(u.toString());
+			builder.append("\n");
+		}
 		return builder.toString();
 	}
 }

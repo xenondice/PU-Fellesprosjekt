@@ -1,9 +1,14 @@
 package server_client.commands;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
+import server_client.Argument;
+import server_client.Command;
+import server_client.RequestHandler;
+import server_client.ServerClientHandler;
 import exceptions.EntryDoesNotExistException;
 import exceptions.ForcedReturnException;
 import exceptions.GroupAlreadyExistsException;
@@ -14,40 +19,32 @@ import exceptions.SessionExpiredException;
 import exceptions.UserDoesNotExistException;
 import exceptions.UserInGroupDoesNotExistsException;
 import exceptions.UsernameAlreadyExistsException;
-import server_client.Argument;
-import server_client.Command;
-import server_client.ServerClientHandler;
 
-public class GetAvailableRooms extends Command{
+public class ShowAllUsers extends Command {
 
 	@Override
 	public String get() {
-		// TODO Auto-generated method stub
-		return null;
+		return "show-all-usernames";
 	}
 
 	@Override
 	public String getDescription() {
-		// TODO Auto-generated method stub
-		return null;
+		return "shows all registered usernames";
 	}
 
 	@Override
 	public String getManual() {
-		// TODO Auto-generated method stub
-		return null;
+		return getDescription();
 	}
 
 	@Override
 	public Argument[][] getArguments() {
-		// TODO Auto-generated method stub
-		return null;
+		return new Argument[0][0];
 	}
 
 	@Override
 	public String[] getExamples() {
-		// TODO Auto-generated method stub
-		return null;
+		return new String[]{get()};
 	}
 
 	@Override
@@ -59,8 +56,20 @@ public class GetAvailableRooms extends Command{
 			EntryDoesNotExistException, GroupAlreadyExistsException,
 			UserInGroupDoesNotExistsException, UsernameAlreadyExistsException,
 			InvitationDoesNotExistException {
-		// TODO Auto-generated method stub
-		return null;
+		HashSet<String> usernames = RequestHandler.getAllUsernames();
+		StringBuilder sb = new StringBuilder();
+		
+		if(usernames.isEmpty()){
+			sb.append("There are no users registered!\n");
+		}else{
+			sb.append("All users: \n");
+		}
+		for(String name: usernames){
+			sb.append("--> ");
+			sb.append(name);
+			sb.append("\n");
+		}
+		return sb.toString();
 	}
 
 }

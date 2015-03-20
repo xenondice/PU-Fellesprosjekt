@@ -11,6 +11,7 @@ import exceptions.HasNotTheRightsException;
 import exceptions.RoomAlreadyBookedException;
 import exceptions.RoomDoesNotExistException;
 import exceptions.SessionExpiredException;
+import exceptions.StartTimeIsLaterTanEndTimeException;
 import exceptions.UserDoesNotExistException;
 import server_client.Argument;
 import server_client.Argument.ArgumentType;
@@ -44,7 +45,7 @@ public class EditEntry extends Command {
 				new Argument(true, "start time", ArgumentType.date),
 				new Argument(true, "end time", ArgumentType.date),
 				new Argument(true, "description of location", ArgumentType.text),
-				new Argument(true, "room name or room id", ArgumentType.text),
+				new Argument(true, "room name or room id (if you want to remove the room, enter 'null')", ArgumentType.text),
 				
 			}
 		};
@@ -73,7 +74,7 @@ public class EditEntry extends Command {
 			if (RequestHandler.editEntry(handler.getUsername(), entry_builder.build())){
 				return "Calendar entry successfully edited!";
 			}else{
-				return "Calendar entry couldn't be edited! (mybe the start time is later than the end time?)";
+				return "Calendar entry couldn't be edited!";
 			}
 		} catch (RoomAlreadyBookedException e) {
 			e.printStackTrace();
@@ -81,6 +82,9 @@ public class EditEntry extends Command {
 		} catch (RoomDoesNotExistException e) {
 			e.printStackTrace();
 			return "Calendar entry couldn't be edited! The given room does not exist!";
+		} catch (StartTimeIsLaterTanEndTimeException e) {
+			e.printStackTrace();
+			return "Calendar entry couldn't be edited! The start time can not be later than the end time.";
 		}
 	}
 }

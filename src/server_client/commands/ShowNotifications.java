@@ -1,6 +1,7 @@
 package server_client.commands;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
@@ -16,10 +17,6 @@ import server_client.RequestHandler;
 import server_client.ServerClientHandler;
 
 public class ShowNotifications extends Command {
-	
-	//TODO: Make inbox not display message, just time and if it's opened, make open message command, mark as seen
-	//TODO: Make message system, make a notification system that is not bound by entry_id
-	//TODO: Possible to delete notification
 	
 	@Override
 	public String get() {
@@ -52,28 +49,37 @@ public class ShowNotifications extends Command {
 		HashSet<Notification> notifications = RequestHandler.getNotifications(handler.getUsername());
 		HashSet<Invitation> invitations = RequestHandler.getInvitations(handler.getUsername());
 		
-		if (notifications == null || invitations == null) return "Couldn't get inbox!";
+		
+		if (notifications == null || invitations == null){ return "Couldn't get inbox!";}
+		
+		// sort the two sets
+		Notification[] sortedNotifics = notifications.toArray(new Notification[notifications.size()]);
+		Invitation[] sortedInvis = invitations.toArray(new Invitation[invitations.size()]);
+		Arrays.sort(sortedInvis);
+		Arrays.sort(sortedNotifics);
+		
 		
 		String message = "";
 		
-		if (!notifications.isEmpty()) {
+		if (!(sortedNotifics.length == 0)) {
 			message += "Notifications:\n";
-			for (Notification notification : notifications) {
+			for (Notification notification : sortedNotifics) {
 				message += " * " + notification +"\n";
 			}
 			message += "\n";
 		}
 		
-		if (!invitations.isEmpty()) {
+		if (!(sortedInvis.length == 0)) {
 			message += "Invitations:\n";
-			for (Invitation invitation : invitations) {
+			for (Invitation invitation : sortedInvis) {
 				message += " * " + invitation +"\n";
 			}
 		}
 		
-		if (message.isEmpty())
+		if (message.isEmpty()){
 			return "Empty inbox!";
-		else
+		}else{
 			return message;
+		}
 	}
 }

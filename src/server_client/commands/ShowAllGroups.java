@@ -1,31 +1,29 @@
 package server_client.commands;
 
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-import room_booking.Room;
-import room_booking.RoomReservation;
 import server_client.Argument;
-import server_client.Argument.ArgumentType;
 import server_client.Command;
 import server_client.RequestHandler;
 import server_client.ServerClientHandler;
+import user.Group;
+import user.User;
 import exceptions.ForcedReturnException;
 import exceptions.SessionExpiredException;
 
-public class ShowAllReservations extends Command{
+public class ShowAllGroups extends Command {
 
 	@Override
 	public String get() {
-		return "show-room-reservations";
+		return "show-all-groups";
 	}
 
 	@Override
 	public String getDescription() {
-		return "Shows all reservations for a given room.";
+		return "shows all existing groups and the users in this groups";
 	}
 
 	@Override
@@ -35,16 +33,12 @@ public class ShowAllReservations extends Command{
 
 	@Override
 	public Argument[][] getArguments() {
-		return new Argument[][]{
-				{
-					new Argument(false, "the room Id ", ArgumentType.text)
-				}
-		};
+		return new Argument[0][0];
 	}
 
 	@Override
 	public String[] getExamples() {
-		return new String[] {"'"+this.get()+"' R-205"};
+		return new String[]{get()};
 	}
 
 	@Override
@@ -53,19 +47,24 @@ public class ShowAllReservations extends Command{
 			InterruptedException, ForcedReturnException,
 			SessionExpiredException {
 		
-		String roomID = (String)arguments.get(0);
-		HashSet<RoomReservation> res = RequestHandler.getAllReservationsForRoom(roomID);
-		if(res == null || res.isEmpty()){
-			return "There are no reservations for this room ("+roomID+").";
-		}else{
-			StringBuilder sb = new StringBuilder();
-			sb.append("all reservations for room "+roomID+": \n");
-			for(RoomReservation rr : res){
-				sb.append("-> ");
-				sb.append(rr.toString());
+		HashSet<Group> groups = RequestHandler.getAllGroups();
+		StringBuilder sb = new StringBuilder();
+		sb.append("All Groups: \n");
+		for(Group g : groups){
+			sb.append(g.getName());
+			sb.append(": ");
+			if(g.isEmpty()){
+				sb.append("has no Users \n");
+			}else{
 				sb.append("\n");
-			}
-			return sb.toString();
+				for(User u : g.getUsers()){
+					sb.append("-->");
+					sb.append(u.toString());
+					sb.append("\n");
+				}
+			}		
 		}
+		return sb.toString();
 	}
+
 }
