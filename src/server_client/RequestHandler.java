@@ -38,8 +38,6 @@ import exceptions.WrongPasswordException;
 
 public class RequestHandler{
 	
-	// TODO look at todos in ShowNotifications class!
-	
 	
 	private static DataBaseManager dbm;
 	private static ServerSocket server;
@@ -530,8 +528,6 @@ public class RequestHandler{
 			throw new StartTimeIsLaterTanEndTimeException();
 		}
 
-//		System.out.println(old_entry); // TODO remove this two printouts
-//		System.out.println(new_entry_final);
 		
 		updateRoomReservation(old_entry, new_entry_final);
 		handleOverlappings(new_entry_final.getEntryID(), requestor);
@@ -998,7 +994,6 @@ public class RequestHandler{
 				if(rres.getStartTime() > rres.getEndTime()){continue;} // check if start and endtime of the reservation are correct.
 				else if(isFree){ // if no overlapping reservation is found yet
 					boolean overlap = ! (rres.getEndTime() < startTime || rres.getStartTime() > endTime);
-					// TODO outsource the overlap check and fuse with doOverlap(entry, entry)
 					if(overlap){
 						isFree = false;
 					}
