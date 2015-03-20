@@ -16,7 +16,6 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.ibatis.jdbc.ScriptRunner;
 
@@ -30,17 +29,12 @@ import user.User;
 import user.UserBuilder;
 import calendar.Alarm;
 import calendar.AlarmBuilder;
-import calendar.Calendar;
-import calendar.CalendarBuilder;
 import calendar.CalendarEntry;
 import calendar.CalendarEntryBuilder;
 import calendar.Invitation;
 import calendar.InvitationBuilder;
 import calendar.Notification;
 import calendar.NotificationBuilder;
-
-import com.mysql.jdbc.exceptions.NotYetImplementedException;
-
 import exceptions.AlarmAlreadyExistsException;
 import exceptions.AlarmDoesNotExistException;
 import exceptions.EntryDoesNotExistException;
@@ -49,7 +43,6 @@ import exceptions.GroupDoesNotExistException;
 import exceptions.HasNotTheRightsException;
 import exceptions.InvitationAlreadyExistsException;
 import exceptions.InvitationDoesNotExistException;
-import exceptions.NotAllowedException;
 import exceptions.NotificationDoesNotExistException;
 import exceptions.RoomAlreadyExistsException;
 import exceptions.RoomDoesNotExistException;
